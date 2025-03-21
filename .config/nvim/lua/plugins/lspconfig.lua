@@ -216,6 +216,14 @@ return {
             },
           },
         },
+
+        -- eslint_d = {
+        --    require('lspconfig').util.find_git_ancestor
+        --   root_dir = vim.fs.dirname(vim.fs.find('.git', { path = startpath, upward = true })[1]),
+        --   settings = {
+        --     workingDirectory = { mode = 'location' },
+        --   },
+        -- },
       }
 
       -- ensure the servers and tools above are installed
@@ -234,7 +242,6 @@ return {
         'prettier',
         'prettierd',
         'eslint',
-        'eslint_d',
         'markdownlint',
         'cssls',
         'html',

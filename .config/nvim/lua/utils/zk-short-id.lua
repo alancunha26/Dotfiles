@@ -1,5 +1,5 @@
 return function()
-  local command = 'suid -l 4 -d "/home/alancunha26/.local/share/assets/alphanum-lower.json"'
+  local command = 'suid -l 4 -d "$HOME/.local/share/assets/alphanum-lower.json"'
   local handle = io.popen(command)
 
   if handle == nil then

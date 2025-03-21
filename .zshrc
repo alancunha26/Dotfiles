@@ -21,3 +21,6 @@ eval "$(starship init zsh)"
 
 # Run neofetch
 neofetch
+
+# Homebrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
