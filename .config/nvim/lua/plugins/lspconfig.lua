@@ -250,6 +250,7 @@ return {
         'yamlls',
         'bashls',
         'emmet_language_server',
+        'tailwindcss',
         'angularls',
       })
 

@@ -35,6 +35,10 @@ return {
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-path',
+
+      -- Adds tailwind configuration
+      'tailwind-tools',
+      'onsails/lspkind-nvim',
     },
     config = function()
       -- See `:help cmp`
@@ -48,7 +52,14 @@ return {
             luasnip.lsp_expand(args.body)
           end,
         },
-        completion = { completeopt = 'menu,menuone,noinsert' },
+        completion = {
+          completeopt = 'menu,menuone,noinsert',
+        },
+        formatting = {
+          format = require('lspkind').cmp_format {
+            before = require('tailwind-tools.cmp').lspkind_format,
+          },
+        },
 
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
