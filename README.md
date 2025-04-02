@@ -134,7 +134,7 @@ Should return:
 options nvidia-drm modeset=1
 ```
 
-### Install ASDF, NodeJS, Yarn and Rust
+### Install ASDF, NodeJS, Yarn, pnpm and Rust
 
 Download ASDF from the original repository:
 
@@ -166,10 +166,16 @@ Set the latest version of node globally:
 asdf global nodejs latest
 ```
 
-Finally install yarn:
+Then, install yarn:
 
 ```shell
-npm --global install yarn
+npm i -g yarn
+```
+
+Finally, install pnpm:
+
+```shell
+npm i -g pnpm
 ```
 
 Add Rust to the ASDF plugins list:
