@@ -114,7 +114,7 @@ return {
               group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
               callback = function(event2)
                 vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+                vim.api.nvim_clear_autocmds({ group = 'kickstart-lsp-highlight', buffer = event2.buf })
               end,
             })
           end
@@ -125,7 +125,7 @@ return {
           -- This may be unwanted, since they displace some of your code
           if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
             map('<leader>th', function()
-              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
+              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
             end, '[T]oggle Inlay [H]ints')
           end
         end,
@@ -140,12 +140,12 @@ return {
           diagnostic_signs[vim.diagnostic.severity[type]] = icon
         end
 
-        vim.diagnostic.config {
+        vim.diagnostic.config({
           signs = { text = diagnostic_signs },
-        }
+        })
       end
 
-      local path = vim.fn.stdpath 'config' .. '/spell/en.utf-8.add'
+      local path = vim.fn.stdpath('config') .. '/spell/en.utf-8.add'
       local en_dictionary = {}
 
       for word in io.open(path, 'r'):lines() do
@@ -217,13 +217,23 @@ return {
           },
         },
 
-        -- eslint_d = {
-        --    require('lspconfig').util.find_git_ancestor
-        --   root_dir = vim.fs.dirname(vim.fs.find('.git', { path = startpath, upward = true })[1]),
-        --   settings = {
-        --     workingDirectory = { mode = 'location' },
-        --   },
-        -- },
+        eslint = {
+          settings = {
+            -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
+            workingDirectories = { mode = 'auto' },
+
+            options = {
+              flags = { 'unstable_config_lookup_from_file' },
+            },
+          },
+        },
+
+        tailwindcss = {
+          -- Fix for monorepos, because the tailwind-language-server attaches only to the first
+          -- root directory it founds, this way I ensure the root is attached to the monorepo root
+          -- where the ".git" file lives.
+          root_dir = require('lspconfig.util').root_pattern('.git'),
+        },
       }
 
       -- ensure the servers and tools above are installed
@@ -245,20 +255,17 @@ return {
         'markdownlint',
         'cssls',
         'html',
-        'ts_ls',
         'jsonls',
         'yamlls',
         'bashls',
         'emmet_language_server',
-        'tailwindcss',
-        'angularls',
       })
 
-      require('mason-tool-installer').setup {
+      require('mason-tool-installer').setup({
         ensure_installed = ensure_installed,
-      }
+      })
 
-      require('mason-lspconfig').setup {
+      require('mason-lspconfig').setup({
         ensure_installed = {},
         automatic_installation = true,
 
@@ -272,7 +279,7 @@ return {
             require('lspconfig')[server_name].setup(server)
           end,
         },
-      }
+      })
     end,
   },
 }

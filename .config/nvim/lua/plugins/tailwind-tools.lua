@@ -9,6 +9,7 @@ return {
   },
   opts = {
     server = {
+      override = false,
       settings = {
         experimental = {
           classRegex = {
