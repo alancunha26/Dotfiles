@@ -24,6 +24,10 @@ yay -Sy neovim luarocks ripgrep neofetch zsh starship xdg-ninja stow file-roller
 
 #### Install the WSL version (Optional)
 
+> ![warning]
+>
+> If you are looking for Windows native support, check the [.win/README.md](./.win/README.md) file and follow its instructions.
+
 Alternatively you can install the WSL version:
 
 ```shell
