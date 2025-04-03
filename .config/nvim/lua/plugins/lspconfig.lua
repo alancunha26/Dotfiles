@@ -131,7 +131,7 @@ return {
         end,
       })
 
-      -- Change diagnostic symbols in the sign column (gutter)
+      -- Change dagnostic symbols in the sign column (gutter)
       if vim.g.have_nerd_font then
         local signs = { ERROR = '', WARN = '', INFO = '', HINT = '' }
         local diagnostic_signs = {}
@@ -142,6 +142,7 @@ return {
 
         vim.diagnostic.config({
           signs = { text = diagnostic_signs },
+          virtual_text = true,
         })
       end
 
@@ -242,7 +243,12 @@ return {
       --    :mason
       --
       --  you can press `g?` for help in this menu.
-      require('mason').setup()
+      --- @diagnostic disable-next-line: missing-fields
+      require('mason').setup({
+        -- Replaces root dir of mason on windows due to user names with spaces resulting in errors when parsing paths
+        -- See: https://github.com/stevearc/conform.nvim/issues/252
+        install_root_dir = vim.fn.has('win32') and 'C:\\.mason' or vim.fn.stdpath('data') .. '/mason',
+      })
 
       -- you can add other tools here that you want mason to install
       -- for you, so that they are available from within neovim.
@@ -280,6 +286,18 @@ return {
           end,
         },
       })
+
+      -- Setup godot lsp
+      local gdscript_config = {
+        capabilities = capabilities,
+        settings = {},
+      }
+
+      if vim.fn.has('win32') == 1 then
+        gdscript_config['cmd'] = { 'ncat', 'localhost', os.getenv('GDScript_Port') or '6005' }
+      end
+
+      require('lspconfig').gdscript.setup(gdscript_config)
     end,
   },
 }

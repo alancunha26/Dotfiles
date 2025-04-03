@@ -3,7 +3,7 @@
 First you need to ensure _winget_ is installed. You can install it from Microsoft
 Store under the name "App Installer".
 
-> ![warning]
+> [!warning]
 > Not all features are supported on Windows. Some examples ara:
 >
 > - Note taking with zk
@@ -74,6 +74,19 @@ git clone git@github.com:alancunha26/Dotfiles.git ~/.dotfiles
 
 Open Powershell as administrator and from the `~/.dotfiles` directory run the `dotfiles.exe` to symlink the correct files.
 
+> [!warning]
+> This dotfiles manager don't replace existing files, so you might have to manually delete already created files, check `.win/mappings_windows.json` to see which files you should look for.
+
 ```shell
 ~/.bin/dotfiles.exe link
+```
+
+## Install Godot dependencies
+
+You can follow this [video](https://www.youtube.com/watch?v=B6UahV8gVo0) from Big Turtle by the letter, but here is a summary:
+
+First you have to install `nmap`, run:
+
+```shell
+winget install nmap
 ```

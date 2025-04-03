@@ -27,6 +27,8 @@ return {
         'yaml',
         'json',
         'toml',
+        'gdscript',
+        'godot_resource'
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
