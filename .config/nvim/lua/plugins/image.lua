@@ -42,10 +42,10 @@ return {
     dependencies = { 'luarocks.nvim' },
     cond = function()
       -- Disables plugin when on WSL
-      return not vim.g.have_wsl_session
+      return not vim.g.have_wsl_session and not vim.fn.has('win32')
     end,
     config = function()
-      require('image').setup {
+      require('image').setup({
         backend = 'kitty',
         kitty_method = 'normal',
         integrations = {
@@ -113,7 +113,7 @@ return {
 
         -- render image files as images when opened
         hijack_file_patterns = { '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.avif' },
-      }
+      })
     end,
   },
 }

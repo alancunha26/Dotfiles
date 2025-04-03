@@ -39,7 +39,7 @@ After that you will need to open Powershell as administrator and install the
 following dependencies:
 
 ```shell
-choco install -y ripgrep make mingw fd unzip gzip wget fzf nvm
+choco install -y ripgrep make mingw fd unzip gzip wget fzf nvm luarocks
 ```
 
 ## Install Node, npm, yarn and pnpm
@@ -72,8 +72,8 @@ Then clone this repository to wherever you see fit.
 git clone git@github.com:alancunha26/Dotfiles.git ~/.dotfiles
 ```
 
-From the `.dotfiles` directory run the `dotfiles.exe` to symlink the correct files.
+Open Powershell as administrator and from the `~/.dotfiles` directory run the `dotfiles.exe` to symlink the correct files.
 
 ```shell
-~/.bin/dotfiles.exe link --dry
+~/.bin/dotfiles.exe link
 ```
