@@ -1,2 +1,3 @@
-nodejs 21.6.2
+nodejs 23.10.0
 rust stable
+java adoptopenjdk-11.0.25+9

@@ -16,5 +16,19 @@ eval "$(starship init zsh)"
 # Startup ASDFK package manager
 . "$HOME/.asdf/asdf.sh"
 
+# set JAVA_HOME
+. ~/.asdf/plugins/java/set-java-home.zsh
+
 # Run neofetch
 neofetch
+
+# Homebrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# pnpm
+export PNPM_HOME="/home/alancunha/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

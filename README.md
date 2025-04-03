@@ -4,7 +4,7 @@ My dotfiles will install a fully-featured tiling window manager environment on a
 
 ## Manual Installing Dotfiles
 
-First you need to install ArchLinux with the `archinstall` script using the **Hyprland** profile.
+First you need to install ArchLinux with the `archinstall` script using the **Gnome** profile.
 
 ### Install Yay and Git
 
@@ -14,7 +14,131 @@ To configure and install the other packages and tools, you will have to install 
 sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si
 ```
 
-### Install ASDF, NodeJS and Yarn
+### Install Base Packages
+
+For the system to work correctly it's important to have all the following packages installed:
+
+```shell
+yay -Sy neovim luarocks ripgrep neofetch zsh starship xdg-ninja stow file-roller cliphist wl-clipboard obs-studio obsidian-bin zed pacseek dconf-editor ttf-fira-code ttf-firacode-nerd ttf-ia-writer otf-font-awesome ttf-jetbrains-mono-nerd ttf-jetbrains-mono gnome-shell-extension-caffeine gnome-shell-extension-blur-my-shell gnome-shell-extension-just-perfection-desktop gnome-shell-extension-tilingshell gnome-shell-extensions-useless-gaps gst-libav qt5-wayland qt6-wayland kitty imagemagick gnome-shell-extension-pop-shell less fzf brave-bin nss mkcert xca docker-desktop
+```
+
+#### Install the WSL version (Optional)
+
+> ![warning]
+>
+> If you are looking for Windows native support, check the [.win/README.md](./.win/README.md) file and follow its instructions.
+
+Alternatively you can install the WSL version:
+
+```shell
+yay -Sy neovim luarocks ripgrep neofetch zsh starship xdg-ninja stow pacseek less fzf zk
+```
+
+Install the clipboard manager for WSL integration on windows:
+
+```shell
+winget install --id=equalsraf.win32yank  -e
+```
+
+### Install Homebrew
+
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### Install Oh-My-Zsh!
+
+To proceed run the following command
+
+```shell
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+Next, install the **zsh autosuggestions** plugin:
+
+```shell
+git clone https://github.com/zsh-users/zsh-autosuggestions \
+  $ZSH_CUSTOM/plugins/zsh-autosuggestions
+```
+
+Then, install the **zsh vi mode** plugin:
+
+```shell
+git clone https://github.com/jeffreytse/zsh-vi-mode \
+  $ZSH_CUSTOM/plugins/zsh-vi-mode
+```
+
+### Remove Unused Packages (Optional)
+
+When installing Gnome from the **archinstall** profile, a lot of unused packages will be installed, so to remove clutter you can remove these packages.
+
+```shell
+yay -R gnome-console epiphany vim
+```
+
+```shell
+sudo pacman -Rsn $(pacman -Qdtq)
+```
+
+### Install short-unique-id package
+
+This is used to generate unique short ids in my [note taking system](https://github.com/alancunha26/Notes).
+
+```shell
+npm install --global short-unique-id
+```
+
+### Grammar support with LSP
+
+The [`ltex` LSP server](https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ltex) supports language models that can be used to suggest fixes for more nuanced grammar issues. These models are rather large, so I opted to exclude packaging it directly. While the model is missing, the ltex lsp server still works, but to get more capabilities you can download [ngrams](https://dev.languagetool.org/finding-errors-using-n-gram-data.html) and unzip the model at `~/.ngrams`.
+
+> Unzip it and put it in its own directory named en, de, fr, or es, depending on the language. The path you need to set in the next step is the directory that the en etc. directory is in, not that directory itself.
+
+So, in my case I have `~/.ngrams/en`.
+
+> [!warning]
+>
+> If the LSP doesn't work, download the latest release of ltex and copy the `jdk` binaries into `~/.local/share/nvim/mason/packages/ltex-ls`.
+
+### Install NVIDIA Support (Optional)
+
+Do this ONLY if you need Nvidia support (do this first)
+
+```shell
+yay -S linux-headers nvidia-dkms qt5-wayland qt5ct libva libva-nvidia-driver-git
+```
+
+/etc/mkinitcpio.conf
+
+```shell
+MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+```
+
+Generate a new initramfs image
+
+```shell
+sudo mkinitcpio --config /etc/mkinitcpio.conf --generate /boot/initramfs-custom.img
+```
+
+Create NVIDIA Configuration
+
+```shell
+echo "options nvidia-drm modeset=1" | sudo tee /etc/modprobe.d/nvidia.conf
+```
+
+Verify
+
+```shell
+cat /etc/modprobe.d/nvidia.conf
+```
+
+Should return:
+
+```shell
+options nvidia-drm modeset=1
+```
+
+### Install ASDF, NodeJS, Yarn, pnpm and Rust
 
 Download ASDF from the original repository:
 
@@ -46,60 +170,34 @@ Set the latest version of node globally:
 asdf global nodejs latest
 ```
 
-Finally install yarn:
+Then, install yarn:
 
 ```shell
-npm --global install yarn
+npm i -g yarn
 ```
 
-### Install Base Packages
-
-For the system to work correctly it's important to have all the following packages installed:
+Finally, install pnpm:
 
 ```shell
-yay -Sy neovim thunar polkit polkit-gnome cliphist wl-clipboard ripgrep neofetch noto-fonts-emoji noto-fonts ttf-fira-sans ttf-fira-code ttf-firacode-nerd ttf-ia-writer otf-font-awesome ttf-jetbrains-mono-nerd ttf-jetbrains-mono zsh starship xdg-ninja kitty wget unzip xdg-user-dirs gtk3 htop slurp grim waybar pavucontrol swaylock swayidle pacseek gum swww ntfs-3g nsxiv mpv zathura rofi-lbonn-wayland papirus-icon-theme stow
+npm i -g pnpm
 ```
 
-### Install Oh-My-Zsh!
-
-To proceed run the following command
+Add Rust to the ASDF plugins list:
 
 ```shell
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+asdf plugin add rust
 ```
 
-Next, install the **zsh autosuggestions** plugin:
+Install the stable version of rust:
 
 ```shell
-git clone https://github.com/zsh-users/zsh-autosuggestions \
-  $ZSH_CUSTOM/plugins/zsh-autosuggestions
+asdf install rust stable
 ```
 
-Then, install the **zsh vi mode** plugin:
+Set the stable version of rust globally:
 
 ```shell
-git clone https://github.com/jeffreytse/zsh-vi-mode \
-  $ZSH_CUSTOM/plugins/zsh-vi-mode
-```
-
-### Install NvChad from the original repository
-
-For neovim configuration I use NvChad as a base configuration.
-
-```shell
-git clone https://github.com/NvChad/NvChad ~/.config/nvim --depth 1 && nvim
-```
-
-### Remove Unused Packages (Optional)
-
-When installing Hyprland from the **archinstall** profile, a lot of unused packages will be installed, so to remove clutter you can remove these packages.
-
-```shell
-yay -R dolphin wofi nm-connection-editor
-```
-
-```shell
-sudo pacman -Rsn $(pacman -Qdtq)
+asdf global nodejs stable
 ```
 
 ### Install Gaming Packages (Optional)
@@ -108,7 +206,7 @@ Check the main [source](https://www.reddit.com/r/linux_gaming/comments/knu89x/ho
 
 Enable `multilib` in `/etc/pacman.conf`.
 
-```
+```toml
 [multilib]
 Include = /etc/pacman.d/mirrorlist
 ```
@@ -182,8 +280,30 @@ First you need to download the dotifles from the git repository:
 git clone git@github.com:alancunha26/Dotfiles.git ~/Dotfiles
 ```
 
-Then you have to run the following command to _symlink_ these dotfiles into your _/home_ directory.
+Then you have to run the following command from the `~/Dotfiles` directory to _symlink_ these dotfiles into your _/home_ directory.
 
 ```shell
-cd ~/Dotfiles && stow .
+stow .
+```
+
+Now reset your desktop settings to the factory defaults with command:
+
+```shell
+dconf reset -f /
+```
+
+To restore the System settings, simply do:
+
+```shell
+dconf load / < kittyos-dconf
+```
+
+## Fixes
+
+Some stuff may not work when fresh installing, below are some common fixes for common problems.
+
+### Fixing "Camera not found" on Gnome 46
+
+```shell
+systemctl --user restart pipewire
 ```
