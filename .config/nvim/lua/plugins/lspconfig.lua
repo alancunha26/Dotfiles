@@ -243,12 +243,7 @@ return {
       --    :mason
       --
       --  you can press `g?` for help in this menu.
-      --- @diagnostic disable-next-line: missing-fields
-      require('mason').setup({
-        -- Replaces root dir of mason on windows due to user names with spaces resulting in errors when parsing paths
-        -- See: https://github.com/stevearc/conform.nvim/issues/252
-        install_root_dir = vim.fn.has('win32') and 'C:\\.mason' or vim.fn.stdpath('data') .. '/mason',
-      })
+      require('mason').setup()
 
       -- you can add other tools here that you want mason to install
       -- for you, so that they are available from within neovim.
