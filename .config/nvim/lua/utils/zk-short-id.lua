@@ -6,7 +6,7 @@ return function()
     return
   end
 
-  local result = handle:read '*a'
+  local result = handle:read('*a')
   handle:close()
 
   if result == nil then

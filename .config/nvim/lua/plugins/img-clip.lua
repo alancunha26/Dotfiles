@@ -1,3 +1,6 @@
+local zk_short_id = require('utils.zk-short-id')
+local config = require('utils.zk-vault-config')
+
 return {
   'HakonHarnes/img-clip.nvim',
   event = 'VeryLazy',
@@ -28,7 +31,6 @@ return {
 
       -- Resolves to the default 'assets' folder if not in a zk notebookk
       dir_path = function()
-        local config = require 'utils.zk-vault-config'()
         if not config then
           return 'assets'
         else
@@ -47,7 +49,7 @@ return {
 
       ---@type string | fun(): string
       file_name = function()
-        local id = require 'utils.zk-short-id'()
+        local id = zk_short_id()
 
         if id ~= nil then
           return id

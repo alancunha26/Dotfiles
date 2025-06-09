@@ -1,2 +1,3 @@
 .local/share/nvim
+.local/share/pnpm
 .local/state

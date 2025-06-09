@@ -22,7 +22,7 @@ return {
         -- `cond` is a condition used to determine whether this plugin should be
         -- installed and loaded.
         cond = function()
-          return vim.fn.executable 'make' == 1
+          return vim.fn.executable('make') == 1
         end,
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
@@ -52,7 +52,7 @@ return {
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
-      require('telescope').setup {
+      require('telescope').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
@@ -90,23 +90,23 @@ return {
             require('telescope.themes').get_dropdown(),
           },
         },
-      }
+      })
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
 
-      local builtin = require 'telescope.builtin'
-      local actions = require 'telescope.actions'
-      local finders = require 'telescope.finders'
-      local pickers = require 'telescope.pickers'
+      local builtin = require('telescope.builtin')
+      local actions = require('telescope.actions')
+      local finders = require('telescope.finders')
+      local pickers = require('telescope.pickers')
       local conf = require('telescope.config').values
-      local entry_display = require 'telescope.pickers.entry_display'
-      local action_state = require 'telescope.actions.state'
+      local entry_display = require('telescope.pickers.entry_display')
+      local action_state = require('telescope.actions.state')
 
       -- This method enables to delete buffers from the telescope menu
       function buffer_searcher()
-        builtin.buffers {
+        builtin.buffers({
           sort_mru = true,
           ignore_current_buffer = false,
           show_all_buffers = true,
@@ -139,34 +139,34 @@ return {
 
             return true
           end,
-        }
+        })
       end
 
-      local emojis = require 'utils.emojis'
-      local icons = require 'utils.nerd-font-icons'
+      local emojis = require('utils.emojis')
+      local icons = require('utils.nerd-font-icons')
 
       local function find_emojis()
-        local displayer = entry_display.create {
+        local displayer = entry_display.create({
           separator = ' ',
           items = {
             { width = 40 },
             { width = 18 },
             { remaining = true },
           },
-        }
+        })
         local make_display = function(entry)
-          return displayer {
+          return displayer({
             entry.value .. ' ' .. entry.name,
             entry.category,
             entry.description,
-          }
+          })
         end
 
         pickers
           .new(opts, {
             prompt_title = 'Emojis',
             sorter = conf.generic_sorter(opts),
-            finder = finders.new_table {
+            finder = finders.new_table({
               results = emojis,
               entry_maker = function(emoji)
                 return {
@@ -179,7 +179,7 @@ return {
                   description = emoji.description,
                 }
               end,
-            },
+            }),
             attach_mappings = function(prompt_bufnr)
               actions.select_default:replace(function()
                 local emoji = action_state.get_selected_entry()
@@ -195,26 +195,26 @@ return {
       end
 
       local function find_icons()
-        local displayer = entry_display.create {
+        local displayer = entry_display.create({
           separator = ' ',
           items = {
             { width = 40 },
             { width = 18 },
             { remaining = true },
           },
-        }
+        })
 
         local make_display = function(entry)
-          return displayer {
+          return displayer({
             entry.char .. ' ' .. entry.name,
-          }
+          })
         end
 
         pickers
           .new(opts, {
             prompt_title = 'Nerd Font Icons',
             sorter = conf.generic_sorter(opts),
-            finder = finders.new_table {
+            finder = finders.new_table({
               results = icons,
               entry_maker = function(icon)
                 return {
@@ -225,7 +225,7 @@ return {
                   char = icon.char,
                 }
               end,
-            },
+            }),
             attach_mappings = function(prompt_bufnr)
               actions.select_default:replace(function()
                 local icon = action_state.get_selected_entry()
@@ -257,24 +257,24 @@ return {
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
           winblend = 10,
           previewer = false,
-        })
+        }))
       end, { desc = '[/] Fuzzily find in current buffer' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
       vim.keymap.set('n', '<leader>f/', function()
-        builtin.live_grep {
+        builtin.live_grep({
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
-        }
+        })
       end, { desc = '[F]ind [/] in Open Files' })
 
       -- Shortcut for finding your Neovim configuration files
       vim.keymap.set('n', '<leader>fn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+        builtin.find_files({ cwd = vim.fn.stdpath('config') })
       end, { desc = '[F]ind [N]eovim files' })
     end,
   },

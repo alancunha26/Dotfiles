@@ -212,8 +212,6 @@ return {
               completion = {
                 callsnippet = 'replace',
               },
-              -- you can toggle below to ignore lua_ls's noisy `missing-fields` warnings
-              -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
         },
@@ -222,18 +220,7 @@ return {
           settings = {
             -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
             workingDirectories = { mode = 'auto' },
-
-            options = {
-              flags = { 'unstable_config_lookup_from_file' },
-            },
           },
-        },
-
-        tailwindcss = {
-          -- Fix for monorepos, because the tailwind-language-server attaches only to the first
-          -- root directory it founds, this way I ensure the root is attached to the monorepo root
-          -- where the ".git" file lives.
-          root_dir = require('lspconfig.util').root_pattern('.git'),
         },
       }
 
@@ -260,6 +247,7 @@ return {
         'yamlls',
         'bashls',
         'emmet_language_server',
+        'tailwindcss',
       })
 
       require('mason-tool-installer').setup({

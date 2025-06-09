@@ -1,11 +1,10 @@
 return {
   'zk-org/zk-nvim',
-  -- enabled = false,
   cond = function()
     return vim.fn.isdirectory(vim.fn.getcwd() .. '/.zk') == 1
   end,
   config = function()
-    require('zk').setup {
+    require('zk').setup({
       picker = 'telescope',
 
       lsp = {
@@ -14,7 +13,7 @@ return {
           name = 'zk',
 
           on_attach = function(client)
-            -- Disables definition provider to use marksman instead
+            -- NOTE: disable to avoid sending another request alongside marksman
             client.server_capabilities.definitionProvider = false
           end,
         },
@@ -24,13 +23,13 @@ return {
           filetypes = { 'markdown' },
         },
       },
-    }
+    })
 
-    local config = require 'utils.zk-vault-config'()
-    local builtin = require 'telescope.builtin'
-    local actions = require 'telescope.actions'
-    local action_state = require 'telescope.actions.state'
-    local commands = require 'zk.commands'
+    local config = require('utils.zk-vault-config')
+    local builtin = require('telescope.builtin')
+    local actions = require('telescope.actions')
+    local action_state = require('telescope.actions.state')
+    local commands = require('zk.commands')
 
     if not config then
       return
@@ -42,7 +41,7 @@ return {
     local daily_title_format = config.daily_title_format
 
     local function zk_templates()
-      builtin.find_files {
+      builtin.find_files({
         follow = false,
         search_dirs = { '.zk/templates' },
 
@@ -59,7 +58,7 @@ return {
 
           return true
         end,
-      }
+      })
     end
 
     local function zk_daily_note()
@@ -70,7 +69,7 @@ return {
       if vim.fn.filereadable(path) == 1 then
         vim.cmd('edit ' .. path)
       else
-        commands.get 'ZkNew' { dir = daily_dir, title = title, group = 'daily' }
+        commands.get('ZkNew')({ dir = daily_dir, title = title, group = 'daily' })
       end
     end
 
@@ -82,7 +81,7 @@ return {
     -- This function opens a telescope list of unlinked mentions (notes) of the current buffer
     -- To run this on cmd -> 'zk unlinked-mentions NOTE_ID --quiet --format "{{path}}" --delimiter "\n"'
     local function zk_mentions()
-      local mention = vim.fn.expand '%:t'
+      local mention = vim.fn.expand('%:t')
 
       if mention == nil then
         vim.notify("There's no buffer currently open", vim.log.levels.INFO)
@@ -147,7 +146,7 @@ return {
     end
 
     local function zk_find_recursive()
-      local title = vim.fn.expand '%:t'
+      local title = vim.fn.expand('%:t')
 
       if title == nil then
         vim.notify("There's no buffer currently open", vim.log.levels.INFO)
