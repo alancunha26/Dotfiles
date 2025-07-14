@@ -183,13 +183,6 @@ return {
         -- ts_ls = {},
         --
 
-        marksman = {
-          on_attach = function(client)
-            -- Disables marksman autocompletion to use zk completion instead
-            client.server_capabilities.completionProvider = false
-          end,
-        },
-
         ltex = {
           flags = {
             debounce_text_changes = 300,
@@ -221,6 +214,13 @@ return {
             -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
             workingDirectories = { mode = 'auto' },
           },
+        },
+
+        marksman = {
+          on_attach = function(client)
+            -- Disables marksman autocompletion to use zk completion instead
+            client.server_capabilities.completionProvider = false
+          end,
         },
       }
 

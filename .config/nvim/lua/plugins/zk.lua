@@ -13,7 +13,7 @@ return {
           name = 'zk',
 
           on_attach = function(client)
-            -- NOTE: disable to avoid sending another request alongside marksman
+            -- Disables definition provider to use marksman instead
             client.server_capabilities.definitionProvider = false
           end,
         },
