@@ -1,0 +1,176 @@
+@define-color foreground #c8d3f5;
+@define-color background #222436;
+
+@define-color color0 #1b1d2b;
+@define-color color1 #ff757f;
+@define-color color2 #c3e88d;
+@define-color color3 #ffc777;
+@define-color color4 #82aaff;
+@define-color color5 #c099ff;
+@define-color color6 #86e1fc;
+@define-color color7 #828bb8;
+
+@define-color color8 #444a73;
+@define-color color9 #ff757f;
+@define-color color10 #c3e88d;
+@define-color color11 #ffc777;
+@define-color color12 #82aaff;
+@define-color color13 #c099ff;
+@define-color color14 #86e1fc;
+@define-color color15 #c8d3f5;
+
+* {
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-family: "Noto Sans", "JetBrainsMono Nerd Font Propo";
+}
+
+#window {
+  color: @foreground;
+  font-size: 14px;
+}
+
+window#waybar {
+  background-color: transparent;
+}
+
+window#waybar > box {
+  margin-bottom: 10px;
+  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.8);
+  background: alpha(@background, 0.6);
+}
+
+#workspaces {
+  margin: 0 8px;
+}
+
+#workspaces button {
+  margin: 6px 4px;
+  padding: 0px 5px;
+  border-radius: 20px;
+  font-size: 12px;
+
+  color: @color8;
+  background-color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#workspaces button.active {
+  background-color: @color4;
+}
+
+#workspaces button:hover {
+  opacity: 0.7;
+}
+
+#custom-appmenu {
+  font-size: 18px;
+  padding-left: 16px;
+  padding-right: 8px;
+  transition: all 0.15s ease-in-out;
+  color: @foreground;
+}
+
+#custom-appmenu:hover {
+  opacity: 0.7;
+}
+
+/*
+ * CENTER
+ */
+
+#systray {
+  margin: 0 8px;
+}
+
+#custom-tray-expand {
+  font-size: 18px;
+  color: @foreground;
+}
+
+#tray {
+  margin-left: 16px;
+}
+
+#tray .active,
+#tray .passive {
+  transition: all 0.15s ease-in-out;
+}
+
+#tray .active:hover,
+#tray .passive:hover {
+  opacity: 0.7;
+}
+
+#cpu {
+  margin: 0 8px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#cpu:hover {
+  opacity: 0.7;
+}
+
+#network {
+  margin: 0 8px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#network:hover {
+  opacity: 0.7;
+}
+
+#wireplumber.source {
+  margin-right: 4px;
+  margin-left: 8px;
+  color: @foreground;
+  min-width: 18px;
+  transition: all 0.15s ease-in-out;
+}
+
+#wireplumber.sink {
+  margin-left: 8px;
+  margin-right: 4px;
+  color: @foreground;
+  min-width: 18px;
+  transition: all 0.15s ease-in-out;
+}
+
+#wireplumber:hover {
+  opacity: 0.7;
+}
+
+#bluetooth {
+  margin: 0 8px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#bluetooth:hover {
+  opacity: 0.7;
+}
+
+#battery {
+  margin: 0 8px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#battery:hover {
+  opacity: 0.7;
+}
+
+#clock {
+  color: @foreground;
+  font-size: 14px;
+  transition: all 0.15s ease-in-out;
+  padding-right: 16px;
+  padding-left: 8px;
+}
+
+#clock:hover {
+  opacity: 0.7;
+}

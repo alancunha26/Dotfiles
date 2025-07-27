@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Icon=bluetooth
+Name=bluetui
+GenericName=Bluetooth Manager
+Comment=Bluetoothn Manager
+Exec=--class=bluetui -e bluetui
+Terminal=true
+

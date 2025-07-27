@@ -1,6 +1,5 @@
-install
+extras
 README.md
-kittyos-dconf
+.gitignore
 .gitconfig
 .git
-.win

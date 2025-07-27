@@ -1,0 +1,18 @@
+/**
+ *
+ * Author : Alan Cunha
+ * Github : @alancunha26
+ *
+ * Colors
+ **/
+
+* {
+    background:     #222436FF;
+    background-alt: #2f334dFF;
+    foreground:     #c8d3f5FF;
+    selected:       #2d3f76FF;
+    active:         #82aaffFF;
+    urgent:         #ff757fFF;
+    font:           "JetBrainsMono Nerd Font Propo 10";
+}
+
