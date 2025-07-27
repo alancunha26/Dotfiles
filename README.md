@@ -1,6 +1,21 @@
+![img](Extras/previews/01.png)
+
 # Welcome to my Dotfiles
 
 Hi! This is my guide to what you are expected to find when using my Dotfiles for to setup your digital environment. It supports [Arch Linux](#arch-linux-hyprland), [MacOS](#macos-aerospace) and [Windows](#windows-11).
+
+<details>
+<summary><b><code>Previews</code></b></summary>
+
+![img](Extras/previews/02.png)
+
+![img](Extras/previews/03.png)
+
+![img](Extras/previews/04.png)
+
+![img](Extras/previews/05.png)
+
+</details>
 
 ## Installation
 
@@ -336,6 +351,7 @@ TODO
 - [ ] Refactor nvim config
 - [ ] Improve mpv config
 - [ ] Rofi window switcher
+- [ ] Rofi emoji picker
 - [ ] Rofi system menu
 - [ ] Rofi calculator
 - [ ] Theme switcher
