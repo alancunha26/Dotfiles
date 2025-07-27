@@ -1,0 +1,38 @@
+# See https://github.com/hyprwm/Hyprland/discussions/8204#discussioncomment-11501768
+
+# Default apps
+export TERMINAL="kitty"
+export WALLPAPER="~/.local/assets/wallpapers/wallpaper-6.jpg"
+
+# Adds my scripts to the $PATH
+export PATH=$PATH:~/.local/bin
+
+# Theming toolkit
+# export GTK_THEME="Tokyonight-Dark-Moon"
+# export XCURSOR_THEME="BreezeX-Dark-hyprcursor"
+# export XCURSOR_SIZE=24
+export HYPRCURSOR_THEME="BreezeX-Dark-hyprcursor"
+export HYPRCURSOR_SIZE-24
+
+# Toolkit Backend Variables
+export SHELL="/usr/bin/zsh"
+export GDK_BACKEND="wayland,x11,*"
+export QT_QPA_PLATFORM="wayland;xcb"
+export SDL_VIDEODRIVER="wayland"
+export CLUTTER_BACKEND="wayland"
+
+# XDG Specifications
+export XDG_CURRENT_DESKTOP="Hyprland"
+export XDG_SESSION_TYPE="wayland"
+export XDG_SESSION_DESKTOP="Hyprland"
+
+# QT Variables
+export QT_AUTO_SCREEN_SCALE_FACTOR=1
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export QT_QPA_PLATFORMTHEME="qt5ct"
+
+# SLURP Config
+export SLURP_ARGS="-d -b -B F050F022 -b 10101022 -c ff00ff"
+
+# Enable to debug waybar
+# export GTK_DEBUG=interactive waybar

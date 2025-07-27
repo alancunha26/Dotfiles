@@ -1,37 +1,52 @@
-My dotfiles will install a fully-featured tiling window manager environment on any Arch Linux based system, with custom theming, gaming on linux, completely keyboard-centric functionality (vim-motions) and a lot more.
+# Welcome to my Dotfiles
 
--> [How to dual boot arch linux and Windows 10/11 using archinstall script (UPDATED)!!!!!!](https://www.youtube.com/watch?v=Np6k3Pilz-I)
+Hi! This is my guide to what you are expected to find when using my Dotfiles for to setup your digital environment. It supports [Arch Linux](#arch-linux-hyprland), [MacOS](#macos-aerospace) and [Windows](#windows-11).
 
-## Manual Installing Dotfiles
+## Installation
 
-First you need to install ArchLinux with the `archinstall` script using the **Gnome** profile.
+Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
 
-### Install Yay and Git
+### Arch Linux (Hyprland)
 
-To configure and install the other packages and tools, you will have to install yay as the AUR helper and git for version control.
+> [!tip]
+> For a reference list of all packages used, you can [check below](#arch-linux-packages).
+
+This is my primary environment and where most of my daily usage happens, so it's much more mature when compared to my dotfiles for other environments.
+
+It's built on top of the [Hyprland](https://hypr.land/) wayland compositor, with huge inspiration from a lot of different rices throughout the internet, to see which inspirations are these, check the "[Inspirations](#inspirations)" section.
+
+#### Install Packages
+
+The first step is to install Yay and Git.
 
 ```shell
 sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si
 ```
 
-### Install Base Packages
-
-For the system to work correctly it's important to have all the following packages installed:
+Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy neovim luarocks ripgrep neofetch zsh starship xdg-ninja stow file-roller cliphist wl-clipboard obs-studio obsidian-bin zed pacseek dconf-editor ttf-fira-code ttf-firacode-nerd ttf-ia-writer otf-font-awesome ttf-jetbrains-mono-nerd ttf-jetbrains-mono gnome-shell-extension-caffeine gnome-shell-extension-blur-my-shell gnome-shell-extension-just-perfection-desktop gnome-shell-extension-tilingshell gnome-shell-extensions-useless-gaps gst-libav qt5-wayland qt6-wayland kitty imagemagick gnome-shell-extension-pop-shell less fzf brave-bin nss mkcert xca docker-desktop
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor nm-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc murrine-engine gnome-themes-extra
 ```
 
-#### Install the WSL version (Optional)
+Optionally you can also install the **Extra Packages**.
 
-> ![warning]
->
-> If you are looking for Windows native support, check the [.win/README.md](./.win/README.md) file and follow its instructions.
+```shell
+yay -Sy obs-studio obsidian-bin libreoffice-fresh zoom
+```
+
+Then you can remove all unused packages currently installed.
+
+```shell
+sudo pacman -Rsn $(pacman -Qdtq)
+```
+
+##### Install the WSL version (Optional)
 
 Alternatively you can install the WSL version:
 
 ```shell
-yay -Sy neovim luarocks ripgrep neofetch zsh starship xdg-ninja stow pacseek less fzf zk
+yay -Sy neovim luarocks ripgrep fastfetch zsh starship xdg-ninja stow pacseek less fzf zk btop lazydocker lazygit
 ```
 
 Install the clipboard manager for WSL integration on windows:
@@ -40,13 +55,7 @@ Install the clipboard manager for WSL integration on windows:
 winget install --id=equalsraf.win32yank  -e
 ```
 
-### Install Homebrew
-
-```shell
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-### Install Oh-My-Zsh!
+#### Install Oh-My-Zsh!
 
 To proceed run the following command
 
@@ -68,89 +77,7 @@ git clone https://github.com/jeffreytse/zsh-vi-mode \
   $ZSH_CUSTOM/plugins/zsh-vi-mode
 ```
 
-### Remove Unused Packages (Optional)
-
-When installing Gnome from the **archinstall** profile, a lot of unused packages will be installed, so to remove clutter you can remove these packages.
-
-```shell
-yay -R gnome-console epiphany vim
-```
-
-```shell
-sudo pacman -Rsn $(pacman -Qdtq)
-```
-
-### Install short-unique-id package
-
-This is used to generate unique short ids in my [note taking system](https://github.com/alancunha26/Notes).
-
-```shell
-npm install --global short-unique-id
-```
-
-### Grammar support with LSP
-
-The [`ltex` LSP server](https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ltex) supports language models that can be used to suggest fixes for more nuanced grammar issues. These models are rather large, so I opted to exclude packaging it directly. While the model is missing, the ltex lsp server still works, but to get more capabilities you can download [ngrams](https://dev.languagetool.org/finding-errors-using-n-gram-data.html) and unzip the model at `~/.ngrams`.
-
-> Unzip it and put it in its own directory named en, de, fr, or es, depending on the language. The path you need to set in the next step is the directory that the en etc. directory is in, not that directory itself.
-
-So, in my case I have `~/.ngrams/en`.
-
-> [!warning]
->
-> If the LSP doesn't work, download the latest release of ltex and copy the `jdk` binaries into `~/.local/share/nvim/mason/packages/ltex-ls`.
-
-### Install NVIDIA Support (Optional)
-
-Do this ONLY if you need Nvidia support (do this first)
-
-```shell
-yay -S linux-headers nvidia-dkms qt5-wayland qt5ct libva libva-nvidia-driver-git
-```
-
-/etc/mkinitcpio.conf
-
-```shell
-MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
-```
-
-Generate a new initramfs image
-
-```shell
-sudo mkinitcpio --config /etc/mkinitcpio.conf --generate /boot/initramfs-custom.img
-```
-
-Create NVIDIA Configuration
-
-```shell
-echo "options nvidia-drm modeset=1" | sudo tee /etc/modprobe.d/nvidia.conf
-```
-
-Verify
-
-```shell
-cat /etc/modprobe.d/nvidia.conf
-```
-
-Should return:
-
-```shell
-options nvidia-drm modeset=1
-```
-
-### Install ASDF, NodeJS, Yarn, pnpm and Rust
-
-Download ASDF from the original repository:
-
-```shell
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
-```
-
-Add the following to `~/.zshrc`:
-
-```shell
-. "$HOME/.asdf/asdf.sh"
-```
+#### Install NodeJS, Yarn, pnpm and Rust
 
 Add NodeJS to the ASDF plugins list:
 
@@ -167,7 +94,7 @@ asdf install nodejs latest
 Set the latest version of node globally:
 
 ```shell
-asdf global nodejs latest
+asdf set nodejs latest --home
 ```
 
 Then, install yarn:
@@ -197,113 +124,210 @@ asdf install rust stable
 Set the stable version of rust globally:
 
 ```shell
-asdf global nodejs stable
+asdf set rust stable --home
 ```
 
-### Install Gaming Packages (Optional)
-
-Check the main [source](https://www.reddit.com/r/linux_gaming/comments/knu89x/how_to_set_up_arch_linux_for_gaming_nvidia_intel/)
-
-Enable `multilib` in `/etc/pacman.conf`.
-
-```toml
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-```
-
-Upgrade your system:
+Then install short-unique-id with npm. This is used to generate unique short ids in my note taking system.
 
 ```shell
-sudo pacman -Syu
+npm install --global short-unique-id
 ```
 
-#### GPU Drivers
-
-You need to install the following gpu drivers depending on which gpu you are using.
-
-##### AMD
+Add java to the ASDF plugins list:
 
 ```shell
-yay -Sy lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader corectl
+asdf plugin add rust
 ```
 
-##### NVIDIA
+Install the correct java version:
 
 ```shell
-yay -Sy nvidia-dkms nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader
+asdf install java latest:adoptopenjdk-11
 ```
 
-##### Intel
+Set the java version globally:
 
 ```shell
-yay -Sy lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader
+asdf set java latest:adoptopenjdk-11 --home
 ```
 
-#### Wine Packages
+#### Enable required services under systemd
+
+Waybar:
 
 ```shell
-yay -Sy wine-staging giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap gnutls lib32-gnutls \
-mpg123 lib32-mpg123 openal lib32-openal v4l-utils lib32-v4l-utils libpulse lib32-libpulse libgpg-error \
-lib32-libgpg-error alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib libjpeg-turbo lib32-libjpeg-turbo \
-sqlite lib32-sqlite libxcomposite lib32-libxcomposite libxinerama lib32-libgcrypt libgcrypt lib32-libxinerama \
-ncurses lib32-ncurses ocl-icd lib32-ocl-icd libxslt lib32-libxslt libva lib32-libva gtk3 \
-lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader
+systemctl --user enable --now waybar.service
 ```
 
-#### Install Steam and Enable Proton
-
-Open up a Terminal, and run the following command.
+Hyprerland Poolkit Agent:
 
 ```shell
-yay -Sy steam
+systemctl --user enable --now hyprpolkitagent.service
 ```
 
-Once installed, run Steam, install any updates, and sign into your Steam account.
-
-Enable Proton to work with all your Steam library by navigating to _Steam / Steam Play / Advanced_, and ticking the Enable Steam Play for all other titles.
-
-Reboot Steam once done.
-
-#### Install Lutris
-
-Open up a Terminal, and run the following command.
+Hyprpaper:
 
 ```shell
-yay -Sy lutris
+systemctl --user enable --now hyprpaper.service
 ```
 
-### Download and Install the dotfiles
+Hypridle:
+
+```shell
+systemctl --user enable --now hypridle.service
+```
+
+Bluetooth:
+
+```shell
+sudo systemctl enable --now bluetooth.service
+```
+
+Ly Display Manager:
+
+```shell
+sudo systemctl enable --now ly.service
+```
+
+#### Download and Install the dotfiles
 
 First you need to download the dotifles from the git repository:
 
 ```shell
-git clone git@github.com:alancunha26/Dotfiles.git ~/Dotfiles
+git clone git@github.com:alancunha26/Dotfiles.git ~/.dotfiles
 ```
 
-Then you have to run the following command from the `~/Dotfiles` directory to _symlink_ these dotfiles into your _/home_ directory.
+Then you have to run the following command.
 
 ```shell
-stow .
+tuckr set \* -f
 ```
 
-Now reset your desktop settings to the factory defaults with command:
+Restart and you're good to go.
 
-```shell
-dconf reset -f /
-```
+#### Arch Linux Packages
 
-To restore the System settings, simply do:
+_Core Packages_
 
-```shell
-dconf load / < kittyos-dconf
-```
+| Package                     | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| pipewire                    | Audio/video server                              |
+| pipewire-alsa               | Pipewire alsa client                            |
+| pipewire-audio              | Pipewire audio client                           |
+| pipewire-jack               | Pipewire jack client                            |
+| pipewire-pulse              | Pipewire pulseaudio client                      |
+| gst-plugin-pipewire         | Pipewire gstreamer client                       |
+| wireplumber                 | Pipewire session manager                        |
+| networkmanager              | Network manager                                 |
+| nm-connection-editor        | GUI Network manager editor                      |
+| nm-applet                   | GUI Network manager applet                      |
+| bluez                       | Bluetooth protocol stack                        |
+| bluez-utils                 | Bluetooth utility cli                           |
+| bluetui                     | Bluetooth manager tui                           |
+| brightnessctl               | Screen brightness control                       |
+| playerctl                   | Media controls                                  |
+| udiskie                     | Manage removable media                          |
+| uwsm                        | Universal wayland session manager               |
+| hyprland                    | Wayland compositor based on wlroots-based       |
+| hyprpaper                   | Wallpapers                                      |
+| hyprlock                    | Lock screen                                     |
+| hyprpicker                  | Color picker                                    |
+| hypridle                    | Idle manager                                    |
+| hyprpolkitagent             | Authentication agent                            |
+| xdg-desktop-portal-hyprland | xdg desktop portal for hyprland                 |
+| xdg-desktop-portal-gtk      | File picker and dbus integration                |
+| xwaylandvideobridge         | Screen sharing of XWayland apps                 |
+| libnotify                   | For notifications                               |
+| dunst                       | Notification daemon                             |
+| rofi                        | Application launcher                            |
+| waybar                      | System bar                                      |
+| grim                        | Screenshot tool                                 |
+| slurp                       | Region selector for screenshot/screenshare      |
+| cliphist                    | Clipboard manager                               |
+| wl-clipboard                | Clipboard utilities for wayland                 |
+| wl-clip-persist             | Persist clipboard after programs close          |
+| ly                          | TUI display manager                             |
+| xdg-user-dirs               | Manage user directories                         |
+| zsh                         | Shell                                           |
+| starship                    | Shell prompt                                    |
+| btop                        | Process viewer                                  |
+| fastfetch                   | System information tool                         |
+| ffmpeg                      | Record, convert and stream audio and video      |
+| imagemagick                 | Image processing                                |
+| ripgrep                     | Regex directory searcher                        |
+| fzf                         | CLI fuzzy finder                                |
+| less                        | Terminal based program for viewing text         |
+| unzip                       | Zip extractor                                   |
+| jq                          | JSON processor                                  |
+| luarocks                    | Lua package manager                             |
+| pacman-contrib              | Scripts and tools for pacman systems            |
+| wget                        | Network utility to retrieve files from the web  |
+| tuckr-git                   | Dotfiles manager                                |
+| qt5-wayland                 | Wayland support in qt5                          |
+| qt6-wayland                 | Wayland support in qt6                          |
+| kvantum                     | Svg based qt6 theme engine                      |
+| kvantum-qt5                 | Svg based qt5 theme engine                      |
+| qt5ct-kde                   | qt5 configuration tool                          |
+| qt6ct-kde                   | qt6 configuration tool                          |
+| gtk3                        | Gnome 3                                         |
+| gtk4                        | Gnome 4                                         |
+| nwg-look                    | GTK configuration tool                          |
+| brave-bin                   | Web browser                                     |
+| kitty                       | Terminal emulator                               |
+| nautilus                    | GUI file manager                                |
+| ffmpegthumbnailer           | Video thumbnails for nautilus                   |
+| ffmpeg-audio-thumbnailer    | Audio thumbnails for nautilus                   |
+| tumbler                     | Thumbnails for evey file manager (not nautilus) |
+| neovim                      | Terminal text editor                            |
+| mpv                         | Video player                                    |
+| nsxiv                       | Simple image viewer                             |
+| zathura                     | Simple document viewer                          |
+| zathura-pdf-mupdf           | PDF and Epub support for zathura                |
+| lazygit                     | Simple terminal UI for git commands             |
+| lazydocker                  | TUI docker manager                              |
+| zk                          | Zettelkasten note taking LSP                    |
+| sassc                       | Deps for GTK Theme                              |
+| murrine-engine              | Deps for GTK Theme                              |
+| gnome-themes-extra          | Deps for GTK Theme                              |
+| noto-fonts-emoji            | -                                               |
+| noto-fonts                  | -                                               |
+| noto-fonts-cjk              | -                                               |
+| noto-fonts-extra            | -                                               |
+| ttf-ia-writer               | -                                               |
+| ttf-jetbrains-mono-nerd     | -                                               |
+| ttf-jetbrains-mono          | -                                               |
+| ttf-fira-sans               | -                                               |
+| ttf-fira-code               | -                                               |
+| ttf-firacode-nerd           | -                                               |
 
-## Fixes
+_Extra Packages (Optional)_
+
+| Package           | Description                      |
+| ----------------- | -------------------------------- |
+| obs-studio        | Live streaming and recording     |
+| obsidian-bin      | Markdown note taking app         |
+| libreoffice-fresh | Open-source office suite         |
+| zoom              | Proprietary video meeting serive |
+
+#### Common Fixes
 
 Some stuff may not work when fresh installing, below are some common fixes for common problems.
 
-### Fixing "Camera not found" on Gnome 46
+##### Fixing "Camera not found" on Gnome 46
 
 ```shell
 systemctl --user restart pipewire
 ```
+
+### MacOS (Aerospace)
+
+TODO
+
+### Windows 11
+
+TODO
+
+## Inspirations
+
+- [HyDE](https://github.com/HyDE-Project/HyDE/)
+- [ML4W](https://www.ml4w.com/)
