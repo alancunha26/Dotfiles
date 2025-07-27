@@ -7,6 +7,8 @@ Hi! This is my guide to what you are expected to find when using my Dotfiles for
 <details>
 <summary><b><code>Previews</code></b></summary>
 
+<br />
+
 ![img](Extras/previews/02.png)
 
 ![img](Extras/previews/03.png)
