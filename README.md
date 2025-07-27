@@ -186,7 +186,7 @@ git clone git@github.com:alancunha26/Dotfiles.git ~/.dotfiles
 Then you have to run the following command.
 
 ```shell
-tuckr add \*
+tuckr set \* -f
 ```
 
 Restart and you're good to go.
