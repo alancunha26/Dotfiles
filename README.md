@@ -10,9 +10,6 @@ Currently, only manual installation is supported, but in the near future I hope 
 
 ### Arch Linux (Hyprland)
 
-> [!tip]
-> For a reference list of all packages used, you can [check below](#arch-linux-packages).
-
 <details>
 <summary><b><code>Previews</code></b></summary>
 
@@ -27,6 +24,9 @@ Currently, only manual installation is supported, but in the near future I hope 
 ![img](Extras/previews/05.png)
 
 </details>
+
+> [!tip]
+> For a reference list of all packages used, you can [check below](#arch-linux-packages).
 
 This is my primary environment and where most of my daily usage happens, so it's much more mature when compared to my dotfiles for other environments.
 
