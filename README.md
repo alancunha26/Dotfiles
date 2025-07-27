@@ -327,6 +327,21 @@ TODO
 
 TODO
 
+## What's Next?
+
+- [ ] Improve `~/.local/share/applications/` organization
+- [ ] TUI File manager (lf or ranger?)
+- [ ] Email client (muttwizard)
+- [ ] Music player (termusic)
+- [ ] Refactor nvim config
+- [ ] Improve mpv config
+- [ ] Rofi window switcher
+- [ ] Rofi system menu
+- [ ] Rofi calculator
+- [ ] Theme switcher
+- [ ] Install script
+- [ ] Lydm theme
+
 ## Inspirations
 
 - [HyDE](https://github.com/HyDE-Project/HyDE/)
