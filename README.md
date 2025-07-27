@@ -4,6 +4,15 @@
 
 Hi! This is my guide to what you are expected to find when using my Dotfiles for to setup your digital environment. It supports [Arch Linux](#arch-linux-hyprland), [MacOS](#macos-aerospace) and [Windows](#windows-11).
 
+## Installation
+
+Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
+
+### Arch Linux (Hyprland)
+
+> [!tip]
+> For a reference list of all packages used, you can [check below](#arch-linux-packages).
+
 <details>
 <summary><b><code>Previews</code></b></summary>
 
@@ -18,15 +27,6 @@ Hi! This is my guide to what you are expected to find when using my Dotfiles for
 ![img](Extras/previews/05.png)
 
 </details>
-
-## Installation
-
-Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
-
-### Arch Linux (Hyprland)
-
-> [!tip]
-> For a reference list of all packages used, you can [check below](#arch-linux-packages).
 
 This is my primary environment and where most of my daily usage happens, so it's much more mature when compared to my dotfiles for other environments.
 
@@ -325,16 +325,6 @@ _Extra Packages (Optional)_
 | obsidian-bin      | Markdown note taking app         |
 | libreoffice-fresh | Open-source office suite         |
 | zoom              | Proprietary video meeting serive |
-
-#### Common Fixes
-
-Some stuff may not work when fresh installing, below are some common fixes for common problems.
-
-##### Fixing "Camera not found" on Gnome 46
-
-```shell
-systemctl --user restart pipewire
-```
 
 ### MacOS (Aerospace)
 
