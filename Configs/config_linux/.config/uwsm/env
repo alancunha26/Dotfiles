@@ -1,6 +1,7 @@
 # See https://github.com/hyprwm/Hyprland/discussions/8204#discussioncomment-11501768
 
 # Default apps
+export EDITOR="nvim"
 export TERMINAL="kitty"
 export WALLPAPER="~/.local/assets/wallpapers/wallpaper-6.jpg"
 
