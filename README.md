@@ -215,7 +215,12 @@ Then you have to run the following command.
 tuckr set \* -f
 ```
 
-Restart and you're good to go.
+Whenever you create a new file you must run `tuckr` again and clear the broken
+symlinks:
+
+```shell
+tuckr set \* & find -xtype l -delete
+```
 
 #### Arch Linux Packages
 
