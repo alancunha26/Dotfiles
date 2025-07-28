@@ -14,6 +14,8 @@ Hi! This is my guide to what you are expected to find when using my Dotfiles for
 
 ![img](Extras/previews/05.png)
 
+![img](Extras/previews/06.png)
+
 ## Installation
 
 Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
