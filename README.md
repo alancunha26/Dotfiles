@@ -1,19 +1,10 @@
-![img](Extras/previews/01.png)
-
 # Welcome to my Dotfiles
 
 Hi! This is my guide to what you are expected to find when using my Dotfiles for to setup your digital environment. It supports [Arch Linux](#arch-linux-hyprland), [MacOS](#macos-aerospace) and [Windows](#windows-11).
 
-## Installation
+## Gallery
 
-Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
-
-### Arch Linux (Hyprland)
-
-<details>
-<summary><b><code>Previews</code></b></summary>
-
-<br />
+![img](Extras/previews/01.png)
 
 ![img](Extras/previews/02.png)
 
@@ -23,7 +14,11 @@ Currently, only manual installation is supported, but in the near future I hope 
 
 ![img](Extras/previews/05.png)
 
-</details>
+## Installation
+
+Currently, only manual installation is supported, but in the near future I hope to write an automatic installation script for each platform supported.
+
+### Arch Linux (Hyprland)
 
 > [!tip]
 > For a reference list of all packages used, you can [check below](#arch-linux-packages).
