@@ -42,7 +42,7 @@ return {
     dependencies = { 'luarocks.nvim' },
     cond = function()
       -- Disables plugin when on WSL
-      return not vim.g.have_wsl_session and not vim.fn.has('win32')
+      return not vim.g.have_wsl_session and vim.fn.has('win32') == 0
     end,
     config = function()
       require('image').setup({
