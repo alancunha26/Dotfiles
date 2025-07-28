@@ -9,6 +9,11 @@
 
 @theme "fullscreen"
 
+/*****----- Configuration -----*****/
+configuration {
+    show-icons:                 true;
+}
+
 listview {
   columns:                      1;
 }
