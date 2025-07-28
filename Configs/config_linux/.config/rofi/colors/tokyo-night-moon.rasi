@@ -13,6 +13,5 @@
     selected:       #2d3f76FF;
     active:         #82aaffFF;
     urgent:         #ff757fFF;
-    font:           "JetBrainsMono Nerd Font Propo 10";
 }
 

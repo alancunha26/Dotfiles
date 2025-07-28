@@ -13,7 +13,7 @@ configuration {
 }
 
 /*****----- Global Properties -----*****/
-@import                          "themes/tokyo-night-moon.rasi"
+@import                          "colors/tokyo-night-moon.rasi"
 
 /*****----- Main Window -----*****/
 window {

@@ -29,8 +29,8 @@
   },
   "custom/appmenu": {
     "format": "󰣇",
-    "on-click": "sleep 0.2;pkill rofi || rofi -show drun -replace",
-    "on-click-right": "sleep 0.2;pkill rofi || rofi -show drun -replace",
+    "on-click": "sleep 0.2;pkill rofi || $HOME/.config/rofi/launcher.sh",
+    "on-click-right": "sleep 0.2;pkill rofi || $HOME/.config/rofi/launcher.sh",
     "tooltip-format": "Left click: Open application launcher\nRight click: Open system menu"
   },
   // ======================
