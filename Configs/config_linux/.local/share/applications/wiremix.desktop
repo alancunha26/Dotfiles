@@ -1,9 +1,10 @@
 [Desktop Entry]
-Type=Application
-Icon=audio-card
 Name=Wiremix
 GenericName=Audio Settings
-Comment=Using Wiremix
 Exec=--class=wiremix -e wiremix
-Categories=Audio;
 Terminal=true
+Type=Application
+Keywords=Audio;Settings;
+Icon=audio-card
+Categories=Audio;Settings;
+StartupWMClass=wiremix

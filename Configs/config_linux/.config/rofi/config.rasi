@@ -47,15 +47,15 @@ configuration {
     run-shell-command: "{terminal} -e {cmd}";
 
     /*---------- Fallback Icon ----------*/
-    run,drun {
-    fallback-icon: "application-x-addon";
+    run,drun,window {
+      fallback-icon: "application-x-addon";
     }
 
     /*---------- Window switcher settings ----------*/
-    window-match-fields: "title,class,role,name,desktop";
-    window-command: "wmctrl -i -R {window}";
-    window-format: "{w} - {c} - {t:0}";
-    window-thumbnail: false;
+    // window-match-fields: "title,class,role,name,desktop";
+    // window-command: "wmctrl -i -R {window}";
+    // window-format: "{w} - {c} - {t:0}";
+    // window-thumbnail: false;
 
     /*---------- History and Sorting ----------*/
     disable-history: false;

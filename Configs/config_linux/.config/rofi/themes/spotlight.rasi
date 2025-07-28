@@ -6,14 +6,6 @@
 
 /*****----- Main Styles -----*****/
 * {
-    bg0:    #242424E6;
-    bg1:    #7E7E7E80;
-    bg2:    #0860f2E6;
-
-    fg0:    #DEDEDE;
-    fg1:    red;
-    fg2:    blue;
-
     background-color:   transparent;
     text-color:         @foreground;
 
@@ -80,15 +72,15 @@ element {
 }
 
 element normal active {
-    text-color: @background-alt;
+    text-color: @active;
 }
 
 element alternate active {
-    text-color: @background-alt;
+    text-color: @active;
 }
 
 element selected normal, element selected active {
-    // background-color:   @background-alt;
+    background-color:   black / 40%;
     text-color:         @active;
 }
 

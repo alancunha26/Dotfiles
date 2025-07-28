@@ -116,11 +116,11 @@ element {
     orientation:                 vertical;
     cursor:                      pointer;
 }
-element normal.normal {
+element normal {
     background-color:            transparent;
     text-color:                  @foreground;
 }
-element selected.normal {
+element selected {
     background-color:            white / 5%;
     text-color:                  @foreground;
 }
