@@ -1,7 +1,6 @@
 /* MACOS SPOTLIGHT LIKE DARK THEME FOR ROFI  */
 /* Author: Newman Sanchez (https://github.com/newmanls) */
 
-
 /*****----- Global Properties -----*****/
 @import "../colors/tokyo-night-moon.rasi"
 

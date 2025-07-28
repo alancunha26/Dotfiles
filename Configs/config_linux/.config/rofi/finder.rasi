@@ -1,0 +1,22 @@
+/**
+ *
+ * Author : Alan Cunha
+ * Github : @alancunha26
+ * 
+ * Rofi Theme File
+ * Rofi Version: 1.7.9
+ **/
+
+@theme "fullscreen"
+
+listview {
+  columns:                      1;
+}
+
+element {
+  orientation:                  horizontal;
+}
+
+element-text {
+    horizontal-align:            0;
+}

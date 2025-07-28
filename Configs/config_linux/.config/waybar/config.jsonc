@@ -42,9 +42,6 @@
   "hyprland/window": {
     "format": "{title}",
     "max-length": 80,
-    "rewrite": {
-      "rofi - ": "Apps"
-    }
   },
   // =====================
   // === MODULES RIGHT ===
