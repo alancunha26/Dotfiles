@@ -1,3 +1,8 @@
 .local/share/nvim
 .local/share/pnpm
 .local/state
+
+# GTK
+Configs/config_linux/.config/gtk-4.0/assets
+Configs/config_linux/.config/gtk-4.0/gtk-dark.css
+Configs/config_linux/.config/gtk-4.0/gtk.css
