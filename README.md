@@ -40,7 +40,7 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor nm-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc murrine-engine gnome-themes-extra yazi 7zip poppler zoxide resvg
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor nm-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc murrine-engine gnome-themes-extra yazi 7zip poppler zoxide resvg ntfs-3g
 ```
 
 Optionally you can also install the **Extra Packages**.
@@ -224,6 +224,16 @@ symlinks:
 tuckr set \* & find -xtype l -delete
 ```
 
+#### Common Fixes
+
+To fix a ntfs drive just you can try to run:
+
+-> Check [here](https://wiki.archlinux.org/title/NTFS#Unable_to_mount_with_ntfs3_with_partition_marked_dirty)
+
+```shell
+sudo ntfsfix -d PATH_TO_VOLUME
+```
+
 #### Arch Linux Packages
 
 _Core Packages_
@@ -314,6 +324,7 @@ _Core Packages_
 | poppler                     | Pdf preview for yazi                            |
 | zoxide                      | Historical directories navigation for yazi      |
 | resvg                       | Svg preview yazi                                |
+| ntfs-3g                     | NTFS filesystem driver and utilities            |
 | noto-fonts-emoji            | -                                               |
 | noto-fonts                  | -                                               |
 | noto-fonts-cjk              | -                                               |
@@ -327,12 +338,14 @@ _Core Packages_
 
 _Extra Packages (Optional)_
 
-| Package           | Description                         |
-| ----------------- | ----------------------------------- |
-| obs-studio        | Live streaming and recording        |
-| obsidian-bin      | Markdown note taking app            |
-| libreoffice-fresh | Open-source office suite            |
-| flatpak           | Run sandboxed applications on Linux |
+| Package            | Description                         |
+| ------------------ | ----------------------------------- |
+| obs-studio         | Live streaming and recording        |
+| obsidian-bin       | Markdown note taking app            |
+| libreoffice-fresh  | Open-source office suite            |
+| flatpak            | Run sandboxed applications on Linux |
+| qbittorrent        | Trusted torrent client              |
+| proton-vpn-gtk-app | Proton VPN                          |
 
 ### MacOS (Aerospace)
 
@@ -357,6 +370,7 @@ TODO
 - [ ] Theme switcher
 - [ ] Install script
 - [ ] Lydm theme
+- [ ] ProtonVPN
 
 ## Inspirations
 
