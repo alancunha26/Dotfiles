@@ -28,7 +28,10 @@ return {
         'json',
         'toml',
         'gdscript',
-        'godot_resource'
+        'godot_resource',
+        'elixir',
+        'eex',
+        'heex',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -42,7 +45,10 @@ return {
           'markdown',
         },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = {
+        enable = true,
+        disable = { 'ruby' },
+      },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:

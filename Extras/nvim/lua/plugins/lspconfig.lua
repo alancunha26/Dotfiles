@@ -248,6 +248,7 @@ return {
         'bashls',
         'emmet_language_server',
         'tailwindcss',
+        'elixirls',
       })
 
       require('mason-tool-installer').setup({

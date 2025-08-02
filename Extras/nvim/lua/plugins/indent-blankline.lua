@@ -5,7 +5,7 @@ return {
     -- See `:help ibl`
     main = 'ibl',
     opts = {
-      exclude = { filetypes = { 'dashboard' } },
+      scope = { enabled = true },
     },
   },
 }

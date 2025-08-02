@@ -24,6 +24,10 @@ return {
             { 'cn\\(([^)]*)\\)', "(?:'|\"|`)([^']*)(?:'|\"|`)" },
           },
         },
+        includeLanguages = {
+          elixir = 'phoenix-heex',
+          heex = 'phoenix-heex',
+        },
       },
     },
   },

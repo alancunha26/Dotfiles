@@ -10,7 +10,7 @@
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  'nmac427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
 
   -- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
   --
