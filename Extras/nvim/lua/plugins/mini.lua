@@ -1,46 +1,181 @@
+-- Shared mini.nvim version
+local version = '*'
+
 return {
-  { -- Collection of various small independent plugins/modules
-    'echasnovski/mini.nvim',
+  -- [[ Text editing ]]
+  {
+    'echasnovski/mini.ai',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.move',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.pairs',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.surround',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.splitjoin',
+    version = version,
+    opts = { n_lines = 500 },
+  },
+  {
+    'echasnovski/mini.operators',
+    version = version,
+  },
+  {
+    'echasnovski/mini.snippets',
+    event = 'InsertEnter',
+    dependencies = 'rafamadriz/friendly-snippets',
+    opts = function(_, opts)
+      local mini_snippets = require('mini.snippets')
+      local config_path = vim.fn.stdpath('config')
+
+      opts.snippets = {
+        mini_snippets.gen_loader.from_file(config_path .. '/snippets/global.json'),
+        mini_snippets.gen_loader.from_lang(),
+      }
+
+      opts.expand = {
+        select = function(snippets, insert)
+          ---@diagnostic disable-next-line: undefined-global
+          local select = expand_select_override or MiniSnippets.default_select
+          select(snippets, insert)
+        end,
+      }
+
+      opts.mappings = {
+        expand = '<C-j>',
+        jump_next = '<C-l>',
+        jump_prev = '<C-h>',
+        stop = '<Esc>',
+      }
+
+      return opts
+    end,
+  },
+
+  -- [[ Appearance ]]
+  {
+    'echasnovski/mini.icons',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.trailspace',
+    event = 'BufReadPost',
+    version = version,
+    config = true,
+    keys = {
+      { '<leader>gt', '<cmd>lua MiniTrailspace.trim()<cr>', desc = 'Trim trailing whitespace' },
+    },
+  },
+  {
+    'echasnovski/mini.bracketed',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini.hipatterns',
+    version = version,
     config = function()
-      -- Better Around/Inside textobjects
-      --
-      -- Examples:
-      --  - va)  - [V]isually select [A]round [)]paren
-      --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
-      --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup({ n_lines = 500 })
+      local hipatterns = require('mini.hipatterns')
+      -- local hipatterns_extras = require('modules.mini.hipatterns')
 
-      -- Add/delete/replace surroundings (brackets, quotes, etc.)
-      --
-      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      -- - sd'   - [S]urround [D]elete [']quotes
-      -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      hipatterns.setup({
+        highlighters = {
+          fixme = { pattern = '%f[%w]()FIXME()%f[%W]', group = 'MiniHipatternsFixme' },
+          hack = { pattern = '%f[%w]()HACK()%f[%W]', group = 'MiniHipatternsHack' },
+          todo = { pattern = '%f[%w]()TODO()%f[%W]', group = 'MiniHipatternsTodo' },
+          note = { pattern = '%f[%w]()NOTE()%f[%W]', group = 'MiniHipatternsNote' },
 
-      -- Add pairs support
-      require('mini.pairs').setup()
+          -- hex_color = hipatterns.gen_highlighter.hex_color(),
+          -- hex_color_short = hipatterns_extras.hex_color_short(),
+          -- hsl_color = hipatterns_extras.hsl_color(),
+          -- rgb_color = hipatterns_extras.rgb_color(),
+          -- rgba_color = hipatterns_extras.rgba_color(),
+        },
+      })
+    end,
+  },
 
-      -- Brackets navigation
-      require('mini.bracketed').setup()
-
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
+  -- [[ Workflow ]]
+  {
+    'echasnovski/mini.jump',
+    version = version,
+    config = true,
+  },
+  {
+    'echasnovski/mini-git',
+    version = version,
+  },
+  {
+    'echasnovski/mini.diff',
+    version = version,
+    opts = {
+      view = {
+        style = 'sign',
+        -- signs = { add = '+', change = '~', delete = '_' },
+        signs = { add = '┃', change = '┃', delete = '_' },
+        priority = 199,
+      },
+    },
+  },
+  {
+    'echasnovski/mini.files',
+    version = version,
+    lazy = false,
+    opts = {
+      options = {
+        permanent_delete = false,
+        use_as_default_explorer = true,
+      },
+    },
+    config = function(_, opts)
+      require('mini.files').setup(opts)
+      require('modules.mini/files-git')
+    end,
+    keys = {
+      {
+        '<leader>ee',
+        function()
+          local buf_name = vim.api.nvim_buf_get_name(0)
+          local path = vim.fn.filereadable(buf_name) == 1 and buf_name or vim.fn.getcwd()
+          MiniFiles.open(path)
+          MiniFiles.reveal_cwd()
+        end,
+        desc = 'File explorer',
+      },
+      {
+        '<leader>eE',
+        function()
+          MiniFiles.open(vim.uv.cwd(), true)
+        end,
+        desc = 'File explorer (cwd)',
+      },
+    },
+  },
+  {
+    'echasnovski/mini.statusline',
+    version = version,
+    opts = { use_icons = vim.g.have_nerd_font },
+    config = function(_, opts)
       local statusline = require('mini.statusline')
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup({ use_icons = vim.g.have_nerd_font })
+      statusline.setup(opts)
 
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
         return '%2l:%-2v'
       end
-
-      -- ... and there is more!
-      --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
 }
--- vim: ts=2 sts=2 sw=2 et

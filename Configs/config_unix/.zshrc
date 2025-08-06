@@ -27,7 +27,7 @@ case ":$PATH:" in
 esac
 
 # Aliases
-alias nnvim="NVIM_APPNAME=nvim-new nvim"
+# alias nnvim="NVIM_APPNAME=nvim-new nvim"
 
 # Run fastfetch
 fastfetch

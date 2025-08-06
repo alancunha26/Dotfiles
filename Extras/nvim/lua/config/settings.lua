@@ -22,6 +22,7 @@ vim.g.loaded_netrw = 1
 
 -- [[ Set Options ]]
 -- See `:help vim.o`
+-- vim.opt.winborder = 'rounded'
 
 -- Make line numbers default
 vim.opt.number = true
@@ -46,7 +47,7 @@ vim.opt.linebreak = true
 vim.opt.breakindent = true
 
 -- Save undo history
-vim.opt.undofile = true
+vim.opt.undofile = false
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
@@ -92,18 +93,5 @@ vim.o.confirm = true
 vim.opt.spelllang = 'en_us,pt_br'
 vim.opt.spell = false
 
--- When text reaches this limit, it automatically wraps to the next line.
--- This WILL NOT auto wrap existing lines, or if you paste a long line into a
--- file it will not wrap it as well
-vim.api.nvim_create_autocmd('BufWinEnter', {
-  pattern = { '*.md' },
-  callback = function()
-    vim.opt.wrap = false
-    vim.opt.textwidth = 80
-    vim.opt.tabstop = 2
-    vim.opt.shiftwidth = 2
-    vim.opt.softtabstop = 2
-    vim.opt.expandtab = true
-    -- vim.opt.spell = true
-  end,
-})
+-- Disable swap files
+vim.opt.swapfile = false

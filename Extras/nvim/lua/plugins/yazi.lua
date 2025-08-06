@@ -6,23 +6,23 @@ return {
   },
   keys = {
     {
-      '<leader>e',
+      '<leader>ee',
       '<cmd>Yazi<cr>',
       desc = 'File explorer',
     },
     {
-      '<leader>yc',
+      '<leader>ec',
       mode = { 'n', 'v' },
       '<cmd>Yazi<cr>',
       desc = 'Open yazi at the current file',
     },
     {
-      '<leader>yr',
+      '<leader>eE',
       '<cmd>Yazi cwd<cr>',
       desc = "Open the yazi in nvim's working directory",
     },
     {
-      '<leader>ye',
+      '<leader>ey',
       '<cmd>Yazi toggle<cr>',
       desc = 'Open yazi last session',
     },
@@ -34,12 +34,6 @@ return {
       show_help = '<f1>',
     },
   },
-  -- 👇 if you use `open_for_directories=true`, this is recommended
-  init = function()
-    -- More details: https://github.com/mikavilpas/yazi.nvim/issues/802
-    -- vim.g.loaded_netrw = 1
-    -- vim.g.loaded_netrwPlugin = 1
-  end,
 
   -- NOTE: Wating for kitty image protcol support
   enabled = false,

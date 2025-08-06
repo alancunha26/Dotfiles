@@ -11,19 +11,23 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+-- Indentation without exiting visual mode
+vim.keymap.set('v', '>', '>gv', { noremap = true, silent = true })
+vim.keymap.set('v', '<', '<gv', { noremap = true, silent = true })
+
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-vim.keymap.set('n', '<C-s>', '<cmd>split<CR>', { desc = 'Split window vertically' })
-vim.keymap.set('n', '<C-i>', '<cmd>vsplit<CR>', { desc = 'Split window horizontally' })
+vim.keymap.set('n', '<C-s>', '<cmd>vsplit<CR>', { desc = 'Split window vertically' })
+vim.keymap.set('n', '<a-s>', '<cmd>split<CR>', { desc = 'Split window horizontally' })
 vim.keymap.set('n', '<C-q>', '<cmd>close<CR>', { desc = 'Close selected window' })
 vim.keymap.set('n', 'zZ', 'zszH', { desc = 'Center this line (horizontal)' })
 
 -- Beter gx -> Open files with vim.ui.open relative to the current buffer
-vim.keymap.set('n', 'gx', function()
+vim.keymap.set('n', 'gX', function()
   local filename = vim.fn.expand('<cfile>%:t')
   local buffer_dir = vim.fn.expand('%:h')
 
@@ -32,21 +36,18 @@ vim.keymap.set('n', 'gx', function()
   else
     vim.ui.open(filename)
   end
-end, { desc = '[X] Open url/file relative to current buffer' })
+end, { desc = 'Open file/url under cursor' })
 
 -- [[ Spellcheck ]]
 --  See `:help spell`
 
 -- Toggle spell check
 vim.keymap.set('n', '<leader>st', function()
-  -- Native spellcheck
   -- vim.opt.spell = not (vim.opt.spell:get())
-
-  -- ltex grammar/spellcheck
   local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
 
   for _, client in pairs(buf_clients) do
-    if client.name == 'ltex' then
+    if client.name == 'harper_ls' then
       client.stop(client, true)
       return
     end
@@ -56,7 +57,7 @@ vim.keymap.set('n', '<leader>st', function()
 end, { desc = 'Toggle spellcheck' })
 
 -- Show spelling suggestions / spell suggestions.
--- NOTE: Overridden by telescope builtin.spell_suggest
+-- NOTE: Overridden by snacks builtin spelling
 vim.keymap.set('n', '<leader>ss', function()
   vim.cmd('normal! z=')
 end, { desc = 'Spellcheck suggestions' })

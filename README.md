@@ -360,19 +360,19 @@ TODO
 ## What's Next?
 
 - [ ] Improve `~/.local/share/applications/` organization
-- [ ] TUI File manager (lf or ranger?)
+- [x] TUI File manager (lf or ranger?)
 - [ ] Email client (muttwizard)
 - [ ] Music player (termusic)
 - [ ] Refactor nvim config
 - [ ] Improve mpv config
-- [ ] Rofi window switcher
+- [x] Rofi window switcher
 - [ ] Rofi emoji picker
 - [ ] Rofi system menu
 - [ ] Rofi calculator
 - [ ] Theme switcher
 - [ ] Install script
 - [ ] Lydm theme
-- [ ] ProtonVPN
+- [x] ProtonVPN
 
 ## Inspirations
 
