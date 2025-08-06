@@ -94,4 +94,4 @@ vim.opt.spelllang = 'en_us,pt_br'
 vim.opt.spell = false
 
 -- Disable swap files
-vim.opt.swapfile = false
+-- vim.opt.swapfile = false
