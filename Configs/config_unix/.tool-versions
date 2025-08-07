@@ -2,3 +2,4 @@ nodejs 24.4.1
 java adoptopenjdk-11.0.28+6
 erlang 27.3.3
 elixir 1.18.3-otp-27
+rust stable

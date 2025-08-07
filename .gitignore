@@ -6,3 +6,7 @@
 Configs/config_linux/.config/gtk-4.0/assets
 Configs/config_linux/.config/gtk-4.0/gtk-dark.css
 Configs/config_linux/.config/gtk-4.0/gtk.css
+
+# OS Specifics
+.DS_Store
+Desktop.ini
