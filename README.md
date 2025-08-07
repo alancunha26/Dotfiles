@@ -203,7 +203,12 @@ Ly Display Manager:
 sudo systemctl enable --now ly.service
 ```
 
-#### Download and Install the dotfiles
+#### Download and install the themes
+
+Follow the instructions provided on my
+[Themes](https://github.com/alancunha26/Themes) repository.
+
+#### Download and install the dotfiles
 
 First you need to download the dotifles from the git repository:
 
