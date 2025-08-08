@@ -15,10 +15,17 @@ return {
     quickfile = { enabled = true },
     bigfile = { enabled = true },
     scroll = { enabled = true },
-    statuscolumn = { enabled = true },
     image = { enabled = true },
     words = { enabled = true },
     indent = { enabled = true },
+
+    statuscolumn = {
+      enabled = true,
+      folds = {
+        open = true,
+        git_hl = true,
+      },
+    },
 
     zen = {
       enabled = true,

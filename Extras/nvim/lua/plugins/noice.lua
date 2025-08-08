@@ -22,5 +22,19 @@ return {
         },
       },
     },
+    routes = {
+      {
+        filter = {
+          -- When multiple LSP attached to a buffer
+          -- multiple notifications may be triggered
+          -- See: https://github.com/neovim/nvim-lspconfig/issues/1931#issuecomment-2138428768
+          event = 'notify',
+          find = 'No information available',
+        },
+        opts = {
+          skip = true,
+        },
+      },
+    },
   },
 }
