@@ -18,8 +18,8 @@ return {
           --stylua: ignore start
           map('<leader>cn', vim.lsp.buf.rename, 'Rename variable')
           map('<leader>ca', vim.lsp.buf.code_action, 'Code actions', { 'n', 'x' })
+          -- map('<C-k>', function() vim.lsp.buf.signature_help({ border = 'rounded' }) end, 'Signature documentation')
           map('K', function() vim.lsp.buf.hover({ border = 'rounded' }) end, 'Hover documentation')
-          map('<C-k>', function() vim.lsp.buf.signature_help({ border = 'rounded' }) end, 'Signature documentation')
         --stylua: ignore end
 
         -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)

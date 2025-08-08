@@ -11,6 +11,7 @@ return {
       on_colors = function(colors)
         colors.border = '#565f89'
         colors.fg_gutter = '#565f89'
+        colors.bg_statusline = colors.none
       end,
       on_highlights = function(hl, c)
         hl['@markup.italic.markdown_inline'] = { fg = c.yellow }
