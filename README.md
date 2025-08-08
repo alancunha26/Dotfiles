@@ -331,7 +331,6 @@ _Core Packages_
 | resvg                       | Svg preview yazi                                |
 | ntfs-3g                     | NTFS filesystem driver and utilities            |
 | gnome-keyring               | Gnome keyring                                   |
-| ueberzugpp                  | CLI tool to render images in yazi inside neovim |
 | noto-fonts-emoji            | -                                               |
 | noto-fonts                  | -                                               |
 | noto-fonts-cjk              | -                                               |

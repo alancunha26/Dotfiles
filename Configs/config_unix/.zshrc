@@ -1,10 +1,11 @@
 export ZSH="$HOME/.oh-my-zsh"
 
+
 # Setup theme
 ZSH_THEME="robbyrussell"
 
 # Setup plugins
-plugins=(git zsh-autosuggestions zsh-vi-mode)
+plugins=(git zsh-autosuggestions zsh-vi-mode direnv)
 source $ZSH/oh-my-zsh.sh
 
 # Setup zsh vi keybinds
@@ -29,7 +30,9 @@ esac
 # Aliases
 # alias nnvim="NVIM_APPNAME=nvim-new nvim"
 
+# Boulevard specifics
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
 # Run fastfetch
 fastfetch
-
 
