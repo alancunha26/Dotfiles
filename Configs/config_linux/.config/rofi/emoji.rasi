@@ -1,0 +1,25 @@
+/**
+ *
+ * Author : Alan Cunha
+ * Github : @alancunha26
+ *
+ * Rofi Theme File
+ * Rofi Version: 1.7.9
+ **/
+
+@theme "spotlight"
+
+/*****----- Configuration -----*****/
+configuration {
+  show-icons:                 true;
+  display-emoji:               "";
+}
+
+entry {
+  placeholder: "Search";
+}
+
+element-icon {
+  enabled:false;
+}
+
