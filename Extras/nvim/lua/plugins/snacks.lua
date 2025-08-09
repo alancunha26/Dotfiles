@@ -147,14 +147,14 @@ return {
 
     -- find
     { '<leader>f?', function() Snacks.picker.help() end, desc = 'Find help pages' },
-    { '<leader>f/', function() Snacks.picker.grep() end, desc = 'Find grep' },
     { '<leader>f:', function() Snacks.picker.command_history() end, desc = 'Find in command history' },
     { '<leader>f!', function() Snacks.picker.commands() end, desc = 'Find commands' },
     { '<leader>fb', function() Snacks.picker.buffers() end, desc = 'Find buffers' },
     { '<leader>fB', function() Snacks.picker.grep_buffers() end, desc = 'Find grep buffers' },
     { '<leader>fc', function() Snacks.picker.files({ cwd = vim.fn.stdpath('config') }) end, desc = 'Find config file' },
     { '<leader>ff', function() Snacks.picker.files() end, desc = 'Find files' },
-    { '<leader>fg', function() Snacks.picker.git_files() end, desc = 'Find git files'},
+    { '<leader>fg', function() Snacks.picker.grep() end, desc = 'Find grep' },
+    { '<leader>fh', function() Snacks.picker.git_files() end, desc = 'Find git files'},
     { '<leader>fp', function() Snacks.picker.projects() end, desc = 'Find projects' },
     { '<leader>fr', function() Snacks.picker.recent() end, desc = 'Find recent files' },
     { '<leader>fa', function() Snacks.picker.autocmds() end, desc = 'Find autocmds' },
