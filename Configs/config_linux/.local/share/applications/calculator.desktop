@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Icon=calc
+Name=Calculator
+GenericName=Calculator
+Exec=/bin/bash -c "$HOME/.config/rofi/calculator.sh"
+Categories=System;Monitor;
+
