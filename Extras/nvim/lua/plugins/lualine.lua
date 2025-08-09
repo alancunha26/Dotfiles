@@ -6,22 +6,6 @@ return {
     require('mini.icons').setup()
     require('mini.icons').mock_nvim_web_devicons()
 
-    -- Custom Lualine component to show attached language server
-    local clients_lsp = function()
-      local bufnr = vim.api.nvim_get_current_buf()
-
-      local clients = vim.lsp.get_clients()
-      if next(clients) == nil then
-        return ''
-      end
-
-      local c = {}
-      for _, client in pairs(clients) do
-        table.insert(c, client.name)
-      end
-      return ' ' .. table.concat(c, '|')
-    end
-
     require('lualine').setup({
       options = {
         theme = require('lualine.themes._tokyonight').get('moon'),
@@ -31,7 +15,24 @@ return {
       },
       sections = {
         lualine_a = {
-          { 'mode', separator = { left = ' ', right = '' }, icon = '' },
+          {
+            'macro',
+            fmt = function()
+              local reg = vim.fn.reg_recording()
+              if reg ~= '' then
+                return 'Recording @' .. reg
+              end
+              return nil
+            end,
+            separator = { left = ' ', right = '' },
+            color = { bg = '#c53b53' },
+            draw_empty = false,
+          },
+          {
+            'mode',
+            separator = { left = ' ', right = '' },
+            icon = '',
+          },
         },
         lualine_b = {
           {
@@ -39,7 +40,9 @@ return {
             icon_only = true,
             padding = { left = 1, right = 0 },
           },
-          'filename',
+          {
+            'filename',
+          },
         },
         lualine_c = {
           {
@@ -59,7 +62,9 @@ return {
             update_in_insert = true,
           },
         },
-        lualine_y = { clients_lsp },
+        lualine_y = {
+          'lsp_status',
+        },
         lualine_z = {
           { 'location', separator = { left = '', right = ' ' }, icon = '' },
         },
