@@ -11,8 +11,8 @@ return {
   },
   keys = {
     -- stylua: ignore start
-    { '<leader>zR', function () require('ufo').openAllFolds() end, desc = 'Open all folds' },
-    { '<leader>zM', function () require('ufo').closeAllFolds() end, desc = 'Close all folds' },
+    { 'zR', function () require('ufo').openAllFolds() end, desc = 'Open all folds' },
+    { 'zM', function () require('ufo').closeAllFolds() end, desc = 'Close all folds' },
     -- stylua: ignore end
   },
 }

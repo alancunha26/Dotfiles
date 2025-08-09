@@ -35,6 +35,16 @@ return {
           skip = true,
         },
       },
+      {
+        filter = {
+          -- Disable deprecation messages
+          event = 'msg_show',
+          find = 'is deprecated',
+        },
+        opts = {
+          skip = true,
+        },
+      },
     },
   },
 }
