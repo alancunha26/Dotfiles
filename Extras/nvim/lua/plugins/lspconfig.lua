@@ -88,8 +88,6 @@ return {
     })
 
     ---@class LspServersConfig
-    ---@field mason table<string, vim.lsp.Config>
-    ---@field others table<string, vim.lsp.Config>
     local servers = {
       mason = {
         lua_ls = {
@@ -125,11 +123,11 @@ return {
           },
         },
 
-        -- marksman = {
-        --   on_attach = function(client)
-        --     client.server_capabilities.completionProvider = false
-        --   end,
-        -- },
+        marksman = {
+          on_attach = function(client)
+            client.server_capabilities.completionProvider = nil
+          end,
+        },
       },
       others = {
         -- zk = {},
