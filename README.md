@@ -370,12 +370,12 @@ TODO
 - [x] TUI File manager (lf or ranger?)
 - [ ] Email client (muttwizard)
 - [ ] Music player (termusic)
-- [ ] Refactor nvim config
+- [x] Refactor nvim config
 - [ ] Improve mpv config
 - [x] Rofi window switcher
-- [ ] Rofi emoji picker
+- [x] Rofi emoji picker
 - [ ] Rofi system menu
-- [ ] Rofi calculator
+- [x] Rofi calculator
 - [ ] Theme switcher
 - [ ] Install script
 - [ ] Lydm theme
