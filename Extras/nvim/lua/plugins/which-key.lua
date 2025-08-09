@@ -3,7 +3,7 @@ return {
   event = 'VimEnter',
   opts = {
     delay = 0,
-    preset = 'modern',
+    preset = 'helix',
     sort = {
       'local',
       'order',
@@ -48,8 +48,6 @@ return {
 
     spec = {
       { '<leader>f', group = 'Find' },
-      { '<leader>y', group = 'Yazi' },
-      { '<leader>t', group = 'Toggle' },
       { '<leader>b', group = 'Buffers' },
       { '<leader>e', group = 'Explorer', icon = { icon = '' } },
       { '<leader>s', group = 'Spellcheck', icon = { icon = '󰓆' } },
@@ -57,6 +55,15 @@ return {
       { '<leader>z', group = 'Zettels', icon = { icon = '' } },
       { '<leader>c', group = 'Code/LSP' },
       { '<leader>h', group = 'Git' },
+    },
+  },
+  keys = {
+    {
+      '<leader>?',
+      function()
+        require('which-key').show({ global = false })
+      end,
+      desc = 'Buffer keymaps',
     },
   },
 }
