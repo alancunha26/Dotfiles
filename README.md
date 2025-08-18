@@ -40,7 +40,7 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra yazi 7zip poppler zoxide resvg ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra yazi 7zip poppler zoxide resvg ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix
 ```
 
 Optionally you can also install the **Extra Packages**.
@@ -60,7 +60,7 @@ sudo pacman -Rsn $(pacman -Qdtq)
 Alternatively you can install the WSL version:
 
 ```shell
-yay -Sy neovim luarocks ripgrep fastfetch zsh starship xdg-ninja stow pacseek less fzf zk btop lazydocker lazygit
+yay -Sy neovim-nightly luarocks ripgrep fastfetch zsh starship xdg-ninja stow pacseek less fzf zk btop lazydocker lazygit
 ```
 
 Install the clipboard manager for WSL integration on windows:
@@ -313,7 +313,7 @@ _Core Packages_
 | ffmpegthumbnailer           | Video thumbnails for nautilus                   |
 | ffmpeg-audio-thumbnailer    | Audio thumbnails for nautilus                   |
 | tumbler                     | Thumbnails for evey file manager (not nautilus) |
-| neovim                      | Terminal text editor                            |
+| neovim-nightly              | Terminal text editor                            |
 | mpv                         | Video player                                    |
 | nsxiv                       | Simple image viewer                             |
 | zathura                     | Simple document viewer                          |
@@ -331,6 +331,7 @@ _Core Packages_
 | resvg                       | Svg preview yazi                                |
 | ntfs-3g                     | NTFS filesystem driver and utilities            |
 | gnome-keyring               | Gnome keyring                                   |
+| wiremix                     | TUI audio manager                               |
 | libqalculate                | Powers rofi calculator                          |
 | rofi-calc                   | Rofi calculator                                 |
 | rofi-emoji                  | Rofi emoji                                      |
