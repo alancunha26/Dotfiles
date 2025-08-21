@@ -229,6 +229,14 @@ symlinks:
 tuckr set \* & find -xtype l -delete
 ```
 
+#### Setup Gaming
+
+Run games on steam with gamescope by pasting this on Steam launch options:
+
+```shell
+gamescope -w 1920 -h 1080 -r 240.0 -b -e --backend=sdl --adaptive-sync --force-grab-cursor -- %command%
+```
+
 #### Common Fixes
 
 To fix a ntfs drive just you can try to run:
@@ -356,6 +364,18 @@ _Extra Packages (Optional)_
 | flatpak            | Run sandboxed applications on Linux |
 | qbittorrent        | Trusted torrent client              |
 | proton-vpn-gtk-app | Proton VPN                          |
+
+_Gaming Packages (Optional)_
+
+> See more in the wiki: [Gaming](https://wiki.archlinux.org/title/Gaming), [Steam](https://wiki.archlinux.org/title/Steam)
+
+| Package        | Description                                |
+| -------------- | ------------------------------------------ |
+| steam          | Valve's digital software delivery system   |
+| gamescope      | SteamOS session compositing window manager |
+| retroarch      | Reference frontend for the libretro API    |
+| corectrl       | AMD GUI hardware control                   |
+| ttf-liberation | Arial font used for steam                  |
 
 ### MacOS (Aerospace)
 
