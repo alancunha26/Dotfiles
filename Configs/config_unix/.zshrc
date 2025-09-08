@@ -34,3 +34,4 @@ esac
 # Run fastfetch
 fastfetch
 
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
