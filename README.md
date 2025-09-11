@@ -247,6 +247,12 @@ To fix a ntfs drive just you can try to run:
 sudo ntfsfix -d PATH_TO_VOLUME
 ```
 
+To fix audio/mic problems setup configuration with `alsamixer` and then run the following:
+
+```shell
+sudo alsactl store
+```
+
 #### Arch Linux Packages
 
 _Core Packages_
