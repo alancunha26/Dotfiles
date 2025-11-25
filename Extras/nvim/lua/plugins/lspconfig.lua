@@ -109,6 +109,7 @@ return {
                 HowTo = false,
                 ToDoHyphen = false,
                 SentenceCapitalization = false,
+                LongSentences = false,
               },
               markdown = {
                 IgnoreLinkTitle = true,
