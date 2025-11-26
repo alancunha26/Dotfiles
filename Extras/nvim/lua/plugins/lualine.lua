@@ -9,33 +9,30 @@ return {
     require('lualine').setup({
       options = {
         globalstatus = true,
-        theme = require('lualine.themes._tokyonight').get('moon'),
-        component_separators = '',
-        section_separators = { left = '', right = '' },
-        disabled_filetypes = { 'alpha', 'Outline' },
+        theme = 'tokyonight',
+        component_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' },
+        disabled_filetypes = {
+          statusline = { 'snacks_dashboard' },
+        },
       },
       sections = {
         lualine_a = {
           {
-            'macro',
-            fmt = function()
-              local reg = vim.fn.reg_recording()
-              if reg ~= '' then
-                return 'Recording @' .. reg
-              end
-              return nil
-            end,
-            separator = { left = ' ', right = '' },
-            color = { bg = '#c53b53' },
-            draw_empty = false,
-          },
-          {
             'mode',
-            separator = { left = ' ', right = '' },
-            icon = '',
+            fmt = function(str)
+              return str:sub(1, 1)
+            end,
           },
         },
         lualine_b = {
+          { 'branch', icon = '' },
+          {
+            'diff',
+            symbols = { added = ' ', modified = ' ', removed = ' ' },
+          },
+        },
+        lualine_c = {
           {
             'filetype',
             icon_only = true,
@@ -43,42 +40,48 @@ return {
           },
           {
             'filename',
-          },
-        },
-        lualine_c = {
-          {
-            'branch',
-            icon = '',
-          },
-          {
-            'diff',
-            symbols = { added = ' ', modified = ' ', removed = ' ' },
-            colored = false,
+            path = 1,
+            symbols = { modified = ' ●', readonly = ' ', unnamed = '[No Name]' },
           },
         },
         lualine_x = {
           {
+            'macro',
+            fmt = function()
+              local reg = vim.fn.reg_recording()
+              if reg ~= '' then
+                return ' @' .. reg
+              end
+              return nil
+            end,
+            color = { fg = '#c53b53' },
+          },
+          {
+            'searchcount',
+            maxcount = 999,
+          },
+          {
+            'selectioncount',
+            fmt = function(str)
+              if str ~= '' then
+                return '󰒅 ' .. str
+              end
+              return nil
+            end,
+          },
+          {
             'diagnostics',
-            symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
-            update_in_insert = true,
+            symbols = { error = ' ', warn = ' ', info = ' ', hint = ' ' },
           },
         },
         lualine_y = {
-          'lsp_status',
+          { 'filetype', icons_enabled = false },
         },
         lualine_z = {
-          { 'location', separator = { left = '', right = ' ' }, icon = '' },
+          { 'location', icon = '' },
         },
       },
-      inactive_sections = {
-        lualine_a = { 'filename' },
-        lualine_b = {},
-        lualine_c = {},
-        lualine_x = {},
-        lualine_y = {},
-        lualine_z = { 'location' },
-      },
-      extensions = { 'toggleterm', 'trouble' },
+      extensions = { 'lazy', 'trouble', 'quickfix' },
     })
   end,
 }
