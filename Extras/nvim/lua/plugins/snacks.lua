@@ -253,6 +253,8 @@ return {
     { '<leader>f?', function() Snacks.picker.help() end, desc = 'Find help pages' },
     { '<leader>f:', function() Snacks.picker.command_history() end, desc = 'Find in command history' },
     { '<leader>f!', function() Snacks.picker.commands() end, desc = 'Find commands' },
+    { '<leader>f.', function() Snacks.picker.resume() end, desc = 'Resume last picker' },
+    { '<leader>f/', function() Snacks.picker.pickers() end, desc = 'Find pickers' },
     { '<leader>fb', function() Snacks.picker.buffers() end, desc = 'Find buffers' },
     { '<leader>fB', function() Snacks.picker.grep_buffers() end, desc = 'Find grep buffers' },
     { '<leader>fc', function() Snacks.picker.files({ cwd = vim.fn.stdpath('config') }) end, desc = 'Find config file' },
@@ -311,6 +313,8 @@ return {
     { "]]", function() Snacks.words.jump(vim.v.count1) end, desc = "Next reference", mode = { "n", "t" } },
     { "[[", function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev reference", mode = { "n", "t" } },
     { '<leader>ss', function() Snacks.picker.spelling() end, desc = 'Spellcheck suggestions' },
+    { '<A-m>', function() Snacks.zen.zoom() end, desc = 'Maximize window' },
+
     --stylua: ignore end
   },
 }

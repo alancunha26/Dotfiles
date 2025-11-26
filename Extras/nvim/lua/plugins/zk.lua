@@ -40,6 +40,8 @@ return {
       { '<leader>zm', extras.mentions, mode = { 'n', 'v' }, desc = 'Find unlinked mentions' },
       { '<leader>zg', extras.grep, desc = 'Grep zettels' },
       { '<leader>zz', extras.open_index, desc = 'Open index zettel' },
+      { '<leader>zc', extras.quick_capture, desc = 'Quick capture to inbox' },
+      { '<leader>zi', extras.open_inbox, desc = 'Open inbox' },
     }
   end,
 }

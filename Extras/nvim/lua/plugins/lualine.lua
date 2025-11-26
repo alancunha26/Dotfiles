@@ -8,6 +8,7 @@ return {
 
     require('lualine').setup({
       options = {
+        globalstatus = true,
         theme = require('lualine.themes._tokyonight').get('moon'),
         component_separators = '',
         section_separators = { left = '', right = '' },

@@ -164,6 +164,34 @@ return {
       },
     },
   },
+  {
+    'echasnovski/mini.sessions',
+    version = version,
+    opts = {
+      autoread = false,
+      autowrite = true,
+      directory = vim.fn.stdpath('data') .. '/sessions',
+    },
+    keys = {
+      {
+        '<leader>gS',
+        function()
+          MiniSessions.select()
+        end,
+        desc = 'Select session',
+      },
+      {
+        '<leader>gs',
+        function()
+          local cwd = vim.fn.getcwd()
+          local session_name = cwd:gsub('/', '_'):gsub('^_', '')
+          MiniSessions.write(session_name)
+          vim.notify('Session saved: ' .. session_name, vim.log.levels.INFO)
+        end,
+        desc = 'Save session (cwd)',
+      },
+    },
+  },
   -- Replaces with lualine
   -- {
   --   'echasnovski/mini.statusline',

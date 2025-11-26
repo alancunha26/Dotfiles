@@ -160,6 +160,50 @@ function M.open_index()
   vim.cmd('edit ' .. notes_path .. '/index.md')
 end
 
+local function get_inbox_path()
+  local inbox_path = notes_path .. '/inbox.md'
+
+  -- Create inbox file if it doesn't exist
+  if vim.fn.filereadable(inbox_path) == 0 then
+    local date = os.date('%Y-%m-%d')
+    local frontmatter = {
+      '---',
+      'title: Inbox',
+      'date: ' .. date,
+      'tags: []',
+      '---',
+      '',
+      '# Inbox',
+      '',
+    }
+    vim.fn.writefile(frontmatter, inbox_path)
+  end
+
+  return inbox_path
+end
+
+function M.quick_capture()
+  local inbox_path = get_inbox_path()
+
+  vim.ui.input({ prompt = 'Capture: ' }, function(input)
+    if input and input ~= '' then
+      local timestamp = os.date('%Y-%m-%d %H:%M')
+      local entry = string.format('- [%s] %s', timestamp, input)
+
+      local file = io.open(inbox_path, 'a')
+      if file then
+        file:write(entry .. '\n')
+        file:close()
+        vim.notify('Captured to inbox', vim.log.levels.INFO)
+      end
+    end
+  end)
+end
+
+function M.open_inbox()
+  vim.cmd('edit ' .. get_inbox_path())
+end
+
 function M.buffers()
   -- Get only loaded buffers
   local buffers = vim.api.nvim_list_bufs()

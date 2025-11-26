@@ -84,3 +84,21 @@ end, { desc = 'Repeat spellcheck for all matches' })
 vim.keymap.set('n', 'D', function()
   vim.diagnostic.open_float()
 end)
+
+-- Better q to close non-file buffers
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = {
+    'help',
+    'qf',
+    'quickfix',
+    'notify',
+    'lspinfo',
+    'man',
+    'checkhealth',
+    'gitsigns-blame',
+  },
+  callback = function(event)
+    vim.bo[event.buf].buflisted = false
+    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = event.buf, silent = true })
+  end,
+})
