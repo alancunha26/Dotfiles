@@ -10,7 +10,107 @@ return {
     explorer = { enabled = false },
 
     -- Enabled
-    dashboard = { enabled = true },
+    dashboard = {
+      enabled = true,
+      preset = {
+        keys = function()
+          local in_zk = vim.fn.isdirectory(vim.fn.getcwd() .. '/.zk') == 1
+
+          if in_zk then
+            return {
+              {
+                icon = ' ',
+                key = 'f',
+                desc = 'Find Notes',
+                action = function()
+                  require('zk').edit(nil, { title = 'Zk Notes' })
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'n',
+                desc = 'New Note',
+                action = function()
+                  require('modules.zettels.extras').new_zettel()
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'g',
+                desc = 'Grep Notes',
+                action = function()
+                  require('modules.zettels.extras').grep()
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'r',
+                desc = 'Recent Notes',
+                action = function()
+                  Snacks.picker.recent()
+                end,
+              },
+              {
+                icon = ' ',
+                key = 't',
+                desc = 'Find Tags',
+                action = function()
+                  require('zk').pick_tags(nil, { title = 'Zk Tags' })
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'z',
+                desc = 'Open Index',
+                action = function()
+                  require('modules.zettels.extras').open_index()
+                end,
+              },
+              { icon = '󰒲 ', key = 'L', desc = 'Lazy', action = ':Lazy', enabled = package.loaded.lazy ~= nil },
+              { icon = ' ', key = 'q', desc = 'Quit', action = ':qa' },
+            }
+          else
+            return {
+              {
+                icon = ' ',
+                key = 'f',
+                desc = 'Find File',
+                action = function()
+                  Snacks.dashboard.pick('files')
+                end,
+              },
+              { icon = ' ', key = 'n', desc = 'New File', action = ':ene | startinsert' },
+              {
+                icon = ' ',
+                key = 'g',
+                desc = 'Find Text',
+                action = function()
+                  Snacks.dashboard.pick('live_grep')
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'r',
+                desc = 'Recent Files',
+                action = function()
+                  Snacks.dashboard.pick('oldfiles')
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'c',
+                desc = 'Config',
+                action = function()
+                  Snacks.dashboard.pick('files', { cwd = vim.fn.stdpath('config') })
+                end,
+              },
+              { icon = '󰒲 ', key = 'L', desc = 'Lazy', action = ':Lazy', enabled = package.loaded.lazy ~= nil },
+              { icon = ' ', key = 'q', desc = 'Quit', action = ':qa' },
+            }
+          end
+        end,
+      },
+    },
     animate = { enabled = true },
     quickfile = { enabled = true },
     bigfile = { enabled = true },
@@ -51,6 +151,10 @@ return {
       enabled = true,
       layout = {
         preset = 'ivy_split',
+      },
+
+      matcher = {
+        smartcase = false, -- disable smartcase so highlighting is always case-insensitive
       },
 
       formatters = {

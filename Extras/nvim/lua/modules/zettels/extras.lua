@@ -53,29 +53,81 @@ function M.new_zettel(opts)
   end)
 end
 
--- TODO: fix new zettels from template in visual mode
 function M.new_zettel_from_template()
+  local is_visual = vim.fn.mode():match('^[vV\x16]$')
+  local title, location
+
+  if is_visual then
+    title = vim_utils.get_visual_selection()
+    location = vim_utils.get_selection_lsp_location()
+
+    -- Only proceed if selection is on a single line
+    if location.range.start.line ~= location.range['end'].line then
+      vim.notify('Selection must be on a single line', vim.log.levels.WARN)
+      return
+    end
+  end
+
   Snacks.picker.files({
     dirs = { '.zk/templates' },
     title = 'Templates',
     confirm = function(picker, item)
       picker:close()
       local template = vim.fn.fnamemodify(item.file, ':p')
-      M.new_zettel({ template = template })
+
+      if is_visual then
+        require('zk').new({
+          title = title,
+          template = template,
+          insertLinkAtLocation = location,
+          dir = notes_path,
+        })
+      else
+        M.new_zettel({ template = template })
+      end
     end,
   })
 end
 
--- TODO: implementation
 function M.insert_template()
-  print('hello')
+  Snacks.picker.files({
+    dirs = { '.zk/templates' },
+    title = 'Templates',
+    confirm = function(picker, item)
+      picker:close()
+      local template_path = vim.fn.fnamemodify(item.file, ':p')
+
+      -- Read template content
+      local template_lines = vim.fn.readfile(template_path)
+      if not template_lines or #template_lines == 0 then
+        vim.notify('Template is empty', vim.log.levels.WARN)
+        return
+      end
+
+      -- Get current position
+      local cursor_pos = vim.fn.getcurpos()
+      local line = cursor_pos[2]
+      local col = cursor_pos[3]
+
+      -- Check if in visual mode
+      if vim.fn.mode():match('^[vV\x16]$') then
+        -- Delete visual selection and insert template
+        vim.cmd('normal! d')
+        vim.api.nvim_put(template_lines, 'c', true, true)
+      else
+        -- Insert template at cursor position
+        vim.api.nvim_buf_set_text(0, line - 1, col - 1, line - 1, col - 1, template_lines)
+      end
+    end,
+  })
 end
 
 function M.mentions()
   local mention = vim.fn.expand('%:t')
 
-  if mention == nil then
+  if mention == nil or mention == '' then
     vim.notify("There's no buffer currently open", vim.log.levels.INFO)
+    return
   end
 
   local options = {
@@ -90,7 +142,7 @@ function M.mentions()
     end
 
     local paths = vim
-      .iter(pairs(notes))
+      .iter(ipairs(notes))
       :map(function(_, note)
         return note.path
       end)
@@ -106,6 +158,86 @@ end
 
 function M.open_index()
   vim.cmd('edit ' .. notes_path .. '/index.md')
+end
+
+function M.buffers()
+  -- Get only loaded buffers
+  local buffers = vim.api.nvim_list_bufs()
+  local paths = {}
+
+  for _, buf in ipairs(buffers) do
+    -- Only include loaded buffers
+    if vim.api.nvim_buf_is_loaded(buf) then
+      local path = vim.api.nvim_buf_get_name(buf)
+      if path ~= '' then
+        table.insert(paths, path)
+      end
+    end
+  end
+
+  require('zk').edit({ hrefs = paths }, { title = 'Zk Buffers' })
+end
+
+function M.grep()
+  -- Build a collection of file paths -> titles using zk API
+  local collection = {}
+  local list_opts = { select = { 'title', 'path', 'absPath' } }
+
+  require('zk.api').list(nil, list_opts, function(_, notes)
+    if notes then
+      for _, note in ipairs(notes) do
+        collection[note.absPath] = note.title or note.path
+      end
+    end
+
+    -- Open grep picker with custom format that shows titles
+    Snacks.picker.grep({
+      format = function(item, picker)
+        local ret = {}
+
+        if not item.file then
+          return ret
+        end
+
+        -- Get title and filename
+        local abs_path = vim.fn.fnamemodify(item.file, ':p')
+        local title = collection[abs_path]
+        local filename = vim.fn.fnamemodify(item.file, ':t')
+
+        -- Add icon
+        local icon, icon_hl = Snacks.util.icon(item.file, 'file')
+        ret[#ret + 1] = { icon .. ' ', icon_hl }
+
+        -- Add title (or filename if no title)
+        if title then
+          ret[#ret + 1] = { title, 'SnacksPickerFile' }
+          ret[#ret + 1] = { ' (' .. filename .. ')', 'SnacksPickerDir' }
+        else
+          ret[#ret + 1] = { filename, 'SnacksPickerFile' }
+        end
+
+        -- Add line number
+        if item.pos and item.pos[1] > 0 then
+          ret[#ret + 1] = { ':' .. item.pos[1], 'SnacksPickerPos' }
+        end
+
+        ret[#ret + 1] = { ' ' }
+
+        -- Add line content with match highlighting (simple, no treesitter)
+        if item.line then
+          local offset = Snacks.picker.highlight.offset(ret)
+
+          if item.positions then
+            Snacks.picker.highlight.matches(ret, item.positions, offset)
+          end
+
+          ret[#ret + 1] = { item.line }
+        end
+
+        return ret
+      end,
+    })
+  end)
 end
 
 return M
