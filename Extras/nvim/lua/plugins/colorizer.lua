@@ -3,6 +3,7 @@ return {
   event = 'BufReadPre',
   opts = {
     user_default_options = {
+      names = false,
       RRGGBBAA = true,
       AARRGGBB = true,
       css = true,

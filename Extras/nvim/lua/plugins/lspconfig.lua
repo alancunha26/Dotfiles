@@ -133,6 +133,15 @@ return {
           on_attach = function(client)
             client.server_capabilities.completionProvider = nil
           end,
+          handlers = {
+            ['textDocument/publishDiagnostics'] = function(err, result, ctx, config)
+              result.diagnostics = vim.tbl_filter(function(d)
+                return not d.message:match('Ambiguous link')
+                  and not d.message:match('Duplicate definition')
+              end, result.diagnostics)
+              vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
+            end,
+          },
         },
       },
       others = {

@@ -280,6 +280,7 @@ return {
     { "<leader>fH", function() Snacks.picker.highlights() end, desc = "Find highlights groups" },
 
     -- Buffers
+    { "<C-x>", function() Snacks.bufdelete() end, desc = "Delete buffer" },
     { "<leader>bs", function() Snacks.scratch() end, desc = "Toggle scratch buffer" },
     { "<leader>bd", function() Snacks.bufdelete() end, desc = "Delete buffer" },
     { "<leader>bD", function() Snacks.bufdelete.all() end, desc = "Delete all buffers" },
