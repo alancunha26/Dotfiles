@@ -1,7 +1,12 @@
 return {
   'neovim/nvim-lspconfig',
   dependencies = {
-    { 'mason-org/mason.nvim', opts = {} },
+    {
+      'mason-org/mason.nvim',
+      opts = {
+        ui = { border = 'rounded' },
+      },
+    },
     'mason-org/mason-lspconfig.nvim',
     'WhoIsSethDaniel/mason-tool-installer.nvim',
     { 'saghen/blink.cmp' },
@@ -135,13 +140,10 @@ return {
       },
     }
 
-    local ensure_installed = vim.tbl_keys(servers.mason or {})
-    vim.list_extend(ensure_installed, {
-      'stylua',
-      'prettier',
-      'prettierd',
+    -- LSP servers (will be auto-enabled by mason-lspconfig)
+    local lsp_servers = vim.tbl_keys(servers.mason or {})
+    vim.list_extend(lsp_servers, {
       'eslint',
-      'markdownlint',
       'cssls',
       'html',
       'jsonls',
@@ -151,6 +153,17 @@ return {
       'tailwindcss',
       'elixirls',
     })
+
+    -- Formatters and linters (NOT LSP servers)
+    local tools = {
+      'stylua',
+      'prettier',
+      'prettierd',
+      'markdownlint',
+    }
+
+    -- Install both servers and tools
+    local ensure_installed = vim.list_extend(vim.deepcopy(lsp_servers), tools)
 
     require('mason-tool-installer').setup({
       ensure_installed = ensure_installed,
@@ -164,11 +177,11 @@ return {
 
     require('mason-lspconfig').setup({
       ensure_installed = {},
-      automatic_enable = true,
+      automatic_enable = false,
     })
 
-    if not vim.tbl_isempty(servers.others) then
-      vim.lsp.enable(vim.tbl_keys(servers.others))
-    end
+    -- Enable all LSP servers (both mason and others)
+    local all_servers = vim.list_extend(vim.deepcopy(lsp_servers), vim.tbl_keys(servers.others))
+    vim.lsp.enable(all_servers)
   end,
 }
