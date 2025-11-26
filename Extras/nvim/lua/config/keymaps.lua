@@ -22,6 +22,8 @@ vim.keymap.set('n', '<C-s>', '<cmd>vsplit<CR>', { desc = 'Split window verticall
 vim.keymap.set('n', '<a-s>', '<cmd>split<CR>', { desc = 'Split window horizontally' })
 vim.keymap.set('n', '<C-q>', '<cmd>close<CR>', { desc = 'Close selected window' })
 vim.keymap.set('n', 'zZ', 'zszH', { desc = 'Center this line (horizontal)' })
+vim.keymap.set('n', '<C-a-h>', 'zH', { desc = 'Scroll half screen left' })
+vim.keymap.set('n', '<C-a-l>', 'zL', { desc = 'Scroll half screen right' })
 
 -- Beter gx -> Open files with vim.ui.open relative to the current buffer
 vim.keymap.set('n', 'gX', function()
