@@ -46,7 +46,7 @@ yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-p
 Optionally you can also install the **Extra Packages**.
 
 ```shell
-yay -Sy obs-studio obsidian-bin libreoffice-fresh faltpak
+yay -Sy obs-studio obsidian-bin libreoffice-fresh faltpak pokemon-colorscripts-git github-cli
 ```
 
 Then you can remove all unused packages currently installed.

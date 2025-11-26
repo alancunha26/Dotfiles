@@ -13,6 +13,14 @@ return {
     dashboard = {
       enabled = true,
       preset = {
+        header = [[
+ █████╗ ██╗      █████╗ ███╗   ██╗
+██╔══██╗██║     ██╔══██╗████╗  ██║
+███████║██║     ███████║██╔██╗ ██║
+██╔══██║██║     ██╔══██║██║╚██╗██║
+██║  ██║███████╗██║  ██║██║ ╚████║
+╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝
+]],
         keys = function()
           local in_zk = vim.fn.isdirectory(vim.fn.getcwd() .. '/.zk') == 1
 
@@ -28,14 +36,6 @@ return {
               },
               {
                 icon = ' ',
-                key = 'n',
-                desc = 'New Note',
-                action = function()
-                  require('modules.zettels.extras').new_zettel()
-                end,
-              },
-              {
-                icon = ' ',
                 key = 'g',
                 desc = 'Grep Notes',
                 action = function()
@@ -44,10 +44,10 @@ return {
               },
               {
                 icon = ' ',
-                key = 'r',
-                desc = 'Recent Notes',
+                key = 'h',
+                desc = 'Grep Headings',
                 action = function()
-                  Snacks.picker.recent()
+                  require('modules.zettels.extras').headings()
                 end,
               },
               {
@@ -56,6 +56,14 @@ return {
                 desc = 'Find Tags',
                 action = function()
                   require('zk').pick_tags(nil, { title = 'Zk Tags' })
+                end,
+              },
+              {
+                icon = ' ',
+                key = 'n',
+                desc = 'New Note',
+                action = function()
+                  require('modules.zettels.extras').new_zettel()
                 end,
               },
               {
@@ -109,6 +117,18 @@ return {
             }
           end
         end,
+      },
+      sections = {
+        {
+          section = 'terminal',
+          cmd = 'pokemon-colorscripts -rn bulbasaur,squirtle,charmander --no-title; sleep .1',
+          align = 'center',
+          indent = 20,
+          padding = 1,
+        },
+        { section = 'header' },
+        { section = 'keys', gap = 1 },
+        { section = 'startup', padding = { 0, 1 } },
       },
     },
     animate = { enabled = true },

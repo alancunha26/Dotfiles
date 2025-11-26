@@ -222,8 +222,8 @@ function M.buffers()
   require('zk').edit({ hrefs = paths }, { title = 'Zk Buffers' })
 end
 
-function M.grep()
-  -- Build a collection of file paths -> titles using zk API
+-- Helper to build note title collection
+local function build_title_collection(callback)
   local collection = {}
   local list_opts = { select = { 'title', 'path', 'absPath' } }
 
@@ -233,50 +233,120 @@ function M.grep()
         collection[note.absPath] = note.title or note.path
       end
     end
+    callback(collection)
+  end)
+end
 
-    -- Open grep picker with custom format that shows titles
+-- Custom format function for grep results with titles
+local function grep_format_with_titles(collection)
+  return function(item, picker)
+    local ret = {}
+
+    if not item.file then
+      return ret
+    end
+
+    -- Get title and filename
+    local abs_path = vim.fn.fnamemodify(item.file, ':p')
+    local title = collection[abs_path]
+    local filename = vim.fn.fnamemodify(item.file, ':t')
+
+    -- Add icon
+    local icon, icon_hl = Snacks.util.icon(item.file, 'file')
+    ret[#ret + 1] = { icon .. ' ', icon_hl }
+
+    -- Add title (or filename if no title)
+    if title then
+      ret[#ret + 1] = { title, 'SnacksPickerFile' }
+      ret[#ret + 1] = { ' (' .. filename .. ')', 'SnacksPickerDir' }
+    else
+      ret[#ret + 1] = { filename, 'SnacksPickerFile' }
+    end
+
+    -- Add line number
+    if item.pos and item.pos[1] > 0 then
+      ret[#ret + 1] = { ':' .. item.pos[1], 'SnacksPickerPos' }
+    end
+
+    ret[#ret + 1] = { ' ' }
+
+    -- Add line content with match highlighting
+    if item.line then
+      local offset = Snacks.picker.highlight.offset(ret)
+
+      if item.positions then
+        Snacks.picker.highlight.matches(ret, item.positions, offset)
+      end
+
+      ret[#ret + 1] = { item.line }
+    end
+
+    return ret
+  end
+end
+
+function M.grep()
+  build_title_collection(function(collection)
     Snacks.picker.grep({
+      format = grep_format_with_titles(collection),
+    })
+  end)
+end
+
+function M.headings()
+  build_title_collection(function(collection)
+    -- Run rg to get all headings
+    local cmd = { 'rg', '--line-number', '--no-heading', '--color=never', '^#{1,6} ', '-g', '*.md' }
+    local output = vim.fn.systemlist(cmd)
+
+    local items = {}
+    for _, line in ipairs(output) do
+      local file, lnum, content = line:match('^([^:]+):(%d+):(.*)$')
+      if file and lnum and content then
+        local heading = content:gsub('^#+ ', '')
+        local abs_path = vim.fn.fnamemodify(file, ':p')
+        local title = collection[abs_path]
+        local filename = vim.fn.fnamemodify(file, ':t')
+        local level = #(content:match('^#+') or '')
+
+        table.insert(items, {
+          text = heading, -- Only match on heading text
+          file = file,
+          pos = { tonumber(lnum), 0 },
+          heading = heading,
+          level = level,
+          title = title or filename,
+          filename = filename,
+        })
+      end
+    end
+
+    Snacks.picker({
+      title = 'Zk Headings',
+      items = items,
       format = function(item, picker)
         local ret = {}
 
-        if not item.file then
-          return ret
-        end
-
-        -- Get title and filename
-        local abs_path = vim.fn.fnamemodify(item.file, ':p')
-        local title = collection[abs_path]
-        local filename = vim.fn.fnamemodify(item.file, ':t')
-
-        -- Add icon
+        -- Add icon (virtual = no match highlighting)
         local icon, icon_hl = Snacks.util.icon(item.file, 'file')
-        ret[#ret + 1] = { icon .. ' ', icon_hl }
+        ret[#ret + 1] = { icon .. ' ', icon_hl, virtual = true }
 
-        -- Add title (or filename if no title)
-        if title then
-          ret[#ret + 1] = { title, 'SnacksPickerFile' }
-          ret[#ret + 1] = { ' (' .. filename .. ')', 'SnacksPickerDir' }
-        else
-          ret[#ret + 1] = { filename, 'SnacksPickerFile' }
+        -- Add title (virtual = no match highlighting)
+        ret[#ret + 1] = { item.title, 'SnacksPickerFile', virtual = true }
+        if item.title ~= item.filename then
+          ret[#ret + 1] = { ' (' .. item.filename .. ')', 'SnacksPickerDir', virtual = true }
         end
 
-        -- Add line number
-        if item.pos and item.pos[1] > 0 then
-          ret[#ret + 1] = { ':' .. item.pos[1], 'SnacksPickerPos' }
+        ret[#ret + 1] = { ' ', virtual = true }
+
+        -- Add heading indent (virtual)
+        local indent = string.rep('  ', item.level - 1)
+        if #indent > 0 then
+          ret[#ret + 1] = { indent, nil, virtual = true }
         end
 
-        ret[#ret + 1] = { ' ' }
-
-        -- Add line content with match highlighting (simple, no treesitter)
-        if item.line then
-          local offset = Snacks.picker.highlight.offset(ret)
-
-          if item.positions then
-            Snacks.picker.highlight.matches(ret, item.positions, offset)
-          end
-
-          ret[#ret + 1] = { item.line }
-        end
+        -- Heading text gets match highlighting
+        ret[#ret + 1] = { item.heading }
 
         return ret
       end,

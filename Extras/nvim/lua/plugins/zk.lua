@@ -39,6 +39,7 @@ return {
       { '<leader>zT', extras.insert_template, mode = { 'n', 'v' }, desc = 'Insert template' },
       { '<leader>zm', extras.mentions, mode = { 'n', 'v' }, desc = 'Find unlinked mentions' },
       { '<leader>zg', extras.grep, desc = 'Grep zettels' },
+      { '<leader>zh', extras.headings, desc = 'Find headings' },
       { '<leader>zz', extras.open_index, desc = 'Open index zettel' },
       { '<leader>zc', extras.quick_capture, desc = 'Quick capture to inbox' },
       { '<leader>zi', extras.open_inbox, desc = 'Open inbox' },
