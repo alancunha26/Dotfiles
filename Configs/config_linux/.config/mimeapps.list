@@ -19,7 +19,6 @@ text/xml=xnvim.desktop;brave-browser.desktop;
 application/pdf=org.pwmt.zathura.desktop;brave-browser.desktop;
 application/epub+zip=org.pwmt.zathura.desktop;brave-browser.desktop;
 application/json=xnvim.desktop;
-
 image/*=kitty-open.desktop;
 image/avif=nsxiv.desktop;
 image/bmp=nsxiv.desktop;
@@ -40,7 +39,6 @@ image/x-portable-bitmap=nsxiv.desktop;
 image/x-portable-graymap=nsxiv.desktop;
 image/x-tga=nsxiv.desktop;
 image/x-xpixmap=nsxiv.desktop;
-
 video/3gp=mpv.desktop;
 video/3gpp=mpv.desktop;
 video/3gpp2=mpv.desktop;
@@ -80,13 +78,10 @@ video/x-ogm=mpv.desktop;
 video/x-ogm+ogg=mpv.desktop;
 video/x-theora=mpv.desktop;
 video/x-theora+ogg=mpv.desktop;
-
-# Scheme handlers
 x-scheme-handler/whatsapp=brave-browser.desktop;
 x-scheme-handlers/zoommtg=brave-browser.desktop;
 
 [Added Associations]
-
 text/*=kitty-open.desktop;
 text/english=xnvim.desktop;
 text/html=brave-browser.desktop;xnvim.desktop
@@ -107,7 +102,6 @@ text/xml=xnvim.desktop;brave-browser.desktop;
 application/pdf=org.pwmt.zathura.desktop;brave-browser.desktop;
 application/epub+zip=org.pwmt.zathura.desktop;brave-browser.desktop;
 application/json=xnvim.desktop;
-
 image/*=kitty-open.desktop;
 image/avif=nsxiv.desktop;
 image/bmp=nsxiv.desktop;
@@ -128,7 +122,6 @@ image/x-portable-bitmap=nsxiv.desktop;
 image/x-portable-graymap=nsxiv.desktop;
 image/x-tga=nsxiv.desktop;
 image/x-xpixmap=nsxiv.desktop;
-
 video/3gp=mpv.desktop;
 video/3gpp=mpv.desktop;
 video/3gpp2=mpv.desktop;
@@ -168,6 +161,5 @@ video/x-ogm=mpv.desktop;
 video/x-ogm+ogg=mpv.desktop;
 video/x-theora=mpv.desktop;
 video/x-theora+ogg=mpv.desktop;
-
-# Scheme handlers
 x-scheme-handler/whatsapp=brave-browser.desktop;
+application/x-zerosize=nvim.desktop;

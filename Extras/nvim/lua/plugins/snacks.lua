@@ -22,7 +22,7 @@ return {
 ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝
 ]],
         keys = function()
-          local in_zk = vim.fn.isdirectory(vim.fn.getcwd() .. '/.zk') == 1
+          local in_zk = require('modules.zettels.config').is_zk_workspace()
 
           if in_zk then
             return {
@@ -298,6 +298,7 @@ return {
     { '<leader>fn', function() Snacks.picker.notifications() end, desc = 'Find notifications' },
     { "<leader>fs", function() Snacks.scratch.select() end, desc = "Find scratch buffer" },
     { "<leader>fH", function() Snacks.picker.highlights() end, desc = "Find highlights groups" },
+    { "<leader>fI", function() Snacks.picker.files({ ft = { "png", "jpg", "jpeg", "gif", "webp", "svg", "ico", "bmp" } }) end, desc = "Find images" },
 
     -- Buffers
     { "<C-x>", function() Snacks.bufdelete() end, desc = "Delete buffer" },

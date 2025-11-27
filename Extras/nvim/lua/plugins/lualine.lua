@@ -6,6 +6,31 @@ return {
     require('mini.icons').setup()
     require('mini.icons').mock_nvim_web_devicons()
 
+    local zk_config = require('modules.zettels.config')
+
+    local function get_note_title()
+      if not zk_config.is_zk_workspace() or vim.bo.filetype ~= 'markdown' then
+        return nil
+      end
+
+      local lines = vim.api.nvim_buf_get_lines(0, 0, 10, false)
+      if #lines == 0 or lines[1] ~= '---' then
+        return nil
+      end
+
+      for i = 2, #lines do
+        if lines[i] == '---' then
+          break
+        end
+        local title = lines[i]:match('^title:%s*["\']?([^"\']+)["\']?%s*$')
+        if title then
+          return title
+        end
+      end
+
+      return nil
+    end
+
     require('lualine').setup({
       options = {
         globalstatus = true,
@@ -42,6 +67,14 @@ return {
             'filename',
             path = 1,
             symbols = { modified = ' ●', readonly = ' ', unnamed = '[No Name]' },
+            fmt = function(filename)
+              local title = get_note_title()
+              if title then
+                local name = vim.fn.expand('%:t')
+                return title .. ' (' .. name .. ')'
+              end
+              return filename
+            end,
           },
         },
         lualine_x = {

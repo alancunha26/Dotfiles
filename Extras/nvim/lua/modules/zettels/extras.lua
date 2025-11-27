@@ -354,4 +354,236 @@ function M.headings()
   end)
 end
 
+-- ============================================================================
+-- Task Management
+-- ============================================================================
+
+local function get_tasks_path()
+  local tasks_path = notes_path .. '/tasks.md'
+
+  if vim.fn.filereadable(tasks_path) == 0 then
+    local date = os.date('%Y-%m-%d')
+    local content = {
+      '---',
+      'title: Tasks',
+      'date: ' .. date,
+      'tags: []',
+      '---',
+      '',
+      '# Tasks',
+      '',
+      '## Do Now',
+      '',
+      '## Do Later',
+      '',
+      '## Do Someday',
+      '',
+    }
+    vim.fn.writefile(content, tasks_path)
+  end
+
+  return tasks_path
+end
+
+local function get_done_path()
+  local done_path = notes_path .. '/done.md'
+
+  if vim.fn.filereadable(done_path) == 0 then
+    local date = os.date('%Y-%m-%d')
+    local content = {
+      '---',
+      'title: Done',
+      'date: ' .. date,
+      'tags: []',
+      '---',
+      '',
+      '# Done',
+      '',
+      '## Tasks',
+      '',
+    }
+    vim.fn.writefile(content, done_path)
+  end
+
+  return done_path
+end
+
+function M.open_tasks()
+  vim.cmd('edit ' .. get_tasks_path())
+end
+
+function M.capture_task()
+  local tasks_path = get_tasks_path()
+  local sections = { 'Do Now', 'Do Later', 'Do Someday' }
+
+  Snacks.picker({
+    title = 'Add Task To',
+    items = vim.tbl_map(function(s)
+      return { text = s, section = s }
+    end, sections),
+    layout = { preset = 'vscode' },
+    format = function(item)
+      return { { item.text } }
+    end,
+    confirm = function(picker, item)
+      picker:close()
+
+      vim.schedule(function()
+        vim.ui.input({ prompt = 'Task: ' }, function(task)
+          vim.schedule(function()
+            vim.cmd('stopinsert')
+          end)
+
+          if not task or task == '' then
+            return
+          end
+
+          task = vim.fn.trim(task)
+          local lines = vim.fn.readfile(tasks_path)
+          local section_header = '## ' .. item.section
+          local inserted = false
+
+          for i, line in ipairs(lines) do
+            if line == section_header then
+              local insert_pos = i + 1
+              -- Skip empty line after header if present
+              if lines[insert_pos] == '' then
+                insert_pos = insert_pos + 1
+              end
+
+              -- Insert the task
+              table.insert(lines, insert_pos, '- [ ] ' .. task)
+
+              -- Ensure empty line before next heading
+              if lines[insert_pos + 1] and lines[insert_pos + 1]:match('^#') then
+                table.insert(lines, insert_pos + 1, '')
+              end
+
+              inserted = true
+              break
+            end
+          end
+
+          if inserted then
+            vim.fn.writefile(lines, tasks_path)
+            vim.notify('Task added to ' .. item.section, vim.log.levels.INFO)
+          else
+            vim.notify('Section not found: ' .. item.section, vim.log.levels.ERROR)
+          end
+        end)
+      end)
+    end,
+  })
+end
+
+function M.complete_task()
+  local line = vim.api.nvim_get_current_line()
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+
+  local task_text
+  local is_incomplete = line:match('^%s*%- %[ %]')
+  local is_complete = line:match('^%s*%- %[x%]')
+
+  if is_incomplete then
+    task_text = line:gsub('^%s*%- %[ %] ', '')
+  elseif is_complete then
+    task_text = line:gsub('^%s*%- %[x%] ', '')
+  else
+    vim.notify('Not on a task line', vim.log.levels.WARN)
+    return
+  end
+  local date = os.date('%Y-%m-%d')
+  local done_entry = '- [x] ' .. task_text .. ' (' .. date .. ')'
+
+  -- Remove from current file
+  vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, false, {})
+
+  -- Add to done.md (at the top, after the ## Tasks header)
+  local done_path = get_done_path()
+  local done_lines = vim.fn.readfile(done_path)
+
+  -- Find the "## Tasks" header and insert after it
+  for i, l in ipairs(done_lines) do
+    if l:match('^## Tasks') then
+      -- Insert after header, skip empty line if present
+      local insert_pos = i + 1
+      if done_lines[insert_pos] == '' then
+        insert_pos = insert_pos + 1
+      end
+      table.insert(done_lines, insert_pos, done_entry)
+      break
+    end
+  end
+
+  vim.fn.writefile(done_lines, done_path)
+  vim.notify('Task completed!', vim.log.levels.INFO)
+end
+
+function M.toggle_task()
+  local line = vim.api.nvim_get_current_line()
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+
+  local new_line
+  if line:match('^%s*%- %[ %]') then
+    new_line = line:gsub('%- %[ %]', '- [x]', 1)
+  elseif line:match('^%s*%- %[x%]') then
+    new_line = line:gsub('%- %[x%]', '- [ ]', 1)
+  else
+    vim.notify('Not on a task line', vim.log.levels.WARN)
+    return
+  end
+
+  vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, false, { new_line })
+end
+
+function M.find_tasks()
+  local tasks_path = get_tasks_path()
+  local lines = vim.fn.readfile(tasks_path)
+
+  local items = {}
+  local current_section = nil
+
+  for i, line in ipairs(lines) do
+    -- Track current section
+    local section = line:match('^## (.+)$')
+    if section then
+      current_section = section
+    end
+
+    -- Collect tasks
+    if line:match('^%- %[ %]') and current_section then
+      local task_text = line:gsub('^%- %[ %] ', '')
+      table.insert(items, {
+        text = current_section .. ' ' .. task_text,
+        file = tasks_path,
+        pos = { i, 0 },
+        section = current_section,
+        task = task_text,
+      })
+    end
+  end
+
+  Snacks.picker({
+    title = 'Tasks',
+    items = items,
+    format = function(item, picker)
+      local ret = {}
+
+      -- Section badge
+      local section_hl = 'SnacksPickerDir'
+      if item.section == 'Do Now' then
+        section_hl = 'DiagnosticError'
+      elseif item.section == 'Do Later' then
+        section_hl = 'DiagnosticWarn'
+      end
+
+      ret[#ret + 1] = { '[' .. item.section .. ']', section_hl, virtual = true }
+      ret[#ret + 1] = { ' ', virtual = true }
+      ret[#ret + 1] = { item.task }
+
+      return ret
+    end,
+  })
+end
+
 return M

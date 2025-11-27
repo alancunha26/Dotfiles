@@ -1,7 +1,7 @@
 return {
   'zk-org/zk-nvim',
   cond = function()
-    return vim.fn.isdirectory(vim.fn.getcwd() .. '/.zk') == 1
+    return require('modules.zettels.config').is_zk_workspace()
   end,
   config = function()
     require('zk').setup({
@@ -43,6 +43,13 @@ return {
       { '<leader>zz', extras.open_index, desc = 'Open index zettel' },
       { '<leader>zc', extras.quick_capture, desc = 'Quick capture to inbox' },
       { '<leader>zi', extras.open_inbox, desc = 'Open inbox' },
+
+      -- Task management
+      { '<leader>zo', extras.open_tasks, desc = 'Open tasks' },
+      { '<leader>za', extras.capture_task, desc = 'Add task' },
+      { '<leader>zx', extras.toggle_task, desc = 'Toggle task checkbox' },
+      { '<leader>zX', extras.complete_task, desc = 'Complete task' },
+      { '<leader>zs', extras.find_tasks, desc = 'Find tasks' },
     }
   end,
 }
