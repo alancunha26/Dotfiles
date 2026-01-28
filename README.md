@@ -206,7 +206,8 @@ sudo systemctl enable --now bluetooth.service
 Ly Display Manager:
 
 ```shell
-sudo systemctl enable --now ly.service
+systemctl enable ly@tty2.service
+systemctl disable getty@tty2.service
 ```
 
 #### Download and install the themes
