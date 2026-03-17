@@ -174,3 +174,15 @@ window#waybar > box {
 #clock:hover {
   opacity: 0.7;
 }
+
+#idle_inhibitor {
+  margin-right: 4px;
+  margin-left: 8px;
+  color: @foreground;
+  min-width: 18px;
+  transition: all 0.15s ease-in-out;
+}
+
+#idle_inhibitor:hover {
+  opacity: 0.7;
+}

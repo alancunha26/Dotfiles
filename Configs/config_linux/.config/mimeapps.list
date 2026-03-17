@@ -163,3 +163,4 @@ video/x-theora=mpv.desktop;
 video/x-theora+ogg=mpv.desktop;
 x-scheme-handler/whatsapp=brave-browser.desktop;
 application/x-zerosize=nvim.desktop;
+audio/mpeg=mpv.desktop;

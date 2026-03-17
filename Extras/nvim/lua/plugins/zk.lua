@@ -3,6 +3,10 @@ return {
   cond = function()
     return require('modules.zettels.config').is_zk_workspace()
   end,
+  init = function()
+    -- Grimoire sync starts eagerly (doesn't need zk plugin loaded)
+    require('modules.zettels.sync').setup()
+  end,
   config = function()
     require('zk').setup({
       picker = 'snacks_picker',
@@ -50,6 +54,9 @@ return {
       { '<leader>zx', extras.toggle_task, desc = 'Toggle task checkbox' },
       { '<leader>zX', extras.complete_task, desc = 'Complete task' },
       { '<leader>zs', extras.find_tasks, desc = 'Find tasks' },
+
+      -- Grimoire sync
+      { '<leader>zv', function() require('modules.zettels.sync').force_navigate() end, desc = 'Preview in Grimoire' },
     }
   end,
 }

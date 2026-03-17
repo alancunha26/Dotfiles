@@ -1,3 +1,8 @@
+-- [[ Text expansion (insert-mode abbreviations) ]]
+vim.cmd("inoreabbrev ,m —")
+vim.cmd("inoreabbrev ,n –")
+vim.cmd("iabbrev <expr> ,d strftime('%Y-%m-%d')")
+vim.cmd("iabbrev <expr> ,t strftime('%Y-%m-%dT%TZ')")
 -- [[ General Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

@@ -288,6 +288,7 @@ end
 function M.grep()
   build_title_collection(function(collection)
     Snacks.picker.grep({
+      dirs = { notes_path },
       format = grep_format_with_titles(collection),
     })
   end)
@@ -296,14 +297,14 @@ end
 function M.headings()
   build_title_collection(function(collection)
     -- Run rg to get all headings
-    local cmd = { 'rg', '--line-number', '--no-heading', '--color=never', '^#{1,6} ', '-g', '*.md' }
+    local cmd = { 'rg', '--line-number', '--no-heading', '--color=never', '^#{1,6} ', '-g', '*.md', notes_path }
     local output = vim.fn.systemlist(cmd)
 
     local items = {}
     for _, line in ipairs(output) do
       local file, lnum, content = line:match('^([^:]+):(%d+):(.*)$')
       if file and lnum and content then
-        local heading = content:gsub('^#+ ', '')
+        local heading = vim.fn.trim((content:gsub('^#+ ', '')))
         local abs_path = vim.fn.fnamemodify(file, ':p')
         local title = collection[abs_path]
         local filename = vim.fn.fnamemodify(file, ':t')
@@ -339,11 +340,9 @@ function M.headings()
 
         ret[#ret + 1] = { ' ', virtual = true }
 
-        -- Add heading indent (virtual)
-        local indent = string.rep('  ', item.level - 1)
-        if #indent > 0 then
-          ret[#ret + 1] = { indent, nil, virtual = true }
-        end
+        -- Add heading level indicator (virtual)
+        local level_hl = '@markup.heading.' .. item.level .. '.markdown'
+        ret[#ret + 1] = { 'H' .. item.level .. ' ', level_hl, virtual = true }
 
         -- Heading text gets match highlighting
         ret[#ret + 1] = { item.heading }
