@@ -145,8 +145,15 @@ end
 -- Flag to suppress our autocmds during browser-initiated actions
 M._from_browser = false
 
+-- Don't disrupt insert/visual/command mode — sync can wait
+local function is_editing()
+  local mode = vim.api.nvim_get_mode().mode
+  return mode ~= "n" and mode ~= "no" and mode ~= "nt"
+end
+
 -- Called by the Vite server to open a file without polluting the jump list
 function M.open_from_browser(filepath)
+  if is_editing() then return "" end
   local current = vim.api.nvim_buf_get_name(0)
   if current == filepath then return "" end
 
@@ -160,6 +167,7 @@ end
 -- Called by the Vite server to scroll to a line without polluting the jump list
 -- `line` is content-relative (after frontmatter)
 function M.scroll_from_browser(filepath, line)
+  if is_editing() then return "" end
   local current = vim.api.nvim_buf_get_name(0)
   if current ~= filepath then
     M._from_browser = true
@@ -182,6 +190,49 @@ function M.force_navigate()
   last_note_id = nil
   last_top_line = nil
   M.navigate()
+end
+
+-- Grimoire dev server management
+local grimoire_job = nil
+local grimoire_dir = vim.fn.getcwd() .. "/grimoire"
+
+function M.toggle_server()
+  if grimoire_job then
+    vim.fn.jobstop(grimoire_job)
+    grimoire_job = nil
+    registered = false
+    vim.notify("[grimoire] Server stopped")
+  else
+    grimoire_job = vim.fn.jobstart({ "pnpm", "dev" }, {
+      cwd = grimoire_dir,
+      on_exit = function()
+        grimoire_job = nil
+      end,
+    })
+
+    vim.defer_fn(function()
+      vim.ui.open("http://localhost:4321")
+    end, 3000)
+
+    vim.notify("[grimoire] Starting dev server...")
+  end
+end
+
+function M.clear_cache()
+  if grimoire_job then
+    vim.fn.jobstop(grimoire_job)
+    grimoire_job = nil
+    registered = false
+  end
+
+  vim.fn.jobstart({ "rm", "-rf", "dist", ".astro" }, {
+    cwd = grimoire_dir,
+    on_exit = function()
+      vim.schedule(function()
+        vim.notify("[grimoire] Cache cleared, server stopped")
+      end)
+    end,
+  })
 end
 
 -- Set up autocmds and register with the Vite server
