@@ -80,6 +80,7 @@ video/x-theora=mpv.desktop;
 video/x-theora+ogg=mpv.desktop;
 x-scheme-handler/whatsapp=brave-browser.desktop;
 x-scheme-handlers/zoommtg=brave-browser.desktop;
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 
 [Added Associations]
 text/*=kitty-open.desktop;

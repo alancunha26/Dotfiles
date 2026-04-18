@@ -32,6 +32,7 @@ return {
   end,
   keys = function()
     local extras = require('modules.zettels.extras')
+    local views = require('modules.zettels.views')
     return {
       { '<leader>z!', '<Cmd>ZkIndex<CR>', desc = 'Index zettels' },
       { '<leader>zt', '<Cmd>ZkTags<CR>', desc = 'Find tags' },
@@ -56,9 +57,13 @@ return {
       { '<leader>zX', extras.complete_task, desc = 'Complete task' },
       { '<leader>zs', extras.find_tasks, desc = 'Find tasks' },
 
+      -- Views
+      { '<leader>zv', views.insert, desc = 'Insert zk view' },
+      { '<leader>zV', views.update, desc = 'Update zk views' },
+
       -- Grimoire
       {
-        '<leader>zv',
+        '<leader>zw',
         function()
           require('modules.zettels.sync').force_navigate()
         end,
