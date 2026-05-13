@@ -37,7 +37,7 @@ return {
       -- drag and drop options
       drag_and_drop = {
         enabled = true, ---@type boolean | fun(): boolean
-        insert_mode = true, ---@type boolean | fun(): boolean
+        insert_mode = false, ---@type boolean | fun(): boolean
       },
     },
 

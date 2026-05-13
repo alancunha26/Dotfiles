@@ -55,7 +55,13 @@ return {
                 key = 't',
                 desc = 'Find Tags',
                 action = function()
-                  require('zk').pick_tags(nil, { title = 'Zk Tags' })
+                  local zk = require('zk')
+                  zk.pick_tags(nil, { title = 'Zk Tags' }, function(tags)
+                    tags = vim.tbl_map(function(v)
+                      return v.name
+                    end, tags)
+                    zk.edit({ tags = tags }, { title = 'Zk Notes for tag(s) ' .. vim.inspect(tags) })
+                  end)
                 end,
               },
               {

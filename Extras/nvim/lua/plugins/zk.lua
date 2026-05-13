@@ -29,6 +29,8 @@ return {
         },
       },
     })
+
+    require('modules.zettels.pickers').setup()
   end,
   keys = function()
     local extras = require('modules.zettels.extras')
@@ -47,19 +49,20 @@ return {
       { '<leader>zg', extras.grep, desc = 'Grep zettels' },
       { '<leader>zh', extras.headings, desc = 'Find headings' },
       { '<leader>zz', extras.open_index, desc = 'Open index zettel' },
-      { '<leader>zc', extras.quick_capture, desc = 'Quick capture to inbox' },
-      { '<leader>zi', extras.open_inbox, desc = 'Open inbox' },
+      { '<leader>zd', extras.open_daily, desc = 'Open daily note' },
 
-      -- Task management
-      { '<leader>zo', extras.open_tasks, desc = 'Open tasks' },
-      { '<leader>za', extras.capture_task, desc = 'Add task' },
+      -- Backlog & capture
+      { '<leader>zo', extras.open_backlog, desc = 'Open backlog' },
+      { '<leader>zc', extras.capture, desc = 'Capture task (today / backlog)' },
+      { '<leader>zp', extras.pull_from_backlog, desc = 'Pull backlog item into today' },
+      { '<leader>zP', extras.push_to_backlog, desc = 'Push current line to backlog' },
+      { '<leader>zs', extras.find_backlog, desc = 'Find backlog items' },
       { '<leader>zx', extras.toggle_task, desc = 'Toggle task checkbox' },
-      { '<leader>zX', extras.complete_task, desc = 'Complete task' },
-      { '<leader>zs', extras.find_tasks, desc = 'Find tasks' },
 
       -- Views
       { '<leader>zv', views.insert, desc = 'Insert zk view' },
       { '<leader>zV', views.update, desc = 'Update zk views' },
+      { '<leader>zU', views.update_all, desc = 'Update all zk views' },
 
       -- Grimoire
       {

@@ -20,6 +20,7 @@ local MARKER_CLOSE = '<!%-%- /zk%-view %-%->'
 ---   --tagless         notes with no tags
 ---   --sort=TERM       sort order (created, modified, path, title, random, word-count)
 ---   --group=letter    group results by first letter of title
+---   --group=year      group results by year read from the date frontmatter
 ---   --level=N         heading level for groups (default: 3, producing ###)
 ---   --links-to=PATH  notes that link to the given file (use "self" for current file)
 ---   --linked-by=PATH notes linked by the given file (use "self" for current file)
@@ -132,6 +133,45 @@ local function build_command(parsed, current_file)
   return cmd
 end
 
+--- Split a string into alternating text and number chunks for natural sorting.
+--- e.g. "NEX-10" -> {"nex-", 10}
+local function natural_key(s)
+  local parts = {}
+  local i = 1
+  while i <= #s do
+    local num_start, num_end = s:find('%d+', i)
+    if num_start == i then
+      table.insert(parts, tonumber(s:sub(num_start, num_end)))
+      i = num_end + 1
+    elseif num_start then
+      table.insert(parts, s:sub(i, num_start - 1):lower())
+      i = num_start
+    else
+      table.insert(parts, s:sub(i):lower())
+      break
+    end
+  end
+  return parts
+end
+
+--- Natural (human-friendly) string comparison: "NEX-2" < "NEX-10".
+local function natural_compare(a, b)
+  local ka, kb = natural_key(a), natural_key(b)
+  for i = 1, math.max(#ka, #kb) do
+    local pa, pb = ka[i], kb[i]
+    if pa == nil then return true end
+    if pb == nil then return false end
+    if type(pa) ~= type(pb) then
+      -- Numeric chunks sort before text chunks at the same position
+      return type(pa) == 'number'
+    end
+    if pa ~= pb then
+      return pa < pb
+    end
+  end
+  return false
+end
+
 --- Run a zk list command and return filtered results.
 local function run_query(parsed, current_file)
   local cmd = build_command(parsed, current_file)
@@ -171,6 +211,16 @@ local function run_query(parsed, current_file)
       end
     end
     lines = filtered
+  end
+
+  -- zk's --sort=title is lexicographic, so "NEX-10" beats "NEX-2". Re-sort
+  -- naturally when sorting by title (the default).
+  if not parsed.sort or parsed.sort == 'title' then
+    table.sort(lines, function(a, b)
+      local ta = a:match('^%- %[(.-)%]') or a
+      local tb = b:match('^%- %[(.-)%]') or b
+      return natural_compare(ta, tb)
+    end)
   end
 
   return lines
@@ -217,12 +267,78 @@ local function group_by_letter(lines, heading_prefix, level)
   return output
 end
 
+--- Read the `date` field from a note's YAML frontmatter.
+--- Returns the date string (e.g. "2026-05-07") or nil if not found.
+local function read_frontmatter_date(rel_path)
+  local abs_path = notes_path .. '/' .. rel_path
+  local ok, lines = pcall(vim.fn.readfile, abs_path, '', 20)
+  if not ok or not lines then
+    return nil
+  end
+  for _, line in ipairs(lines) do
+    local date = line:match('^date:%s*"?([%d%-]+)')
+    if date then
+      return date
+    end
+  end
+  return nil
+end
+
+--- Group result lines by year read from the `date` frontmatter field.
+--- Years are listed most-recent first; entries within a year are sorted by
+--- date descending (so the latest entry appears at the top of each year).
+--- Notes without a parseable date are dropped.
+local function group_by_year(lines, heading_prefix, level)
+  local groups = {}
+  local order = {}
+
+  for _, line in ipairs(lines) do
+    local path = line:match('%]%((.-)%)')
+    local date = path and read_frontmatter_date(path)
+    if date then
+      local year = date:sub(1, 4)
+      if not groups[year] then
+        groups[year] = {}
+        table.insert(order, year)
+      end
+      table.insert(groups[year], { line = line, date = date })
+    end
+  end
+
+  table.sort(order, function(a, b) return a > b end)
+
+  local prefix = string.rep('#', level) .. ' '
+  local output = {}
+  for i, year in ipairs(order) do
+    if i > 1 then
+      table.insert(output, '')
+    end
+
+    if heading_prefix then
+      table.insert(output, prefix .. heading_prefix .. ' (' .. year .. ')')
+    else
+      table.insert(output, prefix .. year)
+    end
+
+    table.sort(groups[year], function(a, b) return a.date > b.date end)
+
+    table.insert(output, '')
+    for _, item in ipairs(groups[year]) do
+      table.insert(output, item.line)
+    end
+  end
+
+  return output
+end
+
 --- Run a query and return formatted output lines (flat or grouped).
 local function query_to_lines(parsed, current_file)
   local results = run_query(parsed, current_file)
 
   if parsed.group == 'letter' then
     return group_by_letter(results, parsed.heading, parsed.level)
+  elseif parsed.group == 'year' then
+    return group_by_year(results, parsed.heading, parsed.level)
   end
 
   return results
@@ -264,13 +380,9 @@ local function match_view_open(lines, i)
   return nil
 end
 
---- Update all zk-view blocks in the current buffer.
-function M.update()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local filepath = vim.api.nvim_buf_get_name(bufnr)
-  local rel_path = vim.fn.fnamemodify(filepath, ':.')
-
+--- Rewrite every zk-view block in `lines`, returning the new lines and the
+--- number of views updated.
+local function process_lines(lines, rel_path)
   local new_lines = {}
   local i = 1
   local updated = 0
@@ -313,12 +425,124 @@ function M.update()
     i = i + 1
   end
 
+  return new_lines, updated
+end
+
+--- Update all zk-view blocks in the current buffer.
+function M.update()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+  local rel_path = vim.fn.fnamemodify(filepath, ':.')
+
+  local new_lines, updated = process_lines(lines, rel_path)
+
   if updated > 0 then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, new_lines)
     vim.notify('Updated ' .. updated .. ' view(s)', vim.log.levels.INFO)
   else
     vim.notify('No zk-view blocks found', vim.log.levels.WARN)
   end
+end
+
+--- Update zk-view blocks in every markdown file under the notebook.
+--- Uses ripgrep to find files with view markers, then processes one file per
+--- event-loop tick so the UI stays responsive. Files with unsaved buffer
+--- changes are skipped.
+function M.update_all()
+  local rg_cmd = {
+    'rg',
+    '--files-with-matches',
+    '--no-messages',
+    '--fixed-strings',
+    '-g',
+    '*.md',
+    '-g',
+    '!.zk/',
+    '<!-- zk-view:',
+    notes_path,
+  }
+
+  vim.system(rg_cmd, { text = true }, function(result)
+    vim.schedule(function()
+      local files = {}
+      for line in (result.stdout or ''):gmatch('[^\n]+') do
+        table.insert(files, line)
+      end
+
+      local total = #files
+      if total == 0 then
+        vim.notify('No zk-view blocks found in notebook', vim.log.levels.INFO)
+        return
+      end
+
+      local files_updated = 0
+      local views_updated = 0
+      local skipped_unsaved = 0
+      local index = 1
+      local started_at = (vim.uv or vim.loop).hrtime()
+
+      vim.notify('Updating zk-views in ' .. total .. ' file(s)...', vim.log.levels.INFO)
+
+      local function step()
+        if index > total then
+          local elapsed_ms = ((vim.uv or vim.loop).hrtime() - started_at) / 1e6
+          local msg = string.format(
+            'zk-views: updated %d view(s) in %d file(s) (%.0fms)',
+            views_updated,
+            files_updated,
+            elapsed_ms
+          )
+          if skipped_unsaved > 0 then
+            msg = msg .. ' — skipped ' .. skipped_unsaved .. ' unsaved buffer(s)'
+          end
+          vim.notify(msg, vim.log.levels.INFO)
+          return
+        end
+
+        local file = files[index]
+        index = index + 1
+
+        local bufnr = vim.fn.bufnr(file)
+        local loaded = bufnr ~= -1 and vim.api.nvim_buf_is_loaded(bufnr)
+        local modified = loaded and vim.bo[bufnr].modified
+
+        if modified then
+          skipped_unsaved = skipped_unsaved + 1
+          vim.schedule(step)
+          return
+        end
+
+        local ok, lines = pcall(vim.fn.readfile, file)
+        if not ok or not lines then
+          vim.schedule(step)
+          return
+        end
+
+        local rel_path = vim.fn.fnamemodify(file, ':.')
+        local new_lines, updated = process_lines(lines, rel_path)
+
+        if updated > 0 then
+          local write_ok = pcall(vim.fn.writefile, new_lines, file)
+          if write_ok then
+            files_updated = files_updated + 1
+            views_updated = views_updated + updated
+
+            -- Reload the buffer from disk if it's currently loaded and unmodified
+            if loaded then
+              vim.api.nvim_buf_call(bufnr, function()
+                vim.cmd('checktime')
+              end)
+            end
+          end
+        end
+
+        vim.schedule(step)
+      end
+
+      vim.schedule(step)
+    end)
+  end)
 end
 
 --- Insert a new zk-view block at the cursor position.
