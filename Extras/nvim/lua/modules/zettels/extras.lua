@@ -878,6 +878,99 @@ function M.toggle_task()
   vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, false, { new_line })
 end
 
+local function plain_replace(s, old, new)
+  local parts = {}
+  local i = 1
+  while i <= #s do
+    local j = s:find(old, i, true)
+    if j then
+      parts[#parts + 1] = s:sub(i, j - 1)
+      parts[#parts + 1] = new
+      i = j + #old
+    else
+      parts[#parts + 1] = s:sub(i)
+      break
+    end
+  end
+  return table.concat(parts)
+end
+
+function M.rename_note()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+
+  if filepath == '' then
+    vim.notify('No file open', vim.log.levels.WARN)
+    return
+  end
+
+  local filename = vim.fn.fnamemodify(filepath, ':t')
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  if lines[1] ~= '---' then
+    vim.notify('No frontmatter found', vim.log.levels.WARN)
+    return
+  end
+
+  local old_title, title_lnum
+  for i = 2, #lines do
+    if lines[i] == '---' then
+      break
+    end
+    local t = lines[i]:match('^title:%s*(.+)$')
+    if t then
+      old_title = vim.fn.trim(t)
+      title_lnum = i
+      break
+    end
+  end
+
+  if not old_title then
+    vim.notify('No title in frontmatter', vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.input({ prompt = 'New title: ', default = old_title }, function(new_title)
+    if not new_title or new_title == '' or new_title == old_title then
+      return
+    end
+
+    vim.api.nvim_buf_set_lines(bufnr, title_lnum - 1, title_lnum, false, { 'title: ' .. new_title })
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd('silent write')
+    end)
+
+    local old_link = '[' .. old_title .. '](' .. filename .. ')'
+    local new_link = '[' .. new_title .. '](' .. filename .. ')'
+    local md_files = vim.fn.glob(notes_path .. '/**/*.md', false, true)
+    local updated = 0
+
+    for _, file in ipairs(md_files) do
+      local file_lines = vim.fn.readfile(file)
+      local changed = false
+
+      for i, line in ipairs(file_lines) do
+        if line:find(old_link, 1, true) then
+          file_lines[i] = plain_replace(line, old_link, new_link)
+          changed = true
+        end
+      end
+
+      if changed then
+        vim.fn.writefile(file_lines, file)
+        reload_buffer_if_open(file)
+        updated = updated + 1
+      end
+    end
+
+    reload_buffer_if_open(filepath)
+    vim.notify(
+      string.format('Renamed "%s" → "%s" (%d file(s) updated)', old_title, new_title, updated),
+      vim.log.levels.INFO
+    )
+  end)
+end
+
 function M.find_backlog()
   local backlog_path = get_backlog_path()
   local lines = vim.fn.readfile(backlog_path)

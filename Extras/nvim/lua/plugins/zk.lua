@@ -42,6 +42,7 @@ return {
       { '<leader>zl', '<Cmd>ZkLinks<CR>', desc = 'Find linked zettels' },
       { '<leader>zb', extras.buffers, desc = 'Find zettels buffers' },
       { '<leader>zB', '<Cmd>ZkBacklinks<CR>', desc = 'Find zettels backlinks' },
+      { '<leader>zr', extras.rename_note, desc = 'Rename note' },
       { '<leader>zn', extras.new_zettel, mode = { 'n', 'v' }, desc = 'New zettel' },
       { '<leader>zN', extras.new_zettel_from_template, mode = { 'n', 'v' }, desc = 'New zettel from template' },
       { '<leader>zT', extras.insert_template, mode = { 'n', 'v' }, desc = 'Insert template' },
