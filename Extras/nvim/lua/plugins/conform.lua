@@ -16,8 +16,11 @@ return {
         lsp_format_opt = 'fallback'
       end
 
+      -- gdformat is a Python CLI; cold starts alone exceed 500ms
+      local slow_formatters = { gdscript = 2000 }
+
       return {
-        timeout_ms = 500,
+        timeout_ms = slow_formatters[vim.bo[bufnr].filetype] or 500,
         lsp_format = lsp_format_opt,
       }
     end,
@@ -34,6 +37,7 @@ return {
       yaml = { 'prettier' },
       markdown = { 'prettier' },
       graphql = { 'prettier' },
+      gdscript = { 'gdformat' },
 
       -- Conform can also run multiple formatters sequentially
       -- python = { "isort", "black" },

@@ -145,6 +145,9 @@ return {
         },
       },
       others = {
+        -- Hosted by the Godot editor itself (tcp 127.0.0.1:6005);
+        -- only attaches while the editor is running.
+        gdscript = {},
         -- zk = {},
       },
     }
@@ -173,6 +176,7 @@ return {
       'prettierd',
       'markdownlint',
       'typescript-language-server',
+      'gdtoolkit',
     }
 
     -- Install both servers and tools

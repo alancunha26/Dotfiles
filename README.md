@@ -244,6 +244,42 @@ Run games on steam with gamescope by pasting this on Steam launch options:
 gamescope -w 1920 -h 1080 -r 240.0 -b -e --backend=sdl --adaptive-sync --force-grab-cursor -- %command%
 ```
 
+#### Setup Godot with Neovim
+
+The Neovim side (GDScript LSP, treesitter, `gdformat` and the `server.pipe`
+listener) comes with the dotfiles, but on a fresh Godot install the editor
+must be configured manually under `Editor > Editor Settings`:
+
+1. **Text Editor > External**:
+   - `Use External Editor`: **on**
+   - `Exec Path`: `/usr/bin/nvim`
+   - `Exec Flags`:
+
+     ```
+     --server {project}/server.pipe --remote-send "<C-\><C-N>:e {file}<CR>:call cursor({line}+1,{col})<CR>"
+     ```
+
+2. **Network > Language Server**:
+   - `Use Thread`: **on**
+   - Leave the port at the default `6005` (what Neovim connects to).
+
+These settings are global (stored in `~/.config/godot/editor_settings-*.tres`),
+so this is a once-per-machine setup, not per project.
+
+Usage: open the Godot editor and launch `nvim` from anywhere inside the
+project (it creates `<project>/server.pipe` on startup). Double-clicking a
+script in Godot then opens it in the running Neovim at the right line, and
+the `gdscript` LSP attaches through the editor. Add `server.pipe` to the
+project's `.gitignore`. If scripts stop opening in Neovim after a crash,
+delete the stale `server.pipe` and restart Neovim.
+
+Node-path (`$Node`) completions come from the scene file on disk, and
+Godot's LSP caches them until the client reconnects. The config handles
+this automatically: when Neovim regains focus after a scene changed on
+disk, it restarts the `gdscript` client. So to see new/renamed nodes in
+completion, save the scene (`Ctrl+S`) in Godot before switching back to
+Neovim. Inside tmux this needs `set -g focus-events on`.
+
 #### Common Fixes
 
 To fix a ntfs drive just you can try to run:
