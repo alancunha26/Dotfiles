@@ -40,7 +40,7 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra yazi 7zip poppler zoxide resvg ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava
 ```
 
 Optionally you can also install the **Extra Packages**.
@@ -60,7 +60,7 @@ sudo pacman -Rsn $(pacman -Qdtq)
 Alternatively you can install the WSL version:
 
 ```shell
-yay -Sy neovim-nightly luarocks ripgrep fastfetch zsh starship xdg-ninja stow pacseek less fzf zk btop lazydocker lazygit
+yay -Sy neovim-nightly tree-sitter-cli luarocks ripgrep fastfetch zsh starship xdg-ninja stow pacseek less fzf zk btop lazydocker lazygit
 ```
 
 Install the clipboard manager for WSL integration on windows:
@@ -260,6 +260,14 @@ To fix audio/mic problems setup configuration with `alsamixer` and then run the 
 sudo alsactl store
 ```
 
+To fix keyboard layout issues on the `ly` greeter (e.g. typing `@` produces `@2`, or missing Portuguese dead keys), set the TTY console keymap to `us-acentos` (the console equivalent of `us-intl`):
+
+```shell
+sudo localectl set-keymap us-acentos
+```
+
+Reboot for the change to take effect.
+
 #### Arch Linux Packages
 
 _Core Packages_
@@ -335,6 +343,7 @@ _Core Packages_
 | ffmpeg-audio-thumbnailer    | Audio thumbnails for nautilus                   |
 | tumbler                     | Thumbnails for evey file manager (not nautilus) |
 | neovim-nightly              | Terminal text editor                            |
+| tree-sitter-cli             | Required by nvim treesitter parser manager      |
 | mpv                         | Video player                                    |
 | nsxiv                       | Simple image viewer                             |
 | zathura                     | Simple document viewer                          |
@@ -345,11 +354,6 @@ _Core Packages_
 | sassc                       | Deps for GTK Theme                              |
 | gtk-engine-murrine          | Deps for GTK Theme                              |
 | gnome-themes-extra          | Deps for GTK Theme                              |
-| yazi                        | TUI file manager                                |
-| 7zip                        | Archiving for yazi                              |
-| poppler                     | Pdf preview for yazi                            |
-| zoxide                      | Historical directories navigation for yazi      |
-| resvg                       | Svg preview yazi                                |
 | ntfs-3g                     | NTFS filesystem driver and utilities            |
 | gnome-keyring               | Gnome keyring                                   |
 | wiremix                     | TUI audio manager                               |

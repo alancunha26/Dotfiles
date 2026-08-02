@@ -164,11 +164,15 @@ return {
     })
 
     -- Formatters and linters (NOT LSP servers)
+    -- typescript-language-server is here (not in lsp_servers) because
+    -- typescript-tools.nvim handles TS via its own LSP; we only need
+    -- Mason to provide the bundled tsserver binary as a fallback.
     local tools = {
       'stylua',
       'prettier',
       'prettierd',
       'markdownlint',
+      'typescript-language-server',
     }
 
     -- Install both servers and tools

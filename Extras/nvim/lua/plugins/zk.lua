@@ -37,7 +37,9 @@ return {
     local views = require('modules.zettels.views')
     return {
       { '<leader>z!', '<Cmd>ZkIndex<CR>', desc = 'Index zettels' },
-      { '<leader>zt', '<Cmd>ZkTags<CR>', desc = 'Find tags' },
+      -- `{ sort = {} }` works around a zk-nvim bug where `:ZkTags` with no
+      -- args passes nil options and crashes on `options.sort` (PR #290).
+      { '<leader>zt', '<Cmd>ZkTags { sort = {} }<CR>', desc = 'Find tags' },
       { '<leader>zf', '<Cmd>ZkNotes<CR>', desc = 'Find zettels' },
       { '<leader>zl', '<Cmd>ZkLinks<CR>', desc = 'Find linked zettels' },
       { '<leader>zb', extras.buffers, desc = 'Find zettels buffers' },
