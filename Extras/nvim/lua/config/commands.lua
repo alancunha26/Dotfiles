@@ -80,14 +80,13 @@ if godot_root then
     desc = 'Restart GDScript LSP when a Godot scene changed on disk',
     group = vim.api.nvim_create_augroup('godot-scene-watch', { clear = true }),
     callback = function()
+      -- godotdev.nvim owns the LSP client; reconnecting clears Godot's
+      -- stale per-script scene cache
       if not scenes_changed() or #vim.lsp.get_clients({ name = 'gdscript' }) == 0 then
         return
       end
-      vim.notify('Godot scene changed, reloading GDScript LSP', vim.log.levels.INFO)
-      vim.lsp.enable('gdscript', false)
-      vim.defer_fn(function()
-        vim.lsp.enable('gdscript')
-      end, 500)
+      -- GodotReconnectLSP already notifies, no extra message needed
+      vim.cmd('GodotReconnectLSP')
     end,
   })
 end

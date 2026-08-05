@@ -55,9 +55,18 @@
     "network",
     "bluetooth",
     "battery",
+    "custom/recording",
     "clock"
   ],
   // ======================
+  "custom/recording": {
+    "exec": "$HOME/.local/bin/wf-record status",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 8,
+    "on-click": "$HOME/.local/bin/wf-record",
+    "tooltip": true
+  },
   "group/systray": {
     "orientation": "inherit",
     "drawer": {

@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+## Toggle screen recording with wf-recorder.
+## Usage: wf-record [area|output|menu]
+## area/output record PC audio; menu picks audio source and mode via rofi.
+## "PC audio + mic" records through a temporary null sink fed by two loopbacks.
+
+STATE="${XDG_RUNTIME_DIR:-/tmp}/wf-record.path"
+MODFILE="${XDG_RUNTIME_DIR:-/tmp}/wf-record.modules"
+
+## Waybar indicator (custom/recording module, signal 8)
+if [ "$1" = status ]; then
+    if pgrep -x wf-recorder > /dev/null; then
+        printf '{"text": "󰑊", "class": "recording", "tooltip": "Recording: %s"}\n' \
+            "$(cat "$STATE" 2> /dev/null)"
+    else
+        echo '{"text": ""}'
+    fi
+    exit 0
+fi
+
+unload_mix() {
+    if [ -f "$MODFILE" ]; then
+        xargs -r -n1 pactl unload-module < "$MODFILE" 2> /dev/null
+        rm -f "$MODFILE"
+    fi
+}
+
+if pgrep -x wf-recorder > /dev/null; then
+    pkill -INT -x wf-recorder
+    for _ in $(seq 20); do pgrep -x wf-recorder > /dev/null || break; sleep 0.1; done
+    unload_mix
+    FILE="$(cat "$STATE" 2> /dev/null)"
+    THUMB="${XDG_RUNTIME_DIR:-/tmp}/wf-record-thumb.png"
+    rm -f "$THUMB"
+    [ -f "$FILE" ] && ffmpeg -y -loglevel error -i "$FILE" \
+        -vf 'thumbnail,scale=320:-2' -frames:v 1 "$THUMB" 2> /dev/null
+    if [ -f "$THUMB" ]; then
+        notify-send -i "$THUMB" "Recording stopped" "Saved to $FILE"
+    else
+        notify-send "Recording stopped" "Saved to $FILE"
+    fi
+    pkill -RTMIN+8 -x waybar
+    exit 0
+fi
+unload_mix # clean up leftovers from a crashed run
+
+MODE="${1:-area}"
+SINK="$(pactl get-default-sink 2> /dev/null)"
+AUDIO="${SINK:+$SINK.monitor}" # PC audio by default
+MIX=''
+MIC=''
+
+pick_mic() {
+    if [ "${#MICS[@]}" -eq 1 ]; then
+        printf '%s' "${MICS[0]#*$'\t'}"
+    else
+        local choice
+        choice="$(printf '%s\n' "${MICS[@]%%$'\t'*}" | rofi -dmenu -p 'Microphone')" || return 1
+        for mic in "${MICS[@]}"; do
+            [ "${mic%%$'\t'*}" = "$choice" ] && printf '%s' "${mic#*$'\t'}" && return 0
+        done
+        return 1
+    fi
+}
+
+if [ "$MODE" = menu ]; then
+    mapfile -t MICS < <(pactl -f json list sources \
+        | jq -r '.[] | select(.name | endswith(".monitor") | not) | "\(.description)\t\(.name)"')
+    CHOICE="$(printf '%s\n' 'PC audio' 'PC audio + mic' "${MICS[@]%%$'\t'*}" 'No audio' \
+        | rofi -dmenu -p 'Record audio')" || exit 0
+    case "$CHOICE" in
+        'PC audio') ;;
+        'PC audio + mic')
+            MIX=1
+            MIC="$(pick_mic)" || exit 0
+            ;;
+        'No audio') AUDIO='' ;;
+        *)
+            AUDIO=''
+            for mic in "${MICS[@]}"; do
+                [ "${mic%%$'\t'*}" = "$CHOICE" ] && AUDIO="${mic#*$'\t'}"
+            done
+            [ -n "$AUDIO" ] || exit 1
+            ;;
+    esac
+    MODE=area
+fi
+
+case "$MODE" in
+    area)
+        # Feed visible-window rects to slurp so clicking a window snaps to it
+        # (same technique as grimblast)
+        hyprctl keyword layerrule "noanim,selection" > /dev/null
+        FS_WS="$(hyprctl workspaces -j | jq -r 'map(select(.hasfullscreen) | .id)')"
+        WS="$(hyprctl monitors -j | jq -r '[(foreach .[] as $monitor (0;
+            if $monitor.specialWorkspace.name == "" then $monitor.activeWorkspace
+            else $monitor.specialWorkspace end)).id]')"
+        WINDOWS="$(hyprctl clients -j | jq -r --argjson ws "$WS" --argjson fsws "$FS_WS" \
+            'map(select(([.workspace.id] | inside($ws))
+                and ([.workspace.id] | inside($fsws) | not) or .fullscreen > 0))
+             | .[] | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')"
+        # Monitor rects too: clicking outside any window selects the whole screen
+        MONITORS="$(hyprctl monitors -j | jq -r '.[] |
+            (if (.transform % 2) == 1 then {w: .height, h: .width}
+             else {w: .width, h: .height} end) as $d |
+            "\(.x),\(.y) \(($d.w / .scale | round))x\(($d.h / .scale | round))"')"
+        GEOMETRY="$(printf '%s\n%s\n' "$WINDOWS" "$MONITORS" | sed '/^$/d' | slurp)" || exit 1
+        ARGS=(-g "$GEOMETRY")
+        ;;
+    output)
+        ARGS=(-o "$(hyprctl monitors -j | jq -r '.[] | select(.focused).name')")
+        ;;
+    *)
+        echo "usage: wf-record [area|output|menu]" >&2
+        exit 1
+        ;;
+esac
+
+if [ -n "$MIX" ]; then
+    {
+        pactl load-module module-null-sink sink_name=wfrec_mix \
+            sink_properties=device.description=wf-record-mix
+        pactl load-module module-loopback source="$SINK.monitor" sink=wfrec_mix
+        pactl load-module module-loopback source="$MIC" sink=wfrec_mix
+    } > "$MODFILE" || {
+        unload_mix
+        notify-send "Recording failed" "Could not set up audio mix"
+        exit 1
+    }
+    AUDIO=wfrec_mix.monitor
+fi
+
+[ -n "$AUDIO" ] && ARGS+=(--audio="$AUDIO")
+
+FILE="$(xdg-user-dir VIDEOS)/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4"
+echo "$FILE" > "$STATE"
+notify-send "Recording started" "$FILE"
+(sleep 0.3 && pkill -RTMIN+8 -x waybar) & # refresh indicator once wf-recorder is up
+# color_range=tv: wf-recorder writes limited-range yuv but flags it full,
+# which washes out playback; tv matches the flag to the data
+exec wf-recorder "${ARGS[@]}" -p color_range=tv -f "$FILE"

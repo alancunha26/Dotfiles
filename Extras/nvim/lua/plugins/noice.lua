@@ -45,6 +45,20 @@ return {
           skip = true,
         },
       },
+      {
+        filter = {
+          -- Godot's LSP can't parse the client's reply to its own
+          -- workspace/applyEdit request (sent e.g. when connecting a
+          -- signal) and answers it with a bogus "Method not found" error,
+          -- surfaced by nvim as this harmless notification.
+          -- See: https://github.com/godotengine/godot/issues/105544
+          event = 'notify',
+          find = 'NO_RESULT_CALLBACK_FOUND',
+        },
+        opts = {
+          skip = true,
+        },
+      },
     },
   },
 }

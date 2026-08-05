@@ -40,7 +40,7 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp wf-recorder cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava
 ```
 
 Optionally you can also install the **Extra Packages**.
@@ -246,9 +246,11 @@ gamescope -w 1920 -h 1080 -r 240.0 -b -e --backend=sdl --adaptive-sync --force-g
 
 #### Setup Godot with Neovim
 
-The Neovim side (GDScript LSP, treesitter, `gdformat` and the `server.pipe`
-listener) comes with the dotfiles, but on a fresh Godot install the editor
-must be configured manually under `Editor > Editor Settings`:
+The Neovim side comes with the dotfiles: [godotdev.nvim](https://github.com/Mathijs-Bakker/godotdev.nvim)
+(GDScript LSP, DAP debugging, docs viewer, scene tree, `:GodotRun*`
+commands, `gdformat` on save) plus treesitter parsers and the
+`server.pipe` listener. On a fresh Godot install the editor must be
+configured manually under `Editor > Editor Settings`:
 
 1. **Text Editor > External**:
    - `Use External Editor`: **on**
@@ -261,6 +263,9 @@ must be configured manually under `Editor > Editor Settings`:
 
 2. **Network > Language Server**:
    - `Use Thread`: **on**
+   - `Show Native Symbols in Editor`: **on** — go-to-declaration (`gD`) on a
+     built-in class/method then opens its docs in the Godot editor
+     (`:GodotDocsCursor` shows docs inside Neovim instead).
    - Leave the port at the default `6005` (what Neovim connects to).
 
 These settings are global (stored in `~/.config/godot/editor_settings-*.tres`),
@@ -342,6 +347,7 @@ _Core Packages_
 | waybar                      | System bar                                      |
 | grim                        | Screenshot tool                                 |
 | slurp                       | Region selector for screenshot/screenshare      |
+| wf-recorder                 | Screen recorder for wlroots compositors         |
 | cliphist                    | Clipboard manager                               |
 | wl-clipboard                | Clipboard utilities for wayland                 |
 | wl-clip-persist             | Persist clipboard after programs close          |

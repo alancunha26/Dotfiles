@@ -145,9 +145,7 @@ return {
         },
       },
       others = {
-        -- Hosted by the Godot editor itself (tcp 127.0.0.1:6005);
-        -- only attaches while the editor is running.
-        gdscript = {},
+        -- gdscript is handled by godotdev.nvim, not listed here
         -- zk = {},
       },
     }
