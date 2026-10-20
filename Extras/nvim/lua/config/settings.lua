@@ -59,6 +59,9 @@ vim.opt.smartcase = true
 -- Keep signcolumn on by default
 vim.opt.signcolumn = 'yes'
 
+-- Custom status column: margin, diagnostics, number, fold and godot marks
+vim.opt.statuscolumn = "%!v:lua.require'modules.statuscolumn'.get()"
+
 -- Decrease update time
 vim.opt.updatetime = 250
 

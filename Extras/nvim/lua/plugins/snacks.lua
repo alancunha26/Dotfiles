@@ -4,6 +4,26 @@ return {
   priority = 1000,
   lazy = false,
 
+  -- nvim 0.13-dev segfaults in ts_query_cursor_next_capture when the picker
+  -- stops and restarts the treesitter highlighter on its scratch buffers on
+  -- every keystroke: the query cursor is freed while the decor provider is
+  -- still iterating it during redraw, so the crash is a SIGSEGV and pcall
+  -- cannot catch it. Refusing to attach makes snacks fall back to vim syntax
+  -- highlighting in the preview. Not a snacks bug: current upstream snacks
+  -- (882c996) crashes the same way, so updating it does not help. Retest on
+  -- nvim/tree-sitter upgrades.
+  init = function()
+    local ts_start = vim.treesitter.start
+    vim.treesitter.start = function(buf, lang)
+      buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+      local ft = vim.bo[buf].filetype
+      if ft == 'snacks_picker_preview' or ft == 'snacks_picker_input' then
+        error('treesitter disabled for snacks picker buffers')
+      end
+      return ts_start(buf, lang)
+    end
+  end,
+
   ---@type snacks.Config
   opts = {
     -- Disabled
@@ -145,13 +165,9 @@ return {
     words = { enabled = true },
     indent = { enabled = true },
 
-    statuscolumn = {
-      enabled = true,
-      folds = {
-        open = true,
-        git_hl = true,
-      },
-    },
+    -- replaced by modules/statuscolumn: more cells per line (diagnostics,
+    -- fold and godot marks together) and a margin from the screen edge
+    statuscolumn = { enabled = false },
 
     zen = {
       enabled = true,

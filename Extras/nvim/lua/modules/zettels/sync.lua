@@ -5,7 +5,9 @@
 
 local M = {}
 
-local base_url = "http://localhost:24680"
+local zk_config = require("modules.zettels.config")
+local base_url = "http://localhost:" .. zk_config.grimoire_port
+local web_url = "http://localhost:" .. zk_config.grimoire_http_port
 local last_note_id = nil
 local last_top_line = nil
 local registered = false
@@ -194,7 +196,8 @@ end
 
 -- Grimoire dev server management
 local grimoire_job = nil
-local grimoire_dir = vim.fn.getcwd() .. "/grimoire"
+-- Grimoire is a standalone command run from the vault root (it reads .zk/config.json).
+local vault_dir = vim.fn.getcwd()
 
 function M.toggle_server()
   if grimoire_job then
@@ -203,15 +206,15 @@ function M.toggle_server()
     registered = false
     vim.notify("[grimoire] Server stopped")
   else
-    grimoire_job = vim.fn.jobstart({ "pnpm", "dev" }, {
-      cwd = grimoire_dir,
+    grimoire_job = vim.fn.jobstart({ "grimoire", "dev" }, {
+      cwd = vault_dir,
       on_exit = function()
         grimoire_job = nil
       end,
     })
 
     vim.defer_fn(function()
-      vim.ui.open("http://localhost:4321")
+      vim.ui.open(web_url)
     end, 3000)
 
     vim.notify("[grimoire] Starting dev server...")
@@ -225,8 +228,8 @@ function M.clear_cache()
     registered = false
   end
 
-  vim.fn.jobstart({ "rm", "-rf", "dist", ".astro" }, {
-    cwd = grimoire_dir,
+  vim.fn.jobstart({ "rm", "-rf", ".grimoire" }, {
+    cwd = vault_dir,
     on_exit = function()
       vim.schedule(function()
         vim.notify("[grimoire] Cache cleared, server stopped")

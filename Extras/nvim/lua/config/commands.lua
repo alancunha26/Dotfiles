@@ -46,9 +46,39 @@ vim.api.nvim_create_autocmd('User', {
 local godot_root = vim.fs.root(vim.fn.getcwd(), 'project.godot')
 if godot_root then
   local pipe = godot_root .. '/server.pipe'
+
+  -- A socket left behind by a crashed or killed nvim makes this look taken,
+  -- and Godot's "open in external editor" then silently does nothing. Probe
+  -- it: if nobody answers, the file is stale and can be replaced.
+  local function pipe_answers()
+    local ok, chan = pcall(vim.fn.sockconnect, 'pipe', pipe, { rpc = true })
+    if ok and chan > 0 then
+      pcall(vim.fn.chanclose, chan)
+      return true
+    end
+    return false
+  end
+
+  if vim.uv.fs_stat(pipe) and not pipe_answers() then
+    vim.uv.fs_unlink(pipe)
+  end
   if not vim.uv.fs_stat(pipe) then
     vim.fn.serverstart(pipe)
+    -- Leave no stale socket behind on a clean exit
+    vim.api.nvim_create_autocmd('VimLeavePre', {
+      desc = 'Remove the Godot editor server pipe',
+      group = vim.api.nvim_create_augroup('godot-server-pipe', { clear = true }),
+      callback = function()
+        pcall(vim.fn.serverstop, pipe)
+        vim.uv.fs_unlink(pipe)
+      end,
+    })
   end
+
+  -- Gutter marks like the editor's indicators: signal-connected methods
+  -- and engine/parent-script overrides
+  require('modules.godot.signals').setup(godot_root)
+  require('modules.godot.overrides').setup(godot_root)
 
   -- Godot's LSP resolves $Node completions from the scene file on disk and
   -- caches it per script without ever invalidating it, so completions go
