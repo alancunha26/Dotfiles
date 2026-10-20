@@ -40,7 +40,7 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp wf-recorder cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-engine-murrine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava zoxide 7zip pavucontrol
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp wf-recorder cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-engine-murrine gnome-themes-extra ntfs-3g ntfsprogs gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava zoxide 7zip pavucontrol
 ```
 
 Install the **Hardware Packages** (AMD CPU/GPU, SSD health, compressed swap).
@@ -438,7 +438,8 @@ _Core Packages_
 | sassc                       | Deps for GTK Theme                              |
 | gtk-engine-murrine          | Deps for GTK Theme                              |
 | gnome-themes-extra          | Deps for GTK Theme                              |
-| ntfs-3g                     | NTFS filesystem driver and utilities            |
+| ntfs-3g                     | NTFS filesystem driver                          |
+| ntfsprogs                   | NTFS utilities (ntfsfix, ntfsinfo, mkntfs)      |
 | gnome-keyring               | Gnome keyring                                   |
 | wiremix                     | TUI audio manager                               |
 | libqalculate                | Powers rofi calculator                          |
