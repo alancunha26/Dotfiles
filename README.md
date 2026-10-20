@@ -59,7 +59,7 @@ Optionally you can also install the **Gaming Packages**. Enable the `[multilib]`
 in `/etc/pacman.conf` first (uncomment the `[multilib]` section and its `Include` line).
 
 ```shell
-yay -Sy steam gamescope protonup-qt-bin wine-mono minecraft-launcher
+yay -Sy steam gamescope protonup-qt-bin wine-mono
 ```
 
 > [!tip]
@@ -176,39 +176,6 @@ Install the latest version and set it globally:
 
 ```shell
 asdf install uv latest && asdf set uv latest --home
-```
-
-Add Proton GE to the ASDF plugins list. It installs into Steam's
-`compatibilitytools.d`, so launch Steam once before installing it:
-
-```shell
-asdf plugin add protonge https://github.com/augustobmoura/asdf-protonge.git
-```
-
-Install the latest version and set it globally:
-
-```shell
-asdf install protonge latest && asdf set protonge latest --home
-```
-
-#### Install CLI tools
-
-Claude Code (native installer, puts the `claude` binary in `~/.local/bin`):
-
-```shell
-curl -fsSL https://claude.ai/install.sh | bash
-```
-
-Spec Kit's `specify` CLI (requires uv):
-
-```shell
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-```
-
-Bottles, to run Windows apps (requires flatpak from the Extra Packages):
-
-```shell
-flatpak install flathub com.usebottles.bottles
 ```
 
 #### Enable required services under systemd
