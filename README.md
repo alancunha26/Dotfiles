@@ -193,16 +193,10 @@ asdf install protonge latest && asdf set protonge latest --home
 
 #### Install CLI tools
 
-Spec Kit's `specify` CLI (requires uv):
+Claude Code (native installer, puts the `claude` binary in `~/.local/bin`):
 
 ```shell
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-```
-
-Bottles, to run Windows apps (requires flatpak from the Extra Packages):
-
-```shell
-flatpak install flathub com.usebottles.bottles
+curl -fsSL https://claude.ai/install.sh | bash
 ```
 
 #### Enable required services under systemd
