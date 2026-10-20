@@ -59,7 +59,7 @@ Optionally you can also install the **Gaming Packages**. Enable the `[multilib]`
 in `/etc/pacman.conf` first (uncomment the `[multilib]` section and its `Include` line).
 
 ```shell
-yay -Sy steam gamescope protonup-qt-bin wine-mono minecraft-launcher
+yay -Sy steam gamescope protonup-qt-bin wine-mono
 ```
 
 > [!tip]
@@ -192,12 +192,6 @@ asdf install protonge latest && asdf set protonge latest --home
 ```
 
 #### Install CLI tools
-
-Claude Code (native installer, puts the `claude` binary in `~/.local/bin`):
-
-```shell
-curl -fsSL https://claude.ai/install.sh | bash
-```
 
 Spec Kit's `specify` CLI (requires uv):
 
