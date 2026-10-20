@@ -166,6 +166,31 @@ Set the java version globally:
 asdf set java latest:adoptopenjdk-11 --home
 ```
 
+Add uv (Python package and project manager) to the ASDF plugins list:
+
+```shell
+asdf plugin add uv
+```
+
+Install the latest version and set it globally:
+
+```shell
+asdf install uv latest && asdf set uv latest --home
+```
+
+Add Proton GE to the ASDF plugins list. It installs into Steam's
+`compatibilitytools.d`, so launch Steam once before installing it:
+
+```shell
+asdf plugin add protonge https://github.com/augustobmoura/asdf-protonge.git
+```
+
+Install the latest version and set it globally:
+
+```shell
+asdf install protonge latest && asdf set protonge latest --home
+```
+
 #### Enable required services under systemd
 
 Waybar:
