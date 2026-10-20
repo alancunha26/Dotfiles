@@ -191,6 +191,26 @@ Install the latest version and set it globally:
 asdf install protonge latest && asdf set protonge latest --home
 ```
 
+#### Install CLI tools
+
+Claude Code (native installer, puts the `claude` binary in `~/.local/bin`):
+
+```shell
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+Spec Kit's `specify` CLI (requires uv):
+
+```shell
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+```
+
+Bottles, to run Windows apps (requires flatpak from the Extra Packages):
+
+```shell
+flatpak install flathub com.usebottles.bottles
+```
+
 #### Enable required services under systemd
 
 Waybar:

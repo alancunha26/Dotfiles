@@ -11,5 +11,6 @@ Configs/config_linux/.config/gtk-4.0/gtk.css
 .DS_Store
 Desktop.ini
 
-# Managed by the Claude Code installer (version-pinned symlink)
+# Managed by installers (Claude Code, uv tool)
 Configs/config_linux/.local/bin/claude
+Configs/config_linux/.local/bin/specify
