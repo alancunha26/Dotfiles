@@ -110,7 +110,7 @@ git clone https://github.com/jeffreytse/zsh-vi-mode \
   $ZSH_CUSTOM/plugins/zsh-vi-mode
 ```
 
-#### Install NodeJS, Yarn, pnpm and Rust
+#### Install NodeJS, Yarn and pnpm
 
 Add NodeJS to the ASDF plugins list:
 
@@ -140,24 +140,6 @@ Finally, install pnpm:
 
 ```shell
 npm i -g pnpm
-```
-
-Add Rust to the ASDF plugins list:
-
-```shell
-asdf plugin add rust
-```
-
-Install the stable version of rust:
-
-```shell
-asdf install rust stable
-```
-
-Set the stable version of rust globally:
-
-```shell
-asdf set rust stable --home
 ```
 
 Then install short-unique-id with npm. This is used to generate unique short ids in my note taking system.
