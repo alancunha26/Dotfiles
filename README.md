@@ -40,14 +40,33 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 Then it's necessary to install the **Core Packages**.
 
 ```shell
-yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp wf-recorder cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-murrine-engine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava
+yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-plugin-pipewire wireplumber networkmanager nm-connection-editor network-manager-applet bluez bluez-utils bluetui brightnessctl playerctl udiskie uwsm hyprland hyprpaper hyprlock hyprpicker hypridle hyprpolkitagent xdg-desktop-portal-hyprland xdg-desktop-portal-gtk libnotify dunst rofi-git waybar grim slurp wf-recorder cliphist wl-clipboard wl-clip-persist ly xdg-user-dirs zsh starship btop fastfetch ffmpeg imagemagick ripgrep fzf fd less unzip jq luarocks pacman-contrib wget tuckr-git qt5-wayland qt6-wayland kvantum kvantum-qt5 qt5ct-kde qt6ct-kde gtk3 gtk4 nwg-look brave-bin kitty nautilus tumbler ffmpeg-audio-thumbnailer ffmpegthumbnailer neovim-nightly tree-sitter-cli mpv nsxiv zathura zathura-pdf-mupdf zk lazygit lazydocker asdf-vm xwaylandvideobridge noto-fonts-emoji noto-fonts noto-fonts-cjk noto-fonts-extra ttf-ia-writer ttf-jetbrains-mono-nerd ttf-jetbrains-mono ttf-fira-sans ttf-fira-code ttf-firacode-nerd sassc gtk-engine-murrine gnome-themes-extra ntfs-3g gnome-keyring libqalculate rofi-calc rofi-emoji wiremix pokemon-colorscripts-git mpd rmpc mpc cava zoxide 7zip pavucontrol
+```
+
+Install the **Hardware Packages** (AMD CPU/GPU, SSD health, compressed swap).
+
+```shell
+yay -Sy amd-ucode vulkan-radeon xf86-video-amdgpu lact smartmontools zram-generator
 ```
 
 Optionally you can also install the **Extra Packages**.
 
 ```shell
-yay -Sy obs-studio obsidian-bin libreoffice-fresh faltpak github-cli
+yay -Sy obs-studio obsidian libreoffice-fresh flatpak github-cli vscodium-bin ungoogled-chromium-bin discord discord-chat-exporter-gui opencode-bin proton-vpn-gtk-app filezilla yt-dlp-git gimp inkscape-bin godot tiled
 ```
+
+Optionally you can also install the **Gaming Packages**. Enable the `[multilib]` repository
+in `/etc/pacman.conf` first (uncomment the `[multilib]` section and its `Include` line).
+
+```shell
+yay -Sy steam gamescope protonup-qt-bin wine-mono minecraft-launcher
+```
+
+> [!tip]
+> The exact list of explicitly installed packages of the last machine is kept in
+> [Extras/packages/pacman.txt](Extras/packages/pacman.txt) and
+> [Extras/packages/aur.txt](Extras/packages/aur.txt). Regenerate them with
+> `pacman -Qqen > Extras/packages/pacman.txt && pacman -Qqem > Extras/packages/aur.txt`.
 
 Then you can remove all unused packages currently installed.
 
@@ -150,7 +169,7 @@ npm install --global short-unique-id
 Add java to the ASDF plugins list:
 
 ```shell
-asdf plugin add rust
+asdf plugin add java
 ```
 
 Install the correct java version:
@@ -208,6 +227,29 @@ Ly Display Manager:
 ```shell
 systemctl enable ly@tty2.service
 systemctl disable getty@tty2.service
+```
+
+LACT (GPU control daemon):
+
+```shell
+sudo systemctl enable --now lactd.service
+```
+
+Periodic SSD TRIM:
+
+```shell
+sudo systemctl enable --now fstrim.timer
+```
+
+#### Install the system configs
+
+After cloning the dotfiles (see below), copy the system-wide files in `Extras/system/etc`
+into `/etc` (they are copied, not symlinked):
+zram swap, LACT GPU profile and the X11 `us-intl` keyboard layout.
+
+```shell
+sudo cp -r ~/.dotfiles/Extras/system/etc/. /etc/
+sudo systemctl daemon-reload && sudo systemctl start systemd-zram-setup@zram0.service
 ```
 
 #### Download and install the themes
@@ -418,7 +460,7 @@ _Extra Packages (Optional)_
 | Package            | Description                         |
 | ------------------ | ----------------------------------- |
 | obs-studio         | Live streaming and recording        |
-| obsidian-bin       | Markdown note taking app            |
+| obsidian           | Markdown note taking app            |
 | libreoffice-fresh  | Open-source office suite            |
 | flatpak            | Run sandboxed applications on Linux |
 | qbittorrent        | Trusted torrent client              |

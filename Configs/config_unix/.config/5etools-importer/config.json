@@ -1,0 +1,46 @@
+{
+  "data": "/home/alancunha/.repos/github.com/alancunha26/5etools-importer/data/data",
+  "images": {
+    "localPath": "/home/alancunha/.repos/github.com/alancunha26/5etools-importer/images"
+  },
+  "homebrew": "/home/alancunha/.repos/github.com/alancunha26/5etools-importer/homebrew",
+  "output": "/home/alancunha/.repos/github.com/alancunha26/dnd-notes/zettels",
+  "state": "/home/alancunha/.repos/github.com/alancunha26/dnd-notes/.zk/importer",
+  "virtualBooks": [
+    {
+      "id": "BndD",
+      "title": "D&D Beyond Drops",
+      "source": "DnDBeyondDrops",
+      "chapters": "byPage"
+    }
+  ],
+  "sources": [
+    "XPHB",
+    "XDMG",
+    "XMM",
+    "XSAC",
+    "ABH",
+    "FRHoF",
+    "FRAiF",
+    "NF",
+    "LFL",
+    "EFA",
+    "RHW",
+    "AU",
+    {
+      "source": "TCE",
+      "book": false,
+      "legacy": false
+    },
+    {
+      "source": "XGE",
+      "book": false,
+      "legacy": false
+    },
+    "BndD"
+  ],
+  "format": {
+    "prettier": true
+  },
+  "overrides": "/home/alancunha/.config/5etools-importer/overrides.json"
+}
