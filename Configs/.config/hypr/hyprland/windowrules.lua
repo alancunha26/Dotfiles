@@ -1,6 +1,9 @@
 -- █░█░█ █ █▄░█ █▀▄ █▀█ █░█░█   █▀█ █░█ █░░ █▀▀ █▀
 -- ▀▄▀▄▀ █ █░▀█ █▄▀ █▄█ ▀▄▀▄▀   █▀▄ █▄█ █▄▄ ██▄ ▄█
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
+-- Sizes and positions are math expressions (variables: monitor_w, monitor_h,
+-- window_w, window_h, cursor_x, cursor_y), not percentages: "50% 50%" fails
+-- silently, so half the screen is "monitor_w*0.5 monitor_h*0.5".
 
 local function rule(match, props)
     props.match = match
@@ -16,8 +19,8 @@ rule({ class = ".*LibreWolf.*|.*floorp.*|.*brave-browser.*|.*firefox.*|.*chromiu
 rule({ title = "[Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture.*" }, {
     float             = true,
     keep_aspect_ratio = true,
-    move              = "73% 72%",
-    size              = "25% 25%",
+    move              = "monitor_w*0.73 monitor_h*0.72",
+    size              = "monitor_w*0.25 monitor_h*0.25",
     pin               = true,
 })
 
@@ -46,9 +49,9 @@ rule({ class = "steam", title = "Friends List" }, { size = "460 800" })
 
 -- Floating with custom sizes
 for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop", "btop", "dots-check" }) do
-    rule({ class = class }, { float = true, size = "50% 50%" })
+    rule({ class = class }, { float = true, size = "monitor_w*0.5 monitor_h*0.5" })
 end
-rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "75% 75%" })
+rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "monitor_w*0.75 monitor_h*0.75" })
 
 -- Common modals
 for _, title in ipairs({

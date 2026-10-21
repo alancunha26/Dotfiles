@@ -1,4 +1,0 @@
-# Runtime files that apps write into config directories linked from this repo
-Configs/.config/mpd/database
-Configs/.config/mpd/state
-Configs/.config/mpd/sticker.sql

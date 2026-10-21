@@ -1,0 +1,8 @@
+# Tokyo Night Moon, the variant used across the desktop (cliamp's built-in
+# tokyo-night is the darker Night variant). No bg: keep the terminal's.
+accent = "#82aaff"
+bright_fg = "#c8d3f5"
+fg = "#828bb8"
+green = "#c3e88d"
+yellow = "#ffc777"
+red = "#ff757f"

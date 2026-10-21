@@ -1,0 +1,19 @@
+# cliamp settings: https://github.com/bjarneo/cliamp/blob/main/docs/configuration.md
+# Only this file and themes/ come from the dotfiles. cliamp keeps its log,
+# history and Spotify sign-in (spotify_credentials.json) next to them, outside
+# the repo. `cliamp setup` edits this file in place.
+
+# Tokyo Night Moon without a background, so it uses the terminal's (see themes/)
+theme = "tokyo-night-moon"
+
+# Where the file browser ('o') starts
+initial_directory = "~/Music"
+
+[spotify]
+# Needs Spotify Premium. Sign in from the player: select Spotify, press Enter.
+# Our own Spotify app (developer.spotify.com, redirect URI
+# http://127.0.0.1:19872/login, Web API): cliamp's built-in client_id is shared
+# worldwide and kept getting rate-limited. A client ID is not a secret (the
+# sign-in uses PKCE, no client secret).
+client_id = "5d2901305ba04b909ab353100b5cd096"
+bitrate = 320

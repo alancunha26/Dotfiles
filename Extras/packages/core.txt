@@ -86,6 +86,7 @@ ttf-firacode-nerd
 zsh                          # Shell
 starship                     # Shell prompt
 zoxide                       # Smarter cd (zsh runs it as `cd`)
+eza                          # Modern ls (zsh runs it as `ls`)
 btop                         # Process viewer
 fastfetch                    # System information tool
 pokemon-colorscripts-git     # Pokemon sprites for fastfetch
@@ -125,7 +126,5 @@ zathura                      # Simple document viewer
 zathura-pdf-mupdf            # PDF and Epub support for zathura
 tesseract-data-eng           # OCR language data for mupdf (pinned: pacman would pick Afrikaans)
 tesseract-data-por           # OCR language data, Portuguese
-mpd                          # Music player daemon
-mpc                          # MPD cli
-rmpc                         # MPD tui client
+cliamp                       # Terminal music player: local files, Spotify (Premium), YouTube, radio
 cava                         # Audio visualizer

@@ -31,6 +31,12 @@ esac
 # Postgres path
 # export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 
+# eza as ls (oh-my-zsh's l/la/ll call ls, so they use it too)
+if command -v eza >/dev/null; then
+  alias ls='eza --icons=auto --group-directories-first'
+  alias lt='ls --tree --level=2'
+fi
+
 # Startup zoxide as cd
 eval "$(zoxide init zsh --cmd cd)"
 

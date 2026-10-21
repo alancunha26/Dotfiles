@@ -67,6 +67,10 @@ There is no test suite. Verify changes with:
   rules in the config or `hyprctl eval`. A running Hyprland picks its config format at startup:
   removing the file it loaded makes it reload a generated stub, so switch formats with a re-login.
   hypridle/hyprlock/hyprpaper still use their own `.conf` files.
+  Hyprland only watches `hyprland.lua`, not the files it requires: after editing
+  `hypr/hyprland/*.lua`, run `hyprctl reload`. Window-rule sizes and positions are math expressions
+  (`monitor_w*0.5 monitor_h*0.5`, variables monitor_w/h, window_w/h/x/y, cursor_x/y); percentages
+  like `"50% 50%"` pass `--verify-config` but fail at runtime and are silently ignored.
 - Updater: `dots check` (no root, changes nothing) caches its result in
   `~/.local/state/dots/check/`; the waybar `custom/dots` module reads it (`dots check waybar`, signal
   9), the page is `dots check page` in a floating kitty (`dots-check` class), and

@@ -53,13 +53,12 @@ THEMES_URL=${DOTS_THEMES_REPO:-https://github.com/alancunha26/Themes.git}
 # Directories that stay real directories in $HOME, because other programs keep
 # their own files in them: their contents are linked one by one. Everything
 # else in Configs/ is linked as a whole, so new files there land in the repo.
-REAL_DIRS=(.config .config/gtk-4.0 .config/systemd .config/systemd/user .local .local/bin .local/share
-  .local/share/applications .claude)
+REAL_DIRS=(.config .config/cliamp .config/gtk-4.0 .config/systemd .config/systemd/user .local .local/bin
+  .local/share .local/share/applications .claude)
 
 SYSTEM_SERVICES=(NetworkManager.service lactd.service fstrim.timer reflector.timer)
 DISPLAY_MANAGER=ly@tty2.service # replaces the getty on the same tty
-USER_SERVICES=(waybar.service hyprpolkitagent.service hyprpaper.service hypridle.service mpd.service
-  dots-check.timer)
+USER_SERVICES=(waybar.service hyprpolkitagent.service hyprpaper.service hypridle.service dots-check.timer)
 
 ZSH_PLUGINS=(https://github.com/zsh-users/zsh-autosuggestions https://github.com/jeffreytse/zsh-vi-mode)
 NPM_GLOBALS=(yarn pnpm short-unique-id)
