@@ -113,13 +113,15 @@ hl.window_rule({
 
 -- █░░ ▄▀█ █▄█ █▀▀ █▀█   █▀█ █░█ █░░ █▀▀ █▀
 -- █▄▄ █▀█ ░█░ ██▄ █▀▄   █▀▄ █▄█ █▄▄ ██▄ ▄█
+-- ignore_alpha skips blur on pixels at or below that opacity: 0 blurs everything
+-- the layer draws (the old `ignorezero`); 1 would skip every pixel, so no blur at all
 for namespace, alpha in pairs({
-    rofi = 1,
-    kitty = 1,
+    rofi = 0,
+    kitty = 0,
     waybar = 0.3,
-    notifications = 1,
-    ["swaync-notification-window"] = 1,
-    ["swaync-control-center"] = 1,
+    notifications = 0,
+    ["swaync-notification-window"] = 0,
+    ["swaync-control-center"] = 0,
 }) do
     hl.layer_rule({ match = { namespace = namespace }, blur = true, ignore_alpha = alpha })
 end
