@@ -86,6 +86,58 @@ window#waybar > box {
   }
 }
 
+/* the margin is on the icon, not the group, so it goes away when the icon hides */
+#custom-music {
+  margin: 0 4px 0 8px;
+  font-size: 17px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+/* the drawer: song name and controls on one pill, set apart from the icons around it */
+#custom-music-title,
+#custom-music-prev,
+#custom-music-play,
+#custom-music-next {
+  background-color: alpha(@color0, 0.6);
+  color: @foreground;
+  padding: 2px 6px;
+  margin: 6px 0;
+  transition: all 0.15s ease-in-out;
+}
+
+#custom-music-title {
+  margin-left: 4px;
+  padding-left: 12px;
+  padding-right: 10px;
+  border-radius: 8px 0 0 8px;
+}
+
+/* the buttons get identical boxes (the glyphs differ in width); the last one only adds the corner */
+#custom-music-prev,
+#custom-music-play,
+#custom-music-next {
+  padding: 2px 7px;
+  min-width: 16px;
+}
+
+#custom-music-next {
+  margin-right: 4px;
+  border-radius: 0 8px 8px 0;
+}
+
+#custom-music:hover {
+  opacity: 0.7;
+}
+
+/* only the glyph dims, so the pill stays even */
+#custom-music-title:hover,
+#custom-music-prev:hover,
+#custom-music-play:hover,
+#custom-music-next:hover {
+  color: alpha(@foreground, 0.7);
+}
+
 #custom-dots {
   margin: 0 8px;
   color: @foreground;
@@ -112,16 +164,22 @@ window#waybar > box {
 }
 
 #systray {
-  margin: 0 8px;
+  margin: 0 4px 0 8px;
 }
 
+/* same gap to the pill as the music icon */
 #custom-tray-expand {
-  font-size: 18px;
+  margin-right: 4px;
+  font-size: 19px;
   color: @foreground;
 }
 
+/* same pill as the music drawer */
 #tray {
-  margin-left: 16px;
+  margin: 6px 0 6px 4px;
+  padding: 2px 12px;
+  border-radius: 8px;
+  background-color: alpha(@color0, 0.6);
 }
 
 #tray .active,
@@ -189,6 +247,7 @@ window#waybar > box {
 #idle_inhibitor {
   margin-right: 4px;
   margin-left: 8px;
+  font-size: 16px;
   color: @foreground;
   min-width: 18px;
   transition: all 0.15s ease-in-out;

@@ -89,11 +89,20 @@ bind("XF86AudioLowerVolume", exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), 
 bind("XF86AudioMute",        exec("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
 bind("XF86AudioMicMute",     exec("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
 
--- Requires playerctl
-bind("XF86AudioNext",  exec("playerctl next"),       { locked = true })
-bind("XF86AudioPause", exec("playerctl play-pause"), { locked = true })
-bind("XF86AudioPlay",  exec("playerctl play-pause"), { locked = true })
-bind("XF86AudioPrev",  exec("playerctl previous"),   { locked = true })
+-- Music without media keys (40% keyboard): Super+Alt with the vim keys. `music`
+-- controls whichever player started playing last (cliamp, Brave, mpv...)
+bind(mainMod .. " + M",             exec("$HOME/.local/bin/cliamp-toggle"))
+bind(mainMod .. " + ALT + SPACE",   exec("$HOME/.local/bin/music toggle"),                               { locked = true })
+bind(mainMod .. " + ALT + L",       exec("$HOME/.local/bin/music next"),                                 { locked = true })
+bind(mainMod .. " + ALT + H",       exec("$HOME/.local/bin/music prev"),                                 { locked = true })
+bind(mainMod .. " + ALT + K",       exec("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+bind(mainMod .. " + ALT + J",       exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
+
+-- Media keys, for keyboards that have them
+bind("XF86AudioNext",  exec("$HOME/.local/bin/music next"),       { locked = true })
+bind("XF86AudioPause", exec("$HOME/.local/bin/music toggle"), { locked = true })
+bind("XF86AudioPlay",  exec("$HOME/.local/bin/music toggle"), { locked = true })
+bind("XF86AudioPrev",  exec("$HOME/.local/bin/music prev"),   { locked = true })
 
 -- mainMod + R enters the resize submap: H/J/K/L resize the active window,
 -- escape goes back to the normal binds

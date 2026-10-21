@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=cliamp
+GenericName=Music Player
+Comment=Show or hide the music player (it keeps playing while hidden)
+Keywords=music;player;spotify;radio;audio;
+Icon=cliamp
+TryExec=cliamp
+Exec=cliamp-toggle
+Terminal=false
+Categories=AudioVideo;Audio;Player;

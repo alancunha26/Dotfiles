@@ -22,4 +22,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -t service -s s -- wl-paste --type image --watch cliphist store")
     hl.exec_cmd("uwsm app -t service -s s -- wl-clip-persist --clipboard regular")
     hl.exec_cmd("uwsm app -t service -s a -- udiskie --no-automount --smart-tray")
+
+    -- Music player, hidden on the "music" workspace until Super+M
+    hl.exec_cmd("uwsm app -- kitty --class=cliamp -e cliamp")
 end)

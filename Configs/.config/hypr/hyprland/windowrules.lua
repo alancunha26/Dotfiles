@@ -53,6 +53,14 @@ for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop"
 end
 rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "monitor_w*0.75 monitor_h*0.75" })
 
+-- cliamp lives on the hidden "music" workspace and keeps playing there (Super+M)
+rule({ class = "^cliamp$" }, {
+    workspace = "special:music silent",
+    float     = true,
+    size      = "monitor_w*0.6 monitor_h*0.7",
+    center    = true,
+})
+
 -- Common modals
 for _, title in ipairs({
     "Open", "Authentication Required", "Add Folder to Workspace", "Open File", "Choose Files",

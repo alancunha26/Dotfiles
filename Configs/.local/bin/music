@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+## Media controls for whatever is playing: any MPRIS player (cliamp, Brave,
+## mpv...). The active one is the player that most recently started playing
+## and still is; when nothing plays, the last one that did. So pausing a video
+## hands the widget back to the music still playing underneath. The waybar
+## music drawer, its buttons and the Super+Alt keys all act on it.
+## (playerctld tracks something similar, but it crashes on this machine.)
+##
+##   music bar icon|title|play   follow the players: one JSON line per change (waybar)
+##   music toggle|next|prev      control the active player
+##   music show                  bring it up: cliamp's window (Super+M) or the app's
+
+STATE=${XDG_RUNTIME_DIR:-/tmp}/music-player
+
+# Glyphs as escapes, so editing this file can't silently drop them
+ICON=$'\U000f075a' ICON_PAUSED=$'\U000f075b' PLAY=$'\uf04b' PAUSE=$'\uf04c'
+
+# $STATE: players in the order they last started playing, most recent first
+
+active() { # the most recent player that is playing, else the most recent that is paused
+    local p want status
+    local -a recent
+    mapfile -t recent 2> /dev/null < "$STATE"
+    for want in Playing Paused; do
+        for p in "${recent[@]}"; do
+            status=$(playerctl -p "$p" status 2> /dev/null) || continue
+            [[ $status == "$want" ]] && echo "$p" && return
+        done
+        # players that never started playing while we watched (e.g. paused at login)
+        p=$(playerctl -a metadata --format '{{playerInstance}} {{status}}' 2> /dev/null | awk -v s="$want" '$2 == s { print $1; exit }')
+        [[ -n $p ]] && echo "$p" && return
+    done
+    return 0
+}
+
+started() { # move a player to the front of $STATE
+    local p=$1
+    { echo "$p"; grep -vxF -- "$p" "$STATE" 2> /dev/null; } > "$STATE.new"
+    mv "$STATE.new" "$STATE"
+}
+
+emit() { # mode, status, artist, title
+    local mode=$1 status=$2 artist=$3 title=$4 text="" tooltip="" class=${2,,}
+    [[ -n $class ]] || class=stopped
+    if [[ $status == Playing || $status == Paused ]]; then
+        case $mode in
+            icon)
+                if [[ $status == Playing ]]; then text=$ICON; else text=$ICON_PAUSED; fi
+                tooltip="$title${artist:+ · $artist}"$'\n'"click: show the player · hover: controls"
+                ;;
+            title)
+                text="$title${artist:+ · $artist}"
+                ((${#text} > 32)) && text="${text:0:31}…"
+                tooltip="$title${artist:+ · $artist}"
+                ;;
+            play) if [[ $status == Playing ]]; then text=$PAUSE; else text=$PLAY; fi ;;
+        esac
+    fi
+    # nothing playing or paused: empty text hides the icon, so the drawer can't open empty
+    jq -nc --arg text "$text" --arg tooltip "$tooltip" --arg class "$class" \
+        '{text: $text, tooltip: $tooltip, class: $class}'
+}
+
+bar() { # follow every player; whoever starts playing becomes the active one
+    local mode=$1 p status artist title a
+    declare -A st=() ar=() ti=()
+    emit "$mode"
+    playerctl -a -F metadata --format $'{{playerInstance}}\t{{status}}\t{{artist}}\t{{title}}' 2> /dev/null |
+        while IFS=$'\t' read -r p status artist title; do
+            if [[ -n $p ]]; then
+                [[ $status == Playing && ${st[$p]:-} != Playing ]] && started "$p"
+                st[$p]=$status ar[$p]=$artist ti[$p]=$title
+            fi
+            # forget players that went away
+            for a in "${!st[@]}"; do playerctl -p "$a" status &> /dev/null || unset "st[$a]" "ar[$a]" "ti[$a]"; done
+            a=$(active)
+            emit "$mode" "${st[$a]:-}" "${ar[$a]:-}" "${ti[$a]:-}"
+        done
+}
+
+show() {
+    local p pid
+    p=$(active)
+    if [[ -z $p || $p == cliamp ]]; then
+        exec "$HOME/.local/bin/cliamp-toggle"
+    fi
+    pid=$(busctl --user status "org.mpris.MediaPlayer2.$p" 2> /dev/null | sed -n 's/^PID=//p')
+    [[ -n $pid ]] && hyprctl dispatch "hl.dsp.focus({ window = 'pid:$pid' })" > /dev/null
+}
+
+case ${1:-} in
+    bar) bar "${2:-icon}" ;;
+    toggle) p=$(active) && [[ -n $p ]] && playerctl -p "$p" play-pause ;;
+    next) p=$(active) && [[ -n $p ]] && playerctl -p "$p" next ;;
+    prev) p=$(active) && [[ -n $p ]] && playerctl -p "$p" previous ;;
+    show) show ;;
+    *)
+        echo "usage: music bar icon|title|play | toggle | next | prev | show" >&2
+        exit 1
+        ;;
+esac

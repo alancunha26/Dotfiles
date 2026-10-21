@@ -48,9 +48,10 @@
   // =====================
   "modules-right": [
     "group/systray",
-    "idle_inhibitor",
+    "group/music",
     "wireplumber#sink",
     "wireplumber#source",
+    "idle_inhibitor",
     "cpu",
     "network",
     "custom/recording",
@@ -58,6 +59,47 @@
     "clock"
   ],
   // ======================
+  "group/music": {
+    "orientation": "inherit",
+    "drawer": {
+      "transition-duration": 300,
+      "children-class": "music-group-item"
+    },
+    "modules": [
+      "custom/music",
+      "custom/music-title",
+      "custom/music-prev",
+      "custom/music-play",
+      "custom/music-next"
+    ]
+  },
+  "custom/music": {
+    "exec": "$HOME/.local/bin/music bar icon",
+    "return-type": "json",
+    "on-click": "$HOME/.local/bin/music show"
+  },
+  "custom/music-title": {
+    "exec": "$HOME/.local/bin/music bar title",
+    "return-type": "json",
+    "escape": true,
+    "on-click": "$HOME/.local/bin/music show"
+  },
+  "custom/music-prev": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "$HOME/.local/bin/music prev"
+  },
+  "custom/music-play": {
+    "exec": "$HOME/.local/bin/music bar play",
+    "return-type": "json",
+    "tooltip": false,
+    "on-click": "$HOME/.local/bin/music toggle"
+  },
+  "custom/music-next": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "$HOME/.local/bin/music next"
+  },
   "custom/dots": {
     "exec": "$HOME/.local/bin/dots check waybar",
     "return-type": "json",
@@ -86,7 +128,7 @@
     ]
   },
   "custom/tray-expand": {
-    "format": "",
+    "format": "",
     "tooltip": false
   },
   "tray": {

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+## Show or hide cliamp. It lives on the hidden "music" workspace (a window rule
+## sends it there), so it keeps playing while hidden. Starts it first if it
+## isn't running, and sends it back there if it was moved to a regular
+## workspace. Used by Super+M, the waybar music drawer and the launcher.
+
+workspace() { hyprctl -j clients | jq -r 'first(.[] | select(.class == "cliamp") | .workspace.name) // empty'; }
+
+ws=$(workspace)
+if [[ -z $ws ]]; then
+    uwsm app -- kitty --class=cliamp -e cliamp
+    for _ in $(seq 30); do ws=$(workspace) && [[ -n $ws ]] && break; sleep 0.1; done
+fi
+
+if [[ -n $ws && $ws != special:music ]]; then
+    # moved to a regular workspace (Super+Shift+N): back to the background
+    hyprctl dispatch "hl.dsp.window.move({ workspace = 'special:music', window = 'class:^cliamp\$', follow = false })" > /dev/null
+else
+    hyprctl dispatch 'hl.dsp.workspace.toggle_special("music")' > /dev/null
+fi
