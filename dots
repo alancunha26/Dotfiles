@@ -800,7 +800,7 @@ summary() {
   fi
   if ((${#unl[@]})); then info "${#unl[@]} installed package(s) aren't in any list: see 'dots status', then 'dots add' or 'dots prune'"; fi
   if ((${#orph[@]})); then info "${#orph[@]} orphaned package(s): 'dots prune' removes them"; fi
-  if ((${#pacnew[@]})); then info "${#pacnew[@]} .pacnew file(s) in /etc: merge them with 'sudo pacdiff'"; fi
+  if ((${#pacnew[@]})); then info "${#pacnew[@]} .pacnew file(s) in /etc: merge them with: sudo DIFFPROG='nvim -d' pacdiff"; fi
   ((DRY_RUN)) || warn_default_providers
   if [[ -d $BACKUP ]]; then info "Files that were in the way are in $(tilde "$BACKUP")"; fi
   if [[ -f $RUN_DIR/notes ]]; then
@@ -846,7 +846,7 @@ cmd_status() {
   done < <(find "$SYSTEM_SRC" -type f -print0 | sort -z)
   show_list "Different from Extras/system" "${items[@]}"
   mapfile -t items < <(pacnew_files)
-  show_list ".pacnew files (sudo pacdiff)" "${items[@]}"
+  show_list ".pacnew files (sudo DIFFPROG='nvim -d' pacdiff)" "${items[@]}"
 
   header "Migrations"
   if [[ ! -d $STATE/migrations ]]; then
@@ -913,20 +913,43 @@ cmd_remove() {
 }
 
 cmd_prune() {
-  local unl
+  local unl p free=() needed=() orph gone extra confirm_args=()
+  ((ASSUME_YES)) && confirm_args=(--noconfirm)
   mapfile -t unl < <(unlisted)
-  if ((${#unl[@]})); then
-    show_list "Installed explicitly but in no list" "${unl[@]}"
-    info "These get marked as dependencies; the ones nothing needs are uninstalled."
-    if ! confirm "Continue?"; then
-      info "Nothing changed. Keep packages by listing them: dots add -g GROUP PKG..."
-      return 0
-    fi
-    sudo_keepalive
-    quiet srun pacman -D --asdeps "${unl[@]}"
+  mapfile -t orph < <(orphans)
+  # An unlisted package goes unless something requires it. pacman -Rp knows when
+  # another package still provides what a dependency needs (ttf-dejavu vs ttf-font),
+  # and checking against the ones already picked catches two packages that are
+  # each other's only alternative.
+  for p in "${unl[@]}"; do
+    if pacman -Rp -- "${free[@]}" "$p" &>/dev/null; then free+=("$p"); else needed+=("$p"); fi
+  done
+  if ((${#free[@]} + ${#needed[@]} + ${#orph[@]} == 0)); then
+    ok "Nothing to prune"
+    return 0
   fi
-  sudo_keepalive
-  remove_orphans
+  show_list "In no list, to be removed" "${free[@]}"
+  show_list "Orphans, to be removed" "${orph[@]}"
+  if ((${#free[@]} + ${#orph[@]})); then
+    mapfile -t gone < <(pacman -Rsp --print-format '%n' "${free[@]}" "${orph[@]}" 2>/dev/null)
+    mapfile -t extra < <(printf '%s\n' "${gone[@]}" | grep -vxF -f <(printf '%s\n' "${free[@]}" "${orph[@]}") || true)
+    show_list "Removed with them (dependencies nothing else uses)" "${extra[@]}"
+    ((${#gone[@]})) || gone=("${free[@]}" "${orph[@]}")
+    info "That's ${#gone[@]} package(s), about $(LC_ALL=C pacman -Qi "${gone[@]}" 2>/dev/null |
+      awk -F': ' '/^Installed Size/ { split($2, a, " "); v = a[1]; if (a[2] == "KiB") v /= 1024; if (a[2] == "GiB") v *= 1024; s += v } END { printf "%.0f", s }') MiB."
+  fi
+  if ((${#needed[@]})); then show_list "In no list but needed by other packages (kept, as dependencies)" "${needed[@]}"; fi
+  ((DRY_RUN)) || sudo_keepalive
+  # pacman shows the same list and asks before removing anything
+  if ((${#free[@]} + ${#orph[@]})); then
+    srun pacman -Rns "${confirm_args[@]}" "${free[@]}" "${orph[@]}" || {
+      info "Nothing was removed."
+      return 0
+    }
+  fi
+  if ((${#needed[@]})); then quiet srun pacman -D --asdeps "${needed[@]}"; fi
+  # anything the removal left without a user (the preview above already counts those)
+  ((DRY_RUN)) || remove_orphans
   return 0
 }
 

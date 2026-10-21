@@ -44,7 +44,7 @@ These are the steps, in order (run a subset with `--only` / `--skip`):
 | `migrations` | Runs pending [migrations](Extras/migrations) (on a fresh machine: marks them all done)          |
 | `link`       | Symlinks [Configs](Configs) into `$HOME`, backing up anything in the way                        |
 | `packages`   | Installs every package in [Extras/packages](Extras/packages) that isn't installed yet           |
-| `system`     | Copies [Extras/system](Extras/system) into `/` (console and X11 keyboard layout)                |
+| `system`     | Copies [Extras/system](Extras/system) into `/` (keyboard layout, zram swap)                     |
 | `shell`      | Oh My Zsh with zsh-autosuggestions and zsh-vi-mode, and zsh as the login shell                  |
 | `runtimes`   | asdf plugins and the versions pinned in [.tool-versions](Configs/.tool-versions), npm globals   |
 | `themes`     | Clones my [Themes](https://github.com/alancunha26/Themes) and links GTK, icon and cursor themes |
@@ -75,10 +75,11 @@ dots adopt ~/.config/foo      # move an existing config into Configs/ and link i
 Every command accepts `--dry-run`. `dots update` and `dots install` write a full log to
 `~/.local/state/dots/logs/`.
 
-**Removing packages safely.** `dots prune` lists packages that are explicitly installed but in
-no list, then marks them as dependencies and removes only what nothing else needs, repeating
-until no orphans are left. It asks before doing anything. The installer's own packages (kernel,
-firmware, bootloader) are in [base.txt](Extras/packages/base.txt), so prune never touches them.
+**Removing packages safely.** `dots prune` removes packages that are explicitly installed but in
+no list, together with the dependencies they leave unused. A package something still requires
+stays, as a plain dependency. It shows everything that will go (and the space freed) and pacman
+asks before removing anything. The installer's own packages (kernel, firmware, bootloader) are
+in [base.txt](Extras/packages/base.txt), so prune never touches them.
 
 **Provider choices.** Some dependencies can be met by several packages (`tesseract` needs one
 of 128 `tesseract-data-*` language packs). Unattended, pacman silently takes option 1, which

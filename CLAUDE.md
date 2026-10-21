@@ -44,7 +44,7 @@ There is no test suite. Verify changes with:
 - `Extras/packages/*.txt`: one package per line, `#` comments, repo and AUR names mixed (`dots`
   classifies them with `pacman -Sl` and the AUR RPC). Every file counts as "listed" for `status`
   and `prune`; `--groups` only narrows what `install` installs. `base.txt` holds the
-  installer's packages (kernel, firmware, bootloader) so `prune` never removes them.
+  installer's packages (kernel, firmware, bootloader, zram) so `prune` never removes them.
   `hardware.txt` is AMD-specific.
 - Provider pinning: with `--noconfirm` pacman silently picks option 1 for a virtual dependency
   (`tessdata` -> Afrikaans). Listing the wanted provider pins it, which is why `core.txt` has

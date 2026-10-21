@@ -9,3 +9,4 @@ sudo
 efibootmgr
 lvm2
 wpa_supplicant
+zram-generator               # Compressed swap in RAM (archinstall's default; see Extras/system/etc/systemd)
