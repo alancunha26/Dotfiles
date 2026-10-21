@@ -46,7 +46,7 @@ yay -Sy pipewire pipewire-alsa pipewire-audio pipewire-jack pipewire-pulse gst-p
 Install the **Hardware Packages** (AMD CPU/GPU, SSD health, compressed swap).
 
 ```shell
-yay -Sy amd-ucode vulkan-radeon xf86-video-amdgpu lact smartmontools zram-generator
+yay -Sy mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver libva-utils amd-ucode xf86-video-amdgp lact
 ```
 
 Optionally you can also install the **Extra Packages**.
