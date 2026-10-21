@@ -1,0 +1,11 @@
+# Base system: what the Arch installer sets up. Listed so `dots prune` never
+# touches them; adjust if a machine uses another kernel, bootloader or disk layout.
+
+base
+linux
+linux-firmware
+mkinitcpio
+sudo
+efibootmgr
+lvm2
+wpa_supplicant

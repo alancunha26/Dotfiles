@@ -1,0 +1,5 @@
+# Gaming. Needs the [multilib] repository (dots enables it automatically).
+
+steam                        # Valve's game store and launcher
+gamescope                    # SteamOS session compositing window manager
+ttf-liberation               # Arial-compatible fonts Steam expects

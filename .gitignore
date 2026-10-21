@@ -1,16 +1,4 @@
-.local/share/nvim
-.local/share/pnpm
-.local/state
-
-# GTK
-Configs/config_linux/.config/gtk-4.0/assets
-Configs/config_linux/.config/gtk-4.0/gtk-dark.css
-Configs/config_linux/.config/gtk-4.0/gtk.css
-
-# OS Specifics
-.DS_Store
-Desktop.ini
-
-# Managed by installers (Claude Code, uv tool)
-Configs/config_linux/.local/bin/claude
-Configs/config_linux/.local/bin/specify
+# Runtime files that apps write into config directories linked from this repo
+Configs/.config/mpd/database
+Configs/.config/mpd/state
+Configs/.config/mpd/sticker.sql

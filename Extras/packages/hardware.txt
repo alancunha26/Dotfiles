@@ -1,0 +1,11 @@
+# Hardware: AMD CPU/GPU drivers, GPU control and SSD health.
+# Swap this group out when installing on a machine with different hardware.
+
+amd-ucode                    # AMD CPU microcode
+mesa                         # OpenGL / Vulkan userspace
+lib32-mesa                   # 32-bit mesa (Steam, Wine)
+vulkan-radeon                # AMD Vulkan driver
+lib32-vulkan-radeon          # 32-bit AMD Vulkan driver
+libva-utils                  # vainfo
+lact                         # GPU control daemon and GUI
+smartmontools                # SSD/HDD health (smartctl)

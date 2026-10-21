@@ -1,0 +1,1021 @@
+#!/usr/bin/env bash
+# dots: install and maintain this Arch Linux + Hyprland setup.
+#
+# The repo describes the machine:
+#   Configs/               mirrors $HOME, symlinked into place
+#   Extras/packages/*.txt  package lists (repo and AUR), one group per file
+#   Extras/system/         files copied into / (Extras/system/etc -> /etc)
+#   Extras/migrations/     one-off scripts, each run once per machine
+#
+# Fresh machine (as your user, from a TTY):
+#   bash <(curl -fsSL https://raw.githubusercontent.com/alancunha26/Dotfiles/main/dots) install
+# Intentional: eval strings and $ON_ERR are single-quoted so they expand later; "~/" in messages is display text.
+# shellcheck disable=SC2016,SC2064,SC2088
+set -Eeuo pipefail
+shopt -s nullglob dotglob
+
+usage() {
+  cat <<'EOF'
+Usage: dots <command> [options]
+
+Commands:
+  install              Set up everything. Safe to re-run: skips what is already done.
+  update               Pull the repo, upgrade the system, then apply everything again.
+  status               Show how this machine differs from the repo (changes nothing).
+  link                 Only (re)create the symlinks from Configs/ into $HOME.
+  adopt PATH...        Move files or directories from $HOME into Configs/ and link them back.
+  add PKG...           Install packages and record them in a list (default: extras).
+  remove PKG...        Uninstall packages and delete them from the lists.
+  prune                Uninstall explicitly installed packages that no list mentions.
+  new-migration TEXT   Create Extras/migrations/<timestamp>-<text>.sh.
+
+Options:
+  -n, --dry-run        Show what would change without changing anything.
+  -y, --yes            Don't ask before removing packages.
+  -g, --group NAME     List used by 'add' (a file in Extras/packages/, default: extras).
+      --groups A,B     Package lists to install (default: all of them).
+      --only A,B       Run only these steps of install/update.
+      --skip A,B       Skip these steps of install/update.
+  -h, --help           Show this help.
+
+Steps, in order: pacman aur migrations link packages system shell runtimes themes apps services
+EOF
+}
+
+# ── Settings ────────────────────────────────────────────────────────────────
+
+REPO_URL=${DOTS_REPO:-https://github.com/alancunha26/Dotfiles.git}
+REPO_PUSH_URL=git@github.com:alancunha26/Dotfiles.git
+THEMES_URL=${DOTS_THEMES_REPO:-https://github.com/alancunha26/Themes.git}
+
+# Directories that stay real directories in $HOME, because other programs keep
+# their own files in them: their contents are linked one by one. Everything
+# else in Configs/ is linked as a whole, so new files there land in the repo.
+REAL_DIRS=(.config .config/gtk-4.0 .local .local/bin .local/share .local/share/applications .claude)
+
+SYSTEM_SERVICES=(NetworkManager.service lactd.service fstrim.timer)
+DISPLAY_MANAGER=ly@tty2.service # replaces the getty on the same tty
+USER_SERVICES=(waybar.service hyprpolkitagent.service hyprpaper.service hypridle.service mpd.service)
+
+ZSH_PLUGINS=(https://github.com/zsh-users/zsh-autosuggestions https://github.com/jeffreytse/zsh-vi-mode)
+NPM_GLOBALS=(yarn pnpm short-unique-id)
+# asdf plugins that aren't in the asdf plugin index (the rest are added by name)
+declare -A ASDF_PLUGIN_URLS=([protonge]=https://github.com/augustobmoura/asdf-protonge.git)
+
+# link comes before packages so ~/.config/pacman/makepkg.conf applies to AUR builds
+STEPS=(pacman aur migrations link packages system shell runtimes themes apps services)
+declare -A STEP_TITLES=(
+  [pacman]="Pacman repositories and system upgrade"
+  [aur]="AUR helper"
+  [migrations]="Migrations"
+  [packages]="Packages"
+  [link]="Dotfiles"
+  [system]="System files"
+  [shell]="Shell"
+  [runtimes]="Runtimes (asdf)"
+  [themes]="Themes"
+  [apps]="Apps"
+  [services]="Services"
+)
+
+PACMAN_ARGS=(--needed --noconfirm)
+YAY_ARGS=(--needed --noconfirm --answerclean None --answerdiff None --answeredit None
+  --removemake --cleanafter --sudoloop)
+
+# ── Paths ───────────────────────────────────────────────────────────────────
+
+SELF=$(readlink -f -- "${BASH_SOURCE[0]:-}" 2>/dev/null || true)
+DOTFILES=${SELF%/*}
+HOME_SRC=$DOTFILES/Configs
+PKG_DIR=$DOTFILES/Extras/packages
+SYSTEM_SRC=$DOTFILES/Extras/system
+MIGRATIONS=$DOTFILES/Extras/migrations
+STATE=${XDG_STATE_HOME:-$HOME/.local/state}/dots
+STAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP=$STATE/backups/$STAMP
+
+# ── Output ──────────────────────────────────────────────────────────────────
+
+if [[ -t 1 ]]; then
+  BOLD=$'\e[1m' DIM=$'\e[2m' RED=$'\e[31m' GREEN=$'\e[32m' YELLOW=$'\e[33m' BLUE=$'\e[34m' RESET=$'\e[0m'
+else
+  BOLD='' DIM='' RED='' GREEN='' YELLOW='' BLUE='' RESET=''
+fi
+# Name the command that failed instead of exiting silently under `set -e`.
+ON_ERR='printf "  %serror:%s \"%s\" failed (exit %s)\n" "$RED" "$RESET" "$BASH_COMMAND" "$?" >&2'
+trap "$ON_ERR" ERR
+# Steps run in subshells, so warnings and notes are collected in files.
+RUN_DIR=$(mktemp -d)
+
+header() { printf '\n%s==> %s%s\n' "$BLUE$BOLD" "$*" "$RESET"; }
+info() { printf '  %s\n' "$*"; }
+ok() { printf '  %s✓%s %s\n' "$GREEN" "$RESET" "$*"; }
+warn() { printf '  %s!%s %s\n' "$YELLOW" "$RESET" "$*" >&2 && printf '%s\n' "$*" >>"$RUN_DIR/warnings"; }
+die() { printf '%serror:%s %s\n' "$RED" "$RESET" "$*" >&2; exit 1; }
+note() { printf '%s\n' "$*" >>"$RUN_DIR/notes"; } # shown at the end: things left for the user to do
+wrap() { printf '%s\n' "$*" | fold -s -w 88 | sed 's/^/      /'; }
+tilde() { printf '%s' "${1/#"$HOME"/\~}"; }
+have() { command -v "$1" &>/dev/null; }
+booted() { [[ -d /run/systemd/system ]]; } # false in a chroot/container
+
+# Everything that changes the machine goes through run/srun/apply, so
+# --dry-run prints it instead. Read-only checks run normally in both modes.
+shell_words() {
+  local a q="'" out=()
+  for a; do
+    if [[ $a =~ ^[][A-Za-z0-9_./:=@%+,~-]+$ ]]; then out+=("$a"); else out+=("'${a//$q/$q\\$q$q}'"); fi
+  done
+  printf '%s' "${out[*]}"
+}
+run() {
+  if ((DRY_RUN)); then
+    printf '  %s[dry-run]%s %s\n' "$DIM" "$RESET" "$(shell_words "$@")"
+  else
+    "$@"
+  fi
+}
+srun() { run sudo "$@"; }
+quiet() { if ((DRY_RUN)); then "$@"; else "$@" >/dev/null; fi; }
+# Describe a change, then make it (in --dry-run, only describe it).
+apply() {
+  local what=$1
+  shift
+  if ((DRY_RUN)); then
+    printf '  %s[dry-run]%s %s\n' "$DIM" "$RESET" "$what"
+  else
+    printf '  %s+%s %s\n' "$GREEN" "$RESET" "$what"
+    "$@"
+  fi
+}
+
+confirm() {
+  ((ASSUME_YES || DRY_RUN)) && return 0
+  local reply
+  read -rp "  $1 [y/N] " reply </dev/tty || return 1
+  [[ $reply == [yY]* ]]
+}
+
+# Ask for the password once and keep sudo alive while dots runs.
+sudo_keepalive() {
+  ((DRY_RUN)) && return 0
+  [[ -n ${SUDO_PID:-} ]] && return 0
+  sudo -v || die "dots needs sudo"
+  # 9>&-: don't hold the dots lock (its `sleep` can outlive dots by a minute)
+  while kill -0 $$ 2>/dev/null; do
+    sudo -n -v 2>/dev/null || true
+    sleep 50
+  done 9>&- &
+  SUDO_PID=$!
+}
+
+# Record the whole run (pacman/yay output included) while keeping it a real TTY.
+start_log() {
+  ((DRY_RUN)) && return 0
+  [[ -n ${DOTS_LOG:-} || ! -t 0 || ! -t 1 ]] && return 0
+  have script || return 0
+  export DOTS_LOG=$STATE/logs/$STAMP-$CMD.log
+  mkdir -p "${DOTS_LOG%/*}"
+  SHELL=/bin/bash exec script -qefc "$(printf '%q ' "$SELF" "${ORIG_ARGS[@]}")" "$DOTS_LOG"
+}
+
+take_lock() {
+  ((DRY_RUN)) && return 0
+  mkdir -p "$STATE"
+  exec 9>"$STATE/lock"
+  flock -n 9 || die "another dots command is already running"
+}
+
+# ── Packages ────────────────────────────────────────────────────────────────
+
+csort() { LC_ALL=C sort -u; }
+names_in() { (($#)) || return 0; sed 's/#.*//' "$@" | awk 'NF { print $1 }' | csort; }
+wanted() { # packages of the selected lists
+  local files=() g
+  if ((${#SEL_GROUPS[@]})); then
+    for g in "${SEL_GROUPS[@]}"; do files+=("$PKG_DIR/$g.txt"); done
+  else
+    files=("$PKG_DIR"/*.txt)
+  fi
+  names_in "${files[@]}"
+}
+listed() { names_in "$PKG_DIR"/*.txt; } # every list: what status/prune compare against
+installed() { pacman -Qq | csort; }
+explicit() { pacman -Qqe | csort; }
+as_deps() { { pacman -Qqd || true; } | csort; }
+orphans() { { pacman -Qdttq || true; } | csort; } # -tt keeps packages that are optional deps of others
+pacnew_files() { find /etc -name '*.pacnew' 2>/dev/null || true; }
+missing() { LC_ALL=C comm -23 <(wanted) <(installed); }
+unlisted() { LC_ALL=C comm -13 <(listed) <(explicit); }
+in_list() { awk -v p="$1" '{ sub(/#.*/, "") } $1 == p { found = 1; exit } END { exit !found }' "$2"; }
+record_pkg() { # append "pkg  # description" to a list file
+  if [[ -n $2 ]]; then printf '%-28s # %s\n' "$1" "$2" >>"$3"; else printf '%s\n' "$1" >>"$3"; fi
+}
+unlist_pkg() { # drop package $1 from list file $2, keeping comments and layout
+  local tmp
+  tmp=$(mktemp)
+  awk -v p="$1" '{ l = $0; sub(/#.*/, "", l); split(l, a, " ") } a[1] != p' "$2" >"$tmp" && cat "$tmp" >"$2"
+  rm -f "$tmp"
+}
+list_of() { # which list mentions package $1
+  awk -v p="$1" '{ sub(/#.*/, "") } $1 == p { print FILENAME; exit }' "$PKG_DIR"/*.txt
+}
+
+aur_names() { # print which of the given names exist in the AUR; fails if it's unreachable
+  local q json
+  q=$(printf '&arg[]=%s' "$@")
+  q=${q//+/%2B}
+  json=$(curl -fsS --max-time 30 "https://aur.archlinux.org/rpc/v5/info?${q#&}") || return 1
+  grep -o '"Name":"[^"]*"' <<<"$json" | cut -d'"' -f4 || true
+}
+official_repo() { # repo of an official package, even if that repo isn't enabled here
+  curl -fsS --max-time 15 "https://archlinux.org/packages/search/json/?name=$1" |
+    grep -o '"repo": *"[^"]*"' | head -1 | cut -d'"' -f4
+}
+
+# One line per fact from the package databases (sync = repos, local = installed):
+#   N name   |   P name virtual (name provides virtual)   |   D name dependency
+pkg_facts() {
+  if [[ $1 == sync ]]; then
+    local db
+    for db in /var/lib/pacman/sync/*.db; do bsdtar -xOf "$db" '*/desc' 2>/dev/null || true; done
+  else
+    cat /var/lib/pacman/local/*/desc 2>/dev/null || true
+  fi | awk '
+    /^%NAME%$/ { getline name; print "N", name; next }
+    /^%(PROVIDES|DEPENDS)%$/ {
+      t = ($0 == "%PROVIDES%") ? "P" : "D"
+      # sonames keep their version: libz.so=1-64 and libz.so=1-32 are different things
+      while ((getline x) > 0 && x != "") { if (x !~ /\.so=/) sub(/[<>=].*/, "", x); print t, name, x }
+    }'
+}
+
+# Virtual dependencies (like tessdata, needed by tesseract) with several
+# providers where no list names one: with --noconfirm pacman silently takes
+# option 1 (tesseract-data-afr). Prints "virtual provider count".
+# With packages as arguments, checks what installing them would pull in;
+# without, checks what is installed. Soname alternatives (zlib-ng-compat...)
+# are drop-in builds of the same library, so they're left out.
+default_providers() {
+  local tx=$RUN_DIR/transaction conf=/etc/pacman.conf
+  [[ -f $RUN_DIR/pacman.conf ]] && conf=$RUN_DIR/pacman.conf # what the pacman step would write (dry run)
+  : >"$tx"
+  if (($#)) && ! pacman --config "$conf" -Sup --print-format '%n' --noconfirm "$@" >"$tx" 2>"$RUN_DIR/transaction.err"; then
+    info "(Couldn't preview the install to check provider choices: $(grep -m1 . "$RUN_DIR/transaction.err" || true))" >&2
+    return 0
+  fi
+  awk -v planned=$(($# > 0)) '
+    FILENAME == ARGV[1] { listed[$1] = 1; next }
+    FILENAME == ARGV[2] { tx[$1] = 1; next }
+    FILENAME == ARGV[3] {
+      if ($1 == "N") real[$2] = 1
+      else if ($1 == "P" && !(($2, $3) in provides)) { count[$3]++; provides[$2, $3] = 1 }
+      else if ($1 == "D" && planned && ($2 in tx)) need[$3] = 1
+      next
+    }
+    $1 == "P" { if (!($3 in have)) have[$3] = $2; provides[$2, $3] = 1 }
+    $1 == "D" && !planned { need[$3] = 1 }
+    END {
+      for (v in need) {
+        if (v in real || v ~ /\.so/ || count[v] < 2) continue
+        pinned = 0
+        for (p in listed) if ((p, v) in provides) { pinned = 1; break }
+        if (pinned) continue
+        pick = ""
+        if (!planned) pick = have[v]
+        else if (!(v in have)) for (p in tx) if ((p, v) in provides) pick = p
+        if (pick != "") print v, pick, count[v]
+      }
+    }' <(listed) "$tx" <(pkg_facts sync) <(pkg_facts local)
+}
+
+warn_default_providers() { # $@ = packages about to be installed (none: what's installed)
+  local virtual pick count
+  while read -r virtual pick count; do
+    if (($#)); then
+      warn "No list picks a provider for '$virtual', so pacman will install option 1 of $count: $pick. Pin the one you want: dots add -g core <provider>"
+    else
+      warn "pacman picked $pick for '$virtual' (option 1 of $count) because no list names one. Keep it with 'dots add -g core $pick', or swap it: dots add <provider> && dots remove $pick"
+    fi
+  done < <(default_providers "$@")
+}
+
+# Sort packages into REPO_PKGS, AUR_PKGS and UNKNOWN_PKGS.
+classify() {
+  REPO_PKGS=() AUR_PKGS=() UNKNOWN_PKGS=()
+  local p found repo
+  local -A in_repos=()
+  while read -r p; do in_repos[$p]=1; done < <(pacman -Slq)
+  local rest=()
+  for p; do
+    if [[ -n ${in_repos[$p]:-} ]]; then REPO_PKGS+=("$p"); else rest+=("$p"); fi
+  done
+  ((${#rest[@]})) || return 0
+  if ! found=$(aur_names "${rest[@]}"); then
+    warn "Couldn't reach the AUR; treating these as AUR packages: ${rest[*]}"
+    AUR_PKGS=("${rest[@]}")
+    return 0
+  fi
+  for p in "${rest[@]}"; do
+    if grep -qxF -- "$p" <<<"$found"; then
+      AUR_PKGS+=("$p")
+    elif repo=$(official_repo "$p") && [[ -n $repo ]]; then
+      # e.g. [multilib] before the pacman step enabled it (only happens in --dry-run)
+      ((DRY_RUN)) || warn "$p is in [$repo], which isn't enabled in /etc/pacman.conf"
+      REPO_PKGS+=("$p")
+    else
+      UNKNOWN_PKGS+=("$p")
+    fi
+  done
+}
+
+pkg_cmd() { # pacman|yay pkg...
+  local tool=$1
+  shift
+  if [[ $tool == pacman ]]; then
+    srun pacman -S "${PACMAN_ARGS[@]}" "$@"
+  else
+    run yay -S "${YAY_ARGS[@]}" "$@"
+  fi
+}
+
+# Install in one transaction; if that fails (a conflict, a broken AUR build...),
+# retry one package at a time so one bad package doesn't block the others.
+install_batch() {
+  local tool=$1
+  shift
+  info "Installing $# package(s) with $tool:"
+  wrap "$@"
+  pkg_cmd "$tool" "$@" && return 0
+  warn "Installing them together failed; retrying one at a time to find the culprit."
+  local p failed=()
+  for p; do
+    pacman -Qq -- "$p" &>/dev/null && continue
+    pkg_cmd "$tool" "$p" || failed+=("$p")
+  done
+  if ((${#failed[@]})); then warn "Failed to install: ${failed[*]}"; fi
+}
+
+install_pkgs() {
+  (($#)) || return 0
+  classify "$@"
+  if ((${#UNKNOWN_PKGS[@]})); then
+    warn "Not in the repos or the AUR (typo, renamed or removed?), skipped: ${UNKNOWN_PKGS[*]}"
+  fi
+  if ((${#REPO_PKGS[@]})); then
+    warn_default_providers "${REPO_PKGS[@]}"
+    install_batch pacman "${REPO_PKGS[@]}"
+  fi
+  if ((${#AUR_PKGS[@]})); then
+    if have yay || ((DRY_RUN)); then
+      install_batch yay "${AUR_PKGS[@]}"
+    else
+      warn "yay isn't installed; skipped AUR packages: ${AUR_PKGS[*]}"
+    fi
+  fi
+}
+
+# Uninstall orphans until none are left (removing some can orphan others).
+remove_orphans() {
+  local orph confirm_args=()
+  ((ASSUME_YES)) && confirm_args=(--noconfirm)
+  mapfile -t orph < <(orphans)
+  if ((DRY_RUN)); then
+    if ((${#orph[@]})); then run sudo pacman -Rns "${orph[@]}"; fi
+    return 0
+  fi
+  while ((${#orph[@]})); do
+    sudo pacman -Rns "${confirm_args[@]}" "${orph[@]}" || {
+      warn "Orphans were left installed"
+      return 0
+    }
+    mapfile -t orph < <(orphans)
+  done
+  ok "No orphans left"
+}
+
+# ── Links ───────────────────────────────────────────────────────────────────
+
+is_real_dir() {
+  local d
+  for d in "${REAL_DIRS[@]}"; do [[ $1 == "$d" ]] && return 0; done
+  return 1
+}
+
+# Move whatever is at $1 (inside $HOME) into this run's backup folder.
+backup() {
+  local path=$1 rel=${1#"$HOME"/}
+  apply "back up ~/$rel -> $(tilde "$BACKUP")/$rel" \
+    eval 'mkdir -p -- "$(dirname -- "$BACKUP/$rel")" && mv -- "$path" "$BACKUP/$rel"'
+}
+
+ensure_dir() { # make $1 a real directory
+  [[ -d $1 && ! -L $1 ]] && return 0
+  if [[ -e $1 || -L $1 ]]; then backup "$1"; fi
+  apply "create $(tilde "$1")/" mkdir -p -- "$1"
+}
+
+ensure_link() { # make $2 a symlink to $1, backing up whatever is in the way
+  local src=$1 dst=$2
+  [[ -L $dst && $(readlink -- "$dst") == "$src" ]] && return 0
+  if [[ -e $dst || -L $dst ]]; then backup "$dst"; fi
+  apply "link $(tilde "$dst")" eval 'mkdir -p -- "${dst%/*}" && ln -s -- "$src" "$dst"'
+}
+
+link_tree() { # $1 = path inside Configs/ ("" = top level)
+  local src rel
+  for src in "$HOME_SRC${1:+/$1}"/*; do
+    rel=${src#"$HOME_SRC"/}
+    if is_real_dir "$rel"; then
+      ensure_dir "$HOME/$rel"
+      link_tree "$rel"
+    else
+      ensure_link "$src" "$HOME/$rel"
+    fi
+  done
+}
+
+bad_links() { # print entries of Configs/ that aren't linked into $HOME
+  local src rel dst
+  for src in "$HOME_SRC${1:+/$1}"/*; do
+    rel=${src#"$HOME_SRC"/}
+    dst=$HOME/$rel
+    if is_real_dir "$rel"; then
+      if [[ -d $dst && ! -L $dst ]]; then bad_links "$rel"; else echo "~/$rel (should be a directory)"; fi
+    elif ! [[ -L $dst && $(readlink -- "$dst") == "$src" ]]; then
+      if [[ -e $dst || -L $dst ]]; then echo "~/$rel (exists, not linked)"; else echo "~/$rel (not linked)"; fi
+    fi
+  done
+}
+
+stale_links() { # broken links into the repo, left behind by files removed from it
+  local dir l
+  for dir in "$HOME" "${REAL_DIRS[@]/#/$HOME/}"; do
+    for l in "$dir"/*; do
+      [[ -L $l && ! -e $l && $(readlink -- "$l") == "$DOTFILES"/* ]] && echo "$l"
+    done
+  done
+  return 0
+}
+
+make_user_dirs() { # the XDG user dirs from user-dirs.dirs (Documents, Music...)
+  local file=$HOME_SRC/.config/user-dirs.dirs line dir re='^XDG_[A-Z]+_DIR="\$HOME/?(.*)"$'
+  [[ -f $file ]] || return 0
+  while IFS= read -r line; do
+    [[ $line =~ $re ]] || continue
+    dir=${BASH_REMATCH[1]}
+    if [[ -n $dir && ! -d $HOME/$dir ]]; then apply "create ~/$dir/" mkdir -p -- "$HOME/$dir"; fi
+  done <"$file"
+}
+
+# ── Steps ───────────────────────────────────────────────────────────────────
+
+backup_etc() { [[ -e $1.dots-orig ]] || srun cp -a -- "$1" "$1.dots-orig"; }
+
+step_pacman() {
+  local conf=/etc/pacman.conf
+  if grep -q '^#\[multilib\]' "$conf"; then
+    info "Enabling the [multilib] repository"
+    backup_etc "$conf"
+    srun sed -i '/^#\[multilib\]$/{s/^#//;n;s/^#//}' "$conf"
+  fi
+  if grep -q '^\[multilib-testing\]' "$conf" && ! grep -q '^\[core-testing\]' "$conf"; then
+    warn "[multilib-testing] is enabled without [core-testing]/[extra-testing]: disabling it (mixing testing and stable repos breaks upgrades)"
+    backup_etc "$conf"
+    srun sed -i '/^\[multilib-testing\]$/{s/^/#/;n;s/^/#/}' "$conf"
+  fi
+  if ((DRY_RUN)); then
+    sed -e '/^#\[multilib\]$/{s/^#//;n;s/^#//}' "$conf" >"$RUN_DIR/pacman.conf"
+    if ! grep -q '^\[core-testing\]' "$conf"; then sed -i '/^\[multilib-testing\]$/{s/^/#/;n;s/^/#/}' "$RUN_DIR/pacman.conf"; fi
+  fi
+  # Refresh the keyring first so new packager keys don't break the upgrade.
+  srun pacman -Sy --needed --noconfirm archlinux-keyring
+  srun pacman -Su --noconfirm
+}
+
+step_aur() {
+  local need=() p tmp
+  for p in git base-devel; do pacman -Qq "$p" &>/dev/null || need+=("$p"); done
+  if ((${#need[@]})); then srun pacman -S "${PACMAN_ARGS[@]}" "${need[@]}"; fi
+  if have yay; then
+    ok "yay is installed"
+    return 0
+  fi
+  info "Building yay from the AUR"
+  if ((DRY_RUN)); then
+    run git clone -q --depth=1 https://aur.archlinux.org/yay.git /tmp/yay
+    run makepkg -sr --noconfirm
+    run sudo pacman -U --noconfirm "yay-<version>.pkg.tar.zst"
+    return 0
+  fi
+  tmp=$(mktemp -d)
+  git clone -q --depth=1 https://aur.archlinux.org/yay.git "$tmp/yay"
+  (cd "$tmp/yay" && makepkg -sr --noconfirm) || die "building yay failed"
+  # Only the package itself: makepkg also builds yay-debug.
+  sudo pacman -U --noconfirm "$tmp"/yay/yay-[0-9]*.pkg.tar.zst
+  rm -rf "$tmp"
+}
+
+step_migrations() {
+  local done_dir=$STATE/migrations f pending=()
+  if [[ ! -d $done_dir ]]; then
+    # First run on this machine: the lists and configs already describe the
+    # end state, so earlier migrations don't apply. Remember them as done.
+    apply "create $(tilde "$done_dir")/ (first run)" mkdir -p -- "$done_dir"
+    for f in "$MIGRATIONS"/*.sh; do apply "mark ${f##*/} as done" touch "$done_dir/${f##*/}"; done
+    return 0
+  fi
+  for f in "$MIGRATIONS"/*.sh; do [[ -e $done_dir/${f##*/} ]] || pending+=("$f"); done
+  if ((${#pending[@]} == 0)); then
+    ok "No pending migrations"
+    return 0
+  fi
+  for f in "${pending[@]}"; do
+    apply "run migration ${f##*/}" eval \
+      '(cd "$DOTFILES" && DOTFILES=$DOTFILES bash -euo pipefail "$f" </dev/null)' ||
+      die "Migration ${f##*/} failed. Fix it, then run 'dots update' again."
+    ((DRY_RUN)) || touch "$done_dir/${f##*/}"
+  done
+}
+
+step_packages() {
+  local miss deps
+  if [[ $MODE == update ]] && have yay; then
+    info "Upgrading AUR packages (including -git/nightly ones)"
+    run yay -Sua --devel "${YAY_ARGS[@]}"
+  fi
+  mapfile -t miss < <(missing)
+  if ((${#miss[@]})); then
+    install_pkgs "${miss[@]}"
+  else
+    ok "All $(wanted | wc -l) listed packages are installed"
+  fi
+  # Listed packages installed as dependencies would be removed as orphans once
+  # whatever pulled them in goes away; mark them explicit.
+  mapfile -t deps < <(LC_ALL=C comm -12 <(wanted) <(as_deps))
+  if ((${#deps[@]})); then
+    info "Marking ${#deps[@]} listed package(s) as explicitly installed"
+    quiet srun pacman -D --asexplicit "${deps[@]}"
+  fi
+}
+
+step_link() {
+  local l bad
+  link_tree ""
+  while read -r l; do
+    apply "remove stale link $(tilde "$l")" rm -- "$l"
+  done < <(stale_links)
+  make_user_dirs
+  ((DRY_RUN)) && return 0
+  mapfile -t bad < <(bad_links)
+  if ((${#bad[@]})); then
+    warn "Not linked: ${bad[*]}"
+  else
+    ok "Everything in Configs/ is linked into ~"
+  fi
+}
+
+step_system() {
+  local src dst changed=0
+  while IFS= read -r -d '' src; do
+    dst=${src#"$SYSTEM_SRC"}
+    [[ -f $dst ]] && cmp -s -- "$src" "$dst" && continue
+    info "Installing $dst"
+    if [[ -e $dst ]]; then backup_etc "$dst"; fi
+    srun install -Dm644 -- "$src" "$dst"
+    changed=1
+  done < <(find "$SYSTEM_SRC" -type f -print0 | sort -z)
+  if ((!changed)); then
+    ok "System files are up to date"
+    return 0
+  fi
+  if booted; then srun systemctl daemon-reload; fi
+  ((DRY_RUN)) || note "System files changed (keyboard layout, ...): reboot to apply them"
+}
+
+git_sync() { # clone $1 into $2, or pull it when updating
+  if [[ ! -d $2/.git ]]; then
+    run git clone -q --depth=1 "$1" "$2"
+  elif [[ $MODE == update ]]; then
+    run git -C "$2" pull -q --ff-only
+  else
+    ok "$(tilde "$2")"
+  fi
+}
+
+step_shell() {
+  local omz=$HOME/.oh-my-zsh url shell
+  git_sync https://github.com/ohmyzsh/ohmyzsh.git "$omz"
+  for url in "${ZSH_PLUGINS[@]}"; do git_sync "$url" "$omz/custom/plugins/${url##*/}"; done
+  shell=$(getent passwd "$(id -un)" | cut -d: -f7)
+  if [[ $shell == /usr/bin/zsh ]]; then
+    ok "Login shell is zsh"
+  elif have zsh || ((DRY_RUN)); then
+    srun chsh -s /usr/bin/zsh "$(id -un)"
+    ((DRY_RUN)) || note "Your login shell is now zsh: log out and back in"
+  else
+    warn "zsh isn't installed; login shell unchanged"
+  fi
+}
+
+step_runtimes() {
+  local asdf_dir=${ASDF_DATA_DIR:-$HOME/.asdf} tool version plugins extra p miss=()
+  export PATH=$asdf_dir/shims:$PATH
+  # Some plugins (asdf-uv) download into the current directory: use a scratch one.
+  cd "$RUN_DIR"
+  if ! have asdf; then
+    if ((DRY_RUN)); then info "asdf isn't installed yet (the packages step installs it)"; else warn "asdf isn't installed; skipped runtimes"; fi
+    return 0
+  fi
+  plugins=$(asdf plugin list 2>/dev/null || true)
+  # fd 3, so commands that read stdin can't eat the rest of the file
+  while read -r -u3 tool version _; do
+    [[ -z $tool || $tool == '#'* ]] && continue
+    if ! grep -qxF -- "$tool" <<<"$plugins"; then
+      extra=()
+      [[ -n ${ASDF_PLUGIN_URLS[$tool]:-} ]] && extra=("${ASDF_PLUGIN_URLS[$tool]}")
+      run asdf plugin add "$tool" "${extra[@]}"
+    elif [[ $MODE == update ]]; then
+      run asdf plugin update "$tool"
+    fi
+    if [[ -d $asdf_dir/installs/$tool/$version ]]; then
+      ok "$tool $version"
+    elif [[ $tool == protonge && ! -e $HOME/.steam/root ]]; then
+      note "Proton GE installs into Steam: open Steam once, then run 'dots update'"
+    else
+      run asdf install "$tool" "$version"
+    fi
+  done 3<"$HOME_SRC/.tool-versions"
+
+  if ! have npm; then
+    info "npm globals (${NPM_GLOBALS[*]}) get installed once node is"
+    return 0
+  fi
+  for p in "${NPM_GLOBALS[@]}"; do npm ls -g --depth=0 "$p" &>/dev/null || miss+=("$p"); done
+  if ((${#miss[@]})); then
+    run npm install -g "${miss[@]}"
+    run asdf reshim nodejs
+  else
+    ok "npm globals: ${NPM_GLOBALS[*]}"
+  fi
+}
+
+step_themes() {
+  local dir=${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-themes t gtk
+  git_sync "$THEMES_URL" "$dir"
+  if [[ ! -d $dir ]]; then
+    info "Themes get linked once the repo is cloned"
+    return 0
+  fi
+  for t in "$dir"/tokyo-night/themes/*/; do t=${t%/} && ensure_link "$t" "$HOME/.local/share/themes/${t##*/}"; done
+  for t in "$dir"/tokyo-night/icons/*/; do t=${t%/} && ensure_link "$t" "$HOME/.local/share/icons/${t##*/}"; done
+  # GTK4/libadwaita apps only read the theme from ~/.config/gtk-4.0. Link through
+  # ~/.local/share/themes, like nwg-look does, so the two don't fight over these.
+  gtk=$(sed -n 's/^gtk-theme-name=//p' "$HOME_SRC/.config/gtk-4.0/settings.ini")
+  for t in assets gtk.css gtk-dark.css; do
+    ensure_link "$HOME/.local/share/themes/$gtk/gtk-4.0/$t" "$HOME/.config/gtk-4.0/$t"
+  done
+}
+
+step_apps() {
+  if have claude || [[ -x $HOME/.local/bin/claude ]]; then
+    ok "Claude Code"
+  else
+    apply "install Claude Code (claude.ai/install.sh)" bash -c 'set -o pipefail; curl -fsSL https://claude.ai/install.sh | bash'
+  fi
+}
+
+unit_exists() { # system|user unit
+  local unit=$2
+  [[ $unit == *@*.* ]] && unit=${unit%%@*}@.${unit##*.} # instance -> template
+  [[ -e /usr/lib/systemd/$1/$unit || -e /etc/systemd/$1/$unit ]]
+}
+
+step_services() {
+  local u getty=getty@${DISPLAY_MANAGER#*@}
+  for u in "${SYSTEM_SERVICES[@]}" "$DISPLAY_MANAGER"; do
+    if ! unit_exists system "$u" && ((DRY_RUN)); then
+      run sudo systemctl enable "$u" # its package isn't installed yet
+    elif ! unit_exists system "$u"; then
+      warn "$u doesn't exist (is its package installed?)"
+    elif systemctl is-enabled -q "$u" 2>/dev/null; then
+      ok "$u"
+    elif [[ $u != "$DISPLAY_MANAGER" ]] && booted; then
+      srun systemctl enable --now "$u"
+    else
+      srun systemctl enable "$u"
+    fi
+  done
+  if systemctl is-enabled -q "$getty" 2>/dev/null; then srun systemctl disable "$getty"; fi
+
+  if ! systemctl --user show-environment &>/dev/null; then
+    warn "No systemd user session, so user services were skipped. From your own login, run: dots install --only services"
+    return 0
+  fi
+  for u in "${USER_SERVICES[@]}"; do
+    if ! unit_exists user "$u" && ((DRY_RUN)); then
+      run systemctl --user enable "$u" # its package isn't installed yet
+    elif ! unit_exists user "$u"; then
+      warn "$u doesn't exist (is its package installed?)"
+    elif systemctl --user is-enabled -q "$u" 2>/dev/null; then
+      ok "$u (user)"
+    else
+      run systemctl --user enable "$u"
+    fi
+  done
+}
+
+# ── Commands ────────────────────────────────────────────────────────────────
+
+pull_repo() {
+  [[ -n ${DOTS_PULLED:-} ]] && return 0
+  header "Dotfiles repo"
+  local before
+  before=$(git -C "$DOTFILES" rev-parse HEAD)
+  if ((DRY_RUN)); then
+    run git -C "$DOTFILES" pull --ff-only --autostash
+    return 0
+  fi
+  git -C "$DOTFILES" pull --ff-only --autostash || die "git pull failed; sort it out in $DOTFILES and run again"
+  if [[ $(git -C "$DOTFILES" rev-parse HEAD) != "$before" ]]; then
+    info "The repo changed; restarting with the new version of dots"
+    DOTS_PULLED=1 exec "$SELF" "${ORIG_ARGS[@]}"
+  fi
+}
+
+want_step() {
+  local x
+  if ((${#ONLY[@]})); then
+    for x in "${ONLY[@]}"; do [[ $x == "$1" ]] && return 0; done
+    return 1
+  fi
+  for x in "${SKIP[@]}"; do [[ $x == "$1" ]] && return 1; done
+  return 0
+}
+
+cmd_install() { # install and update
+  [[ -f /etc/arch-release ]] || die "dots only supports Arch Linux"
+  ((EUID)) || die "run dots as your user, not root (it uses sudo when it needs to)"
+  MODE=$CMD
+  ((DRY_RUN)) && printf '%sDry run:%s nothing will be changed.\n' "$BOLD" "$RESET"
+  [[ $MODE == update ]] && pull_repo
+  sudo_keepalive
+  local s rc
+  for s in "${STEPS[@]}"; do
+    want_step "$s" || continue
+    header "${STEP_TITLES[$s]}"
+    # A subshell with its own `set -e`: a failure stops this step, not the ones
+    # after it (bash would silently ignore `set -e` inside `step_x || ...`).
+    trap - ERR && set +e
+    (trap "$ON_ERR" ERR; set -e; "step_$s")
+    rc=$?
+    set -e && trap "$ON_ERR" ERR
+    ((rc == 0)) && continue
+    # Going on after a failed upgrade risks a partial upgrade; after a failed
+    # migration, later steps may assume it ran.
+    [[ $s == pacman || $s == migrations ]] && die "The $s step failed, so dots stopped. Fix the cause and run it again."
+    warn "The $s step failed. Once the cause is fixed: dots $MODE --only $s"
+  done
+  summary
+}
+
+summary() {
+  local miss unl orph pacnew line
+  header "Summary"
+  # First what came up during this run, then the state of the machine.
+  if [[ -f $RUN_DIR/warnings ]]; then
+    while IFS= read -r line; do printf '  %s!%s %s\n' "$YELLOW" "$RESET" "$line"; done <"$RUN_DIR/warnings"
+  fi
+  mapfile -t miss < <(missing)
+  mapfile -t unl < <(unlisted)
+  mapfile -t orph < <(orphans)
+  mapfile -t pacnew < <(pacnew_files)
+  if ((DRY_RUN)); then
+    info "Dry run: nothing was changed."
+  elif ((${#miss[@]})) && want_step packages; then
+    printf '  %s!%s %s\n' "$YELLOW" "$RESET" "${#miss[@]} listed package(s) aren't installed: ${miss[*]}"
+  elif ((${#miss[@]})); then
+    info "${#miss[@]} listed package(s) aren't installed yet (the packages step didn't run)"
+  else
+    ok "All listed packages are installed"
+  fi
+  if ((${#unl[@]})); then info "${#unl[@]} installed package(s) aren't in any list: see 'dots status', then 'dots add' or 'dots prune'"; fi
+  if ((${#orph[@]})); then info "${#orph[@]} orphaned package(s): 'dots prune' removes them"; fi
+  if ((${#pacnew[@]})); then info "${#pacnew[@]} .pacnew file(s) in /etc: merge them with 'sudo pacdiff'"; fi
+  ((DRY_RUN)) || warn_default_providers
+  if [[ -d $BACKUP ]]; then info "Files that were in the way are in $(tilde "$BACKUP")"; fi
+  if [[ -f $RUN_DIR/notes ]]; then
+    while IFS= read -r line; do printf '  %s→%s %s\n' "$BLUE" "$RESET" "$line"; done < <(sort -u "$RUN_DIR/notes")
+  fi
+  if [[ -n ${DOTS_LOG:-} ]]; then info "Log: $(tilde "$DOTS_LOG")"; fi
+}
+
+show_list() { # title, then items
+  local title=$1
+  shift
+  if (($#)); then
+    printf '  %s%s (%d):%s\n' "$BOLD" "$title" $# "$RESET"
+    if [[ $* == *' ('* ]]; then printf '      %s\n' "$@"; else wrap "$@"; fi
+  else
+    ok "$title: none"
+  fi
+}
+
+cmd_status() {
+  local items f src dst
+  header "Packages"
+  mapfile -t items < <(missing)
+  show_list "Listed but not installed" "${items[@]}"
+  mapfile -t items < <(unlisted)
+  show_list "Installed but in no list (dots add -g GROUP, or dots prune)" "${items[@]}"
+  mapfile -t items < <(orphans)
+  show_list "Orphans (dots prune)" "${items[@]}"
+  mapfile -t items < <(default_providers | awk '{ printf "%s -> %s (option 1 of %s)\n", $1, $2, $3 }')
+  show_list "Providers pacman picked because no list names one (pin one with dots add)" "${items[@]}"
+
+  header "Dotfiles"
+  mapfile -t items < <(bad_links)
+  show_list "Not linked (dots link)" "${items[@]}"
+  mapfile -t items < <(stale_links)
+  show_list "Stale links (dots link removes them)" "${items[@]/#$HOME/\~}"
+
+  header "System files"
+  items=()
+  while IFS= read -r -d '' src; do
+    dst=${src#"$SYSTEM_SRC"}
+    cmp -s -- "$src" "$dst" 2>/dev/null || items+=("$dst")
+  done < <(find "$SYSTEM_SRC" -type f -print0 | sort -z)
+  show_list "Different from Extras/system" "${items[@]}"
+  mapfile -t items < <(pacnew_files)
+  show_list ".pacnew files (sudo pacdiff)" "${items[@]}"
+
+  header "Migrations"
+  if [[ ! -d $STATE/migrations ]]; then
+    info "dots hasn't run on this machine yet"
+  else
+    items=()
+    for f in "$MIGRATIONS"/*.sh; do [[ -e $STATE/migrations/${f##*/} ]] || items+=("${f##*/}"); done
+    show_list "Pending (dots update)" "${items[@]}"
+  fi
+}
+
+cmd_add() {
+  (($#)) || die "usage: dots add PKG... [-g GROUP]"
+  local file=$PKG_DIR/$ADD_GROUP.txt p where desc new=() miss=() deps=()
+  [[ $ADD_GROUP =~ ^[a-z0-9_-]+$ ]] || die "bad group name: $ADD_GROUP"
+  for p; do
+    where=$(list_of "$p")
+    if [[ -n $where ]]; then info "$p is already listed in ${where#"$DOTFILES"/}"; else new+=("$p"); fi
+    pacman -Qq -- "$p" &>/dev/null || miss+=("$p")
+  done
+  sudo_keepalive
+  install_pkgs "${miss[@]}"
+  [[ -f $file ]] || apply "create new list ${file#"$DOTFILES"/}" touch "$file"
+  for p in "${new[@]}"; do
+    if ((DRY_RUN)) || pacman -Qq -- "$p" &>/dev/null; then
+      desc=$({ LC_ALL=C pacman -Qi -- "$p" || LC_ALL=C pacman -Si -- "$p"; } 2>/dev/null |
+        sed -n 's/^Description *: //p' | head -1 || true)
+      apply "add $p to ${file#"$DOTFILES"/}" record_pkg "$p" "$desc" "$file"
+    fi
+  done
+  for p; do pacman -Qqd -- "$p" &>/dev/null && deps+=("$p"); done
+  if ((${#deps[@]})); then quiet srun pacman -D --asexplicit "${deps[@]}"; fi
+  return 0
+}
+
+cmd_remove() {
+  (($#)) || die "usage: dots remove PKG..."
+  local p f inst=() free=() confirm_args=()
+  ((ASSUME_YES)) && confirm_args=(--noconfirm)
+  for p; do
+    for f in "$PKG_DIR"/*.txt; do
+      in_list "$p" "$f" || continue
+      apply "remove $p from ${f#"$DOTFILES"/}" unlist_pkg "$p" "$f"
+    done
+    pacman -Qq -- "$p" &>/dev/null && inst+=("$p")
+  done
+  if ((${#inst[@]} == 0)); then
+    ok "Nothing to uninstall"
+    return 0
+  fi
+  sudo_keepalive
+  # Uninstall what nothing else needs; keep the rest as plain dependencies.
+  # (pacman -Rp also knows when another provider still satisfies a dependency)
+  for p in "${inst[@]}"; do
+    if pacman -Rp -- "$p" &>/dev/null; then
+      free+=("$p")
+    else
+      info "$p is still needed by: $(LC_ALL=C pacman -Qi -- "$p" | sed -n 's/^Required By *: //p') (kept, as a dependency)"
+      quiet srun pacman -D --asdeps "$p"
+    fi
+  done
+  if ((${#free[@]})); then srun pacman -Rns "${confirm_args[@]}" "${free[@]}"; fi
+  return 0
+}
+
+cmd_prune() {
+  local unl
+  mapfile -t unl < <(unlisted)
+  if ((${#unl[@]})); then
+    show_list "Installed explicitly but in no list" "${unl[@]}"
+    info "These get marked as dependencies; the ones nothing needs are uninstalled."
+    if ! confirm "Continue?"; then
+      info "Nothing changed. Keep packages by listing them: dots add -g GROUP PKG..."
+      return 0
+    fi
+    sudo_keepalive
+    quiet srun pacman -D --asdeps "${unl[@]}"
+  fi
+  sudo_keepalive
+  remove_orphans
+  return 0
+}
+
+cmd_adopt() {
+  (($#)) || die "usage: dots adopt PATH..."
+  local path rel parent
+  for path; do
+    path=$(realpath -s -- "$path")
+    rel=${path#"$HOME"/}
+    parent=$(dirname -- "$rel")
+    [[ $path == "$HOME"/* ]] || die "$path isn't inside your home"
+    [[ -e $path && ! -L $path ]] || die "~/$rel doesn't exist or is already a symlink"
+    [[ -e $HOME_SRC/$rel ]] && die "Configs/$rel already exists"
+    is_real_dir "$rel" && die "~/$rel stays a real directory; adopt what's inside it"
+    [[ $parent == . ]] || is_real_dir "$parent" ||
+      die "~/$rel is inside ~/$parent, which dots links as a whole; adopt ~/$parent instead"
+    apply "move ~/$rel to Configs/$rel" eval 'mkdir -p -- "$(dirname -- "$HOME_SRC/$rel")" && mv -- "$path" "$HOME_SRC/$rel"'
+    apply "link ~/$rel" ln -s -- "$HOME_SRC/$rel" "$path"
+  done
+}
+
+cmd_new_migration() {
+  (($#)) || die 'usage: dots new-migration "what it does"'
+  local slug file
+  slug=$(tr '[:upper:]' '[:lower:]' <<<"$*" | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//')
+  file=$MIGRATIONS/$(date +%s)-$slug.sh
+  apply "create ${file#"$DOTFILES"/}" write_migration "$file" "$*"
+}
+
+write_migration() {
+  mkdir -p -- "${1%/*}"
+  printf '%s\n' "echo $(printf '%q' "$2")" "" \
+    "# Runs once per machine, on dots update (bash -euo pipefail, from the repo root)." \
+    "# Keep it safe to run twice: check before changing anything." >"$1"
+}
+
+# ── Main ────────────────────────────────────────────────────────────────────
+
+# Not inside a checkout (e.g. run through curl): clone the repo, then hand over.
+bootstrap() {
+  local target=$HOME/.dotfiles
+  if [[ ! -d $target/.git ]]; then
+    have git || sudo pacman -S --needed --noconfirm git
+    if ((DRY_RUN)); then target=$(mktemp -d)/dotfiles; fi
+    git clone "$REPO_URL" "$target"
+    git -C "$target" remote set-url --push origin "$REPO_PUSH_URL"
+  fi
+  # Under `curl | bash` stdin is the script itself: give the real run the terminal.
+  [[ -t 0 ]] && exec bash "$target/dots" "${ORIG_ARGS[@]}"
+  if { true </dev/tty; } 2>/dev/null; then exec bash "$target/dots" "${ORIG_ARGS[@]}" </dev/tty; fi
+  exec bash "$target/dots" "${ORIG_ARGS[@]}" </dev/null
+}
+
+DRY_RUN=0 ASSUME_YES=0 ADD_GROUP=extras SEL_GROUPS=() ONLY=() SKIP=() POS=() MODE=install
+ORIG_ARGS=("$@")
+while (($#)); do
+  case $1 in
+    -n | --dry-run) DRY_RUN=1 ;;
+    -y | --yes) ASSUME_YES=1 ;;
+    -g | --group) ADD_GROUP=${2:?--group needs a name} && shift ;;
+    --groups) IFS=, read -ra SEL_GROUPS <<<"${2:?--groups needs a list}" && shift ;;
+    --only) IFS=, read -ra ONLY <<<"${2:?--only needs a list}" && shift ;;
+    --skip) IFS=, read -ra SKIP <<<"${2:?--skip needs a list}" && shift ;;
+    -h | --help) usage && exit 0 ;;
+    -*) die "unknown option: $1 (see dots --help)" ;;
+    *) POS+=("$1") ;;
+  esac
+  shift
+done
+CMD=${POS[0]:-}
+ARGS=("${POS[@]:1}")
+
+[[ -d $PKG_DIR ]] || bootstrap
+for s in "${ONLY[@]}" "${SKIP[@]}"; do [[ -n ${STEP_TITLES[$s]:-} ]] || die "unknown step: $s"; done
+for s in "${SEL_GROUPS[@]}"; do [[ -f $PKG_DIR/$s.txt ]] || die "unknown package list: $s"; done
+trap '[[ -n ${SUDO_PID:-} ]] && kill "$SUDO_PID" 2>/dev/null; rm -rf "$RUN_DIR"' EXIT
+
+case $CMD in
+  install | update | add | remove | prune) start_log && take_lock ;;
+esac
+case $CMD in
+  install | update) cmd_install ;;
+  status) cmd_status ;;
+  link) header "Dotfiles" && step_link ;;
+  adopt) cmd_adopt "${ARGS[@]}" ;;
+  add) cmd_add "${ARGS[@]}" ;;
+  remove) cmd_remove "${ARGS[@]}" ;;
+  prune) cmd_prune ;;
+  new-migration) cmd_new_migration "${ARGS[@]}" ;;
+  "" | help) usage ;;
+  *) die "unknown command: $CMD (see dots --help)" ;;
+esac

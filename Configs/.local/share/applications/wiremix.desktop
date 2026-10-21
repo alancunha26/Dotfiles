@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Wiremix
+GenericName=Audio Settings
+TryExec=wiremix
+Exec=kitty --class=wiremix -e wiremix
+Terminal=false
+Type=Application
+Keywords=Audio;Settings;
+Icon=audio-card
+Categories=AudioVideo;Audio;Mixer;
+StartupWMClass=wiremix

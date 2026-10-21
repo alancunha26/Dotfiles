@@ -1,0 +1,130 @@
+# Core desktop: everything the Hyprland setup and the dotfiles rely on.
+# One package per line; text after '#' is ignored. Repo and AUR packages mix freely.
+
+# Bootstrap
+git                          # Version control (needed to clone the dotfiles)
+base-devel                   # Toolchain for building AUR packages
+yay                          # AUR helper (dots builds it on a fresh machine)
+
+# Audio
+pipewire                     # Audio/video server
+pipewire-alsa                # Pipewire alsa client
+pipewire-audio               # Pipewire audio client
+pipewire-jack                # Pipewire jack client
+pipewire-pulse               # Pipewire pulseaudio client
+gst-plugin-pipewire          # Pipewire gstreamer client
+wireplumber                  # Pipewire session manager
+libpulse                     # pactl (used by wf-record)
+alsa-utils                   # alsamixer / alsactl (audio fixes)
+pavucontrol                  # GUI volume control
+wiremix                      # TUI audio manager
+
+# Network
+networkmanager               # Network manager
+nm-connection-editor         # GUI Network manager editor
+network-manager-applet       # GUI Network manager applet
+
+# Hyprland session
+uwsm                         # Universal wayland session manager
+hyprland                     # Wayland compositor
+hyprpaper                    # Wallpapers
+hyprlock                     # Lock screen
+hyprpicker                   # Color picker
+hypridle                     # Idle manager
+hyprpolkitagent              # Authentication agent
+xdg-desktop-portal-hyprland  # xdg desktop portal for hyprland
+xdg-desktop-portal-gtk       # File picker and dbus integration
+xwaylandvideobridge          # Screen sharing of XWayland apps
+ly                           # TUI display manager
+gnome-keyring                # Secrets storage
+playerctl                    # Media controls
+udiskie                      # Manage removable media
+xdg-user-dirs                # Manage user directories
+xdg-utils                    # xdg-open and friends
+xorg-xrdb                    # Loads ~/.Xresources for XWayland apps
+
+# Bar, launcher, notifications, clipboard, screenshots
+waybar                       # System bar
+rofi                         # Application launcher (2.x has native wayland)
+rofi-calc                    # Rofi calculator
+rofi-emoji                   # Rofi emoji
+libqalculate                 # Powers rofi calculator
+libnotify                    # For notifications
+dunst                        # Notification daemon
+grim                         # Screenshot tool
+slurp                        # Region selector for screenshot/screenshare
+wf-recorder                  # Screen recorder for wlroots compositors
+cliphist                     # Clipboard manager
+wl-clipboard                 # Clipboard utilities for wayland
+wl-clip-persist              # Persist clipboard after programs close
+
+# Theming (the themes themselves come from github.com/alancunha26/Themes)
+qt5-wayland                  # Wayland support in qt5
+qt6-wayland                  # Wayland support in qt6
+kvantum                      # Svg based qt6 theme engine
+kvantum-qt5                  # Svg based qt5 theme engine
+qt5ct-kde                    # qt5 configuration tool
+qt6ct-kde                    # qt6 configuration tool
+gtk3                         # GTK 3
+gtk4                         # GTK 4
+nwg-look                     # GTK configuration tool
+gnome-themes-extra           # Adwaita-dark fallback for GTK
+
+# Fonts
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+noto-fonts-extra
+ttf-ia-writer
+ttf-jetbrains-mono
+ttf-jetbrains-mono-nerd
+ttf-fira-sans
+ttf-fira-code
+ttf-firacode-nerd
+
+# Shell and CLI
+zsh                          # Shell
+starship                     # Shell prompt
+zoxide                       # Smarter cd (zsh runs it as `cd`)
+btop                         # Process viewer
+fastfetch                    # System information tool
+pokemon-colorscripts-git     # Pokemon sprites for fastfetch
+ripgrep                      # Regex directory searcher
+fzf                          # CLI fuzzy finder
+fd                           # Fast file finder
+less                         # Pager
+unzip                        # Zip extractor
+7zip                         # Archive tool
+jq                           # JSON processor
+wget                         # Network utility to retrieve files from the web
+pacman-contrib               # Scripts and tools for pacman systems (pacdiff, paccache)
+man-db                       # man pages (also used by the nvim man picker)
+ffmpeg                       # Record, convert and stream audio and video
+imagemagick                  # Image processing
+ntfs-3g                      # NTFS filesystem driver
+ntfsprogs                    # NTFS utilities (ntfsfix, ntfsinfo, mkntfs)
+asdf-vm                      # Runtime version manager (node, java, uv, protonge)
+
+# Development
+neovim-nightly               # Terminal text editor
+tree-sitter-cli              # Required by nvim treesitter parser manager
+luarocks                     # Lua package manager
+lazygit                      # Simple terminal UI for git commands
+zk                           # Zettelkasten note taking LSP
+
+# Apps
+kitty                        # Terminal emulator
+brave-bin                    # Web browser
+nautilus                     # GUI file manager
+ffmpegthumbnailer            # Video thumbnails for nautilus
+ffmpeg-audio-thumbnailer     # Audio thumbnails for nautilus
+mpv                          # Video player
+nsxiv                        # Simple image viewer
+zathura                      # Simple document viewer
+zathura-pdf-mupdf            # PDF and Epub support for zathura
+tesseract-data-eng           # OCR language data for mupdf (pinned: pacman would pick Afrikaans)
+tesseract-data-por           # OCR language data, Portuguese
+mpd                          # Music player daemon
+mpc                          # MPD cli
+rmpc                         # MPD tui client
+cava                         # Audio visualizer

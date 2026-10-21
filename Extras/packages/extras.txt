@@ -1,0 +1,18 @@
+# Extra applications.
+
+obs-studio                   # Live streaming and recording
+obsidian                     # Markdown note taking app
+libreoffice-fresh            # Office suite
+flatpak                      # Run sandboxed applications
+github-cli                   # GitHub cli (gh)
+vscodium-bin                 # VS Code without telemetry
+ungoogled-chromium-bin       # Chromium without Google services
+discord                      # Chat
+discord-chat-exporter-gui    # Export Discord chats
+opencode-bin                 # AI coding agent
+proton-vpn-gtk-app           # Proton VPN
+filezilla                    # FTP client
+yt-dlp-git                   # Video downloader
+gimp                         # Image editor
+godot                        # Game engine
+tiled                        # Tile map editor

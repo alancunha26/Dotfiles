@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+## Show or hide the NetworkManager applet in the tray (waybar network module, right click).
+## Usage: nm-tray [toggle|show|hide]
+## Starts it the same way as hyprland/autostart.conf, so it runs as a uwsm app service.
+
+show() {
+    pgrep -x nm-applet > /dev/null || uwsm app -t service -s a -- nm-applet --indicator
+}
+
+hide() {
+    pkill -x nm-applet || true
+}
+
+case "${1:-toggle}" in
+    show) show ;;
+    hide) hide ;;
+    toggle) if pgrep -x nm-applet > /dev/null; then hide; else show; fi ;;
+    *)
+        echo "usage: nm-tray [toggle|show|hide]" >&2
+        exit 1
+        ;;
+esac
