@@ -1,0 +1,17 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Starship's default prompt in the Tokyo Night Moon colors used across the
+# desktop (kitty, waybar, rofi). The default modules use the standard color
+# names, so redefining those in a palette recolors everything; a theme
+# switcher only needs to swap this palette.
+palette = "tokyonight_moon"
+
+[palettes.tokyonight_moon]
+black = "#1b1d2b"
+red = "#ff757f"
+green = "#c3e88d"
+yellow = "#ffc777"
+blue = "#82aaff"
+purple = "#c099ff"
+cyan = "#86e1fc"
+white = "#c8d3f5"
