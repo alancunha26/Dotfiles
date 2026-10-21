@@ -1,0 +1,36 @@
+/**
+ *
+ * Author : Alan Cunha
+ * Github : @alancunha26
+ *
+ * Rofi Theme File
+ * Rofi Version: 1.7.9
+ **/
+
+@theme "spotlight"
+
+/*****----- Configuration -----*****/
+configuration {
+    show-icons:                 false;
+}
+
+window {
+    width:                      1100;
+}
+
+entry {
+    placeholder:                "Search keybinds (an app name shows only its binds)";
+}
+
+listview {
+    lines:                      16;
+}
+
+element {
+    padding:                    6px 16px;
+}
+
+/* monospace, so the app, keys and description columns line up */
+element-text {
+    font:                       "JetBrainsMono Nerd Font Mono 11";
+}

@@ -67,6 +67,8 @@ There is no test suite. Verify changes with:
   rules in the config or `hyprctl eval`. A running Hyprland picks its config format at startup:
   removing the file it loaded makes it reload a generated stub, so switch formats with a re-login.
   hypridle/hyprlock/hyprpaper still use their own `.conf` files.
+  Every bind carries a `description`: `keybinds` (Super+/) reads them from `hyprctl binds`,
+  next to kitty's and Neovim's keymaps, so a new bind needs one too.
   Hyprland only watches `hyprland.lua`, not the files it requires: after editing
   `hypr/hyprland/*.lua`, run `hyprctl reload`. Window-rule sizes and positions are math expressions
   (`monitor_w*0.5 monitor_h*0.5`, variables monitor_w/h, window_w/h/x/y, cursor_x/y); percentages

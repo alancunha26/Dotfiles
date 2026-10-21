@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+## Every keybind in one list, read live from the apps themselves, so there is
+## nothing to keep in sync: Hyprland (`hyprctl binds`, with the description
+## each bind carries in keybinds.lua), kitty (its effective keymap, defaults
+## included) and Neovim (mappings that have a description).
+##
+##   keybinds          print the list (app, keys, description)
+##   keybinds menu     search it in rofi (Super+/)
+
+hyprland() {
+    hyprctl binds -j | jq -r '
+        def mods: [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]] as $m
+            | . as $mask | [$m[] | select(($mask / .[0] | floor) % 2 == 1) | .[1]];
+        def key: {
+            "mouse:272": "Left drag", "mouse:273": "Right drag",
+            "mouse_up": "Scroll up", "mouse_down": "Scroll down",
+            "RETURN": "Return", "SPACE": "Space", "escape": "Esc", "period": ".", "slash": "/"
+        }[.] // (sub("^XF86"; "") | if length == 1 then ascii_upcase else . end);
+        .[]
+        | ((.modmask | mods) + [.key | key] | join(" + ")) as $keys
+        | ["Hyprland",
+           (if .submap != "" then "\(.submap) mode: \($keys)" else $keys end),
+           (if .has_description then .description else "(no description)" end)]
+        | @tsv'
+}
+
+kitty_keys() {
+    # kitty's own Python reads its config; the script comes on stdin
+    kitty +runpy 'import sys; exec(sys.stdin.read(), {"__name__": "__main__"})' << 'EOF'
+import os
+from kitty.config import load_config
+
+MODS = [(8, "Super"), (4, "Ctrl"), (2, "Alt"), (1, "Shift")]
+
+def name(k):
+    from kitty.fast_data_types import glfw_get_key_name
+    key = (glfw_get_key_name(0, k.key) if k.is_native else glfw_get_key_name(k.key, 0)) or str(k.key)
+    key = {" ": "Space"}.get(key, key)
+    return " + ".join([n for bit, n in MODS if k.mods & bit] + [key[:1].upper() + key[1:]])
+
+opts = load_config(os.path.expanduser("~/.config/kitty/kitty.conf"))
+for k, defs in opts.keyboard_modes[""].keymap.items():
+    # a plain map replaces any sequences that start with the same key
+    singles = [i for i, d in enumerate(defs) if not d.is_sequence]
+    for d in defs[singles[-1]:singles[-1] + 1] if singles else defs:
+        if d.definition in ("no_op", "discard_event"):
+            continue
+        keys = " > ".join([name(k)] + [name(r) for r in d.rest]) if d.is_sequence else name(k)
+        action = d.definition.replace("_", " ")
+        print(f"kitty\t{keys}\t{action[:1].upper()}{action[1:]}")
+EOF
+}
+
+nvim_keys() {
+    # runs from $HOME so no project-local config gets involved
+    (cd && nvim --headless -c 'lua
+        local function keys(lhs)
+            local out = {}
+            local i = 1
+            while i <= #lhs do
+                local tok = lhs:sub(i):match("^<[^>]+>") or lhs:sub(i, i)
+                if tok == " " then tok = "<Space>" end
+                tok = tok:gsub("^<C%-(.+)>$", "Ctrl+%1"):gsub("^<M%-(.+)>$", "Alt+%1"):gsub("^<S%-(.+)>$", "Shift+%1"):gsub("^<(.+)>$", "%1")
+                table.insert(out, tok)
+                i = i + #(lhs:sub(i):match("^<[^>]+>") or "x")
+            end
+            return table.concat(out, " ")
+        end
+        local seen, out = {}, {}
+        for _, mode in ipairs({ "n", "x", "t" }) do
+            for _, m in ipairs(vim.api.nvim_get_keymap(mode)) do
+                local desc = m.desc or ""
+                if desc ~= "" and not desc:match("^:help") and not m.lhs:match("^<Plug>") then
+                    local k = keys(m.lhs) .. ({ n = "", x = "  (visual)", t = "  (terminal)" })[mode]
+                    if not seen[keys(m.lhs) .. desc] then
+                        seen[keys(m.lhs) .. desc] = true
+                        table.insert(out, "Neovim\t" .. k .. "\t" .. desc:gsub("[\t\n]", " "))
+                    end
+                end
+            end
+        end
+        table.sort(out)
+        io.stdout:write(table.concat(out, "\n") .. "\n")
+    ' -c qa 2> /dev/null)
+}
+
+list() {
+    # kitty and Neovim take a moment to start: read them while Hyprland answers
+    exec 3< <(kitty_keys) 4< <(nvim_keys)
+    hyprland
+    cat <&3
+    cat <&4
+}
+
+case ${1:-} in
+    "") list | column -t -s $'\t' ;;
+    menu)
+        list | awk -F'\t' '{ printf "%-9s %-28s %s\n", $1, $2, $3 }' |
+            rofi -dmenu -i -p $'\uf002' -theme "$HOME/.config/rofi/keybinds.rasi" > /dev/null
+        ;;
+    *)
+        echo "usage: keybinds [menu]" >&2
+        exit 1
+        ;;
+esac
