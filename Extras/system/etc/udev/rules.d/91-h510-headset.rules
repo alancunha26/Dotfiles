@@ -1,0 +1,5 @@
+# HyperX/XiiSound H510-PRO wireless headset: besides the left/right volume, it
+# has a master volume (PCM,1) that comes up at 0%, which mutes or unbalances
+# the output. Raise it whenever the headset appears (after 90-alsa-restore).
+# Volume itself is done in software, see ~/.config/wireplumber/wireplumber.conf.d.
+ACTION=="add", SUBSYSTEM=="sound", KERNEL=="controlC*", ATTRS{idVendor}=="040b", ATTRS{idProduct}=="0897", RUN+="/usr/bin/amixer -c %n sset PCM,1 100%%"

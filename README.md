@@ -44,7 +44,7 @@ These are the steps, in order (run a subset with `--only` / `--skip`):
 | `migrations` | Runs pending [migrations](Extras/migrations) (on a fresh machine: marks them all done)          |
 | `link`       | Symlinks [Configs](Configs) into `$HOME`, backing up anything in the way                        |
 | `packages`   | Installs every package in [Extras/packages](Extras/packages) that isn't installed yet           |
-| `system`     | Copies [Extras/system](Extras/system) into `/` (keyboard layout, zram swap)                     |
+| `system`     | Copies [Extras/system](Extras/system) into `/` (keyboard layout, zram swap, headset udev rule)  |
 | `shell`      | Oh My Zsh with zsh-autosuggestions and zsh-vi-mode, and zsh as the login shell                  |
 | `runtimes`   | asdf plugins and the versions pinned in [.tool-versions](Configs/.tool-versions), npm globals   |
 | `themes`     | Clones my [Themes](https://github.com/alancunha26/Themes) and links GTK, icon and cursor themes |
@@ -174,7 +174,9 @@ To fix a ntfs drive just you can try to run:
 sudo ntfsfix -d PATH_TO_VOLUME
 ```
 
-To fix audio/mic problems setup configuration with `alsamixer` and then run the following:
+My H510-PRO headset's quirks are handled automatically (a WirePlumber rule for software volume and
+a udev rule for its master volume). For other audio/mic problems, set things up with `alsamixer`
+and then run the following:
 
 ```shell
 sudo alsactl store
