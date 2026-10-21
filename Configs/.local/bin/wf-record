@@ -90,7 +90,6 @@ case "$MODE" in
     area)
         # Feed visible-window rects to slurp so clicking a window snaps to it
         # (same technique as grimblast)
-        hyprctl keyword layerrule "noanim,selection" > /dev/null
         FS_WS="$(hyprctl workspaces -j | jq -r 'map(select(.hasfullscreen) | .id)')"
         WS="$(hyprctl monitors -j | jq -r '[(foreach .[] as $monitor (0;
             if $monitor.specialWorkspace.name == "" then $monitor.activeWorkspace

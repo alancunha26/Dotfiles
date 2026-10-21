@@ -269,7 +269,6 @@ elif [ "$SUBJECT" = "area" ]; then
 
   # disable animation for layer namespace "selection" (slurp)
   # this removes the black border seen around screenshots
-  hyprctl keyword layerrule "noanim,selection" >/dev/null
 
   FULLSCREEN_WORKSPACES="$(hyprctl workspaces -j | jq -r 'map(select(.hasfullscreen) | .id)')"
   WORKSPACES="$(hyprctl monitors -j | jq -r '[(foreach .[] as $monitor (0; if $monitor.specialWorkspace.name == "" then $monitor.activeWorkspace else $monitor.specialWorkspace end)).id]')"

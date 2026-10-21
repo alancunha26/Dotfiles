@@ -58,8 +58,15 @@ There is no test suite. Verify changes with:
 - Themes come from a separate repo (github.com/alancunha26/Themes), cloned to
   `~/.local/share/dotfiles-themes` and linked into `~/.local/share/{themes,icons}` and
   `~/.config/gtk-4.0`. The GTK theme name is read from `Configs/.config/gtk-4.0/settings.ini`.
-- Session environment: `Configs/.config/uwsm/env` is the live one (PATH incl. asdf shims, cursor
-  themes, Qt/GTK backends). `hypr/hyprland/environments.conf` is not sourced.
+- Session environment: `Configs/.config/uwsm/env` (PATH incl. asdf shims, cursor themes, Qt/GTK
+  backends); uwsm loads it before Hyprland starts.
+- Hyprland uses the Lua config: `hypr/hyprland.lua` requires `hypr/hyprland/*.lua`. Validate with
+  `Hyprland --verify-config -c ~/.config/hypr/hyprland.lua` (strict: unknown keys, rule fields and
+  dispatcher args all fail). Under Lua, `hyprctl dispatch` takes Lua
+  (`hyprctl dispatch 'hl.dsp.dpms({ action = "off" })'`) and `hyprctl keyword` doesn't work; use
+  rules in the config or `hyprctl eval`. A running Hyprland picks its config format at startup:
+  removing the file it loaded makes it reload a generated stub, so switch formats with a re-login.
+  hypridle/hyprlock/hyprpaper still use their own `.conf` files.
 - Runtimes (node, java, uv, protonge) come from asdf, pinned in `Configs/.tool-versions`. Proton
   GE only installs after Steam has run once (it needs `~/.steam/root`).
 - `Configs/.config/pacman/makepkg.conf` disables `-debug` split packages for AUR builds; that's
