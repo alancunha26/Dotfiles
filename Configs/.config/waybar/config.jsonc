@@ -54,9 +54,18 @@
     "cpu",
     "network",
     "custom/recording",
+    "custom/dots",
     "clock"
   ],
   // ======================
+  "custom/dots": {
+    "exec": "$HOME/.local/bin/dots check waybar",
+    "return-type": "json",
+    "interval": 60,
+    "signal": 9,
+    "on-click": "kitty --class=dots-check -e $HOME/.local/bin/dots check page",
+    "tooltip": true
+  },
   "custom/recording": {
     "exec": "$HOME/.local/bin/wf-record status",
     "return-type": "json",

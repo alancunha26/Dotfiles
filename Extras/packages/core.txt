@@ -44,7 +44,7 @@ xdg-utils                    # xdg-open and friends
 xorg-xrdb                    # Loads ~/.Xresources for XWayland apps
 
 # Bar, launcher, notifications, clipboard, screenshots
-waybar                       # System bar
+waybar-git                   # System bar (git: clicking workspaces needs Lua-config support, unreleased after 0.15.0; switch back to waybar once a release has it)
 rofi                         # Application launcher (2.x has native wayland)
 rofi-calc                    # Rofi calculator
 rofi-emoji                   # Rofi emoji
@@ -98,6 +98,7 @@ unzip                        # Zip extractor
 jq                           # JSON processor
 wget                         # Network utility to retrieve files from the web
 pacman-contrib               # Scripts and tools for pacman systems (pacdiff, paccache)
+reflector                    # Keeps the mirror list fresh (weekly, see Extras/system/etc/xdg/reflector)
 man-db                       # man pages (also used by the nvim man picker)
 ffmpeg                       # Record, convert and stream audio and video
 imagemagick                  # Image processing

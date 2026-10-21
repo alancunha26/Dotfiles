@@ -45,7 +45,7 @@ rule({ class = "steam", title = "Steam" }, { center = true, size = "1100 700" })
 rule({ class = "steam", title = "Friends List" }, { size = "460 800" })
 
 -- Floating with custom sizes
-for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop", "btop" }) do
+for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop", "btop", "dots-check" }) do
     rule({ class = class }, { float = true, size = "50% 50%" })
 end
 rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "75% 75%" })

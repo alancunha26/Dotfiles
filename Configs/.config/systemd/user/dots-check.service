@@ -1,0 +1,7 @@
+[Unit]
+Description=Check what dots update would bring in (waybar indicator)
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/dots check quiet

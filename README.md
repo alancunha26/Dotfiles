@@ -44,12 +44,12 @@ These are the steps, in order (run a subset with `--only` / `--skip`):
 | `migrations` | Runs pending [migrations](Extras/migrations) (on a fresh machine: marks them all done)          |
 | `link`       | Symlinks [Configs](Configs) into `$HOME`, backing up anything in the way                        |
 | `packages`   | Installs every package in [Extras/packages](Extras/packages) that isn't installed yet           |
-| `system`     | Copies [Extras/system](Extras/system) into `/` (keyboard layout, zram swap, headset udev rule)  |
+| `system`     | Copies [Extras/system](Extras/system) into `/` (keyboard layout, zram, headset, mirror refresh) |
 | `shell`      | Oh My Zsh with zsh-autosuggestions and zsh-vi-mode, and zsh as the login shell                  |
 | `runtimes`   | asdf plugins and the versions pinned in [.tool-versions](Configs/.tool-versions), npm globals   |
 | `themes`     | Clones my [Themes](https://github.com/alancunha26/Themes) and links GTK, icon and cursor themes |
 | `apps`       | Claude Code                                                                                     |
-| `services`   | Enables NetworkManager, LACT, fstrim, ly and the Hyprland user services                         |
+| `services`   | Enables NetworkManager, LACT, fstrim, reflector, ly and the Hyprland user services              |
 
 Afterwards, reboot. A few things can't be automated:
 
@@ -70,7 +70,13 @@ dots remove obs-studio        # uninstall it and drop it from the lists
 dots prune                    # uninstall packages installed by hand that no list mentions
 dots link                     # re-create the symlinks (e.g. after adding a file to Configs/)
 dots adopt ~/.config/foo      # move an existing config into Configs/ and link it back
+dots check                    # what dots update would bring in, without changing anything
 ```
+
+**On the bar**, an icon with a count appears next to the clock when `dots update` has something
+to bring in (it checks hourly and after every `dots` run). It turns amber when something needs a
+decision, like a package in no list or a `.pacnew` file, and red when the check couldn't finish.
+Click it for the details, with keys to update, prune, merge `.pacnew` files or re-link.
 
 Every command accepts `--dry-run`. `dots update` and `dots install` write a full log to
 `~/.local/state/dots/logs/`.

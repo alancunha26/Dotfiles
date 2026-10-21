@@ -67,6 +67,14 @@ There is no test suite. Verify changes with:
   rules in the config or `hyprctl eval`. A running Hyprland picks its config format at startup:
   removing the file it loaded makes it reload a generated stub, so switch formats with a re-login.
   hypridle/hyprlock/hyprpaper still use their own `.conf` files.
+- Updater: `dots check` (no root, changes nothing) caches its result in
+  `~/.local/state/dots/check/`; the waybar `custom/dots` module reads it (`dots check waybar`, signal
+  9), the page is `dots check page` in a floating kitty (`dots-check` class), and
+  `dots-check.timer` (in `Configs/.config/systemd/user`, hence `.config/systemd` in `REAL_DIRS`)
+  refreshes it hourly. Its network checks run in parallel. Mutating `dots` commands start a
+  background re-check on exit, which must not inherit the fd 9 lock.
+- reflector owns `/etc/pacman.d/mirrorlist` (Brazil first, US fallback), so `mirrorlist.pacnew` is
+  ignored; waybar is `waybar-git` until a release can dispatch to a Lua-config Hyprland.
 - Runtimes (node, java, uv, protonge) come from asdf, pinned in `Configs/.tool-versions`. Proton
   GE only installs after Steam has run once (it needs `~/.steam/root`).
 - `Configs/.config/pacman/makepkg.conf` disables `-debug` split packages for AUR builds; that's
