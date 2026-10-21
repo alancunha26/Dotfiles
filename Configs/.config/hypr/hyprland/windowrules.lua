@@ -4,6 +4,7 @@
 -- Sizes and positions are math expressions (variables: monitor_w, monitor_h,
 -- window_w, window_h, cursor_x, cursor_y), not percentages: "50% 50%" fails
 -- silently, so half the screen is "monitor_w*0.5 monitor_h*0.5".
+-- class/title patterns must match the whole string: "Settings - .*", not "^Settings - ".
 
 local function rule(match, props)
     props.match = match
@@ -29,6 +30,13 @@ rule({ class = "org.kde.dolphin", title = "Copying — Dolphin" }, { float = tru
 rule({ title = "About Mozilla Firefox" }, { float = true })
 rule({ class = "firefox", title = "Picture-in-Picture" }, { float = true })
 rule({ class = "firefox", title = "Library" }, { float = true })
+
+-- Obsidian opens its settings as a separate window (same class, title "Settings - <vault> - Obsidian")
+rule({ class = "^md\\.obsidian\\.Obsidian$", title = "Settings - .*" }, {
+    float  = true,
+    size   = "monitor_w*0.6 monitor_h*0.7",
+    center = true,
+})
 
 -- Floating apps
 for _, class in ipairs({
