@@ -32,6 +32,7 @@ bind(mainMod .. " + SHIFT + Q",      exec("hyprlock"), { description = "Lock scr
 bind(mainMod .. " + escape",         exec("dunstctl close-all"), { description = "Dismiss notifications" })
 bind(mainMod .. " + SHIFT + escape", exec("dunstctl history-pop"), { description = "Show last notification" })
 bind(mainMod .. " + slash",          exec("$HOME/.local/bin/keybinds menu"), { description = "Keybind cheat sheet" })
+bind(mainMod .. " + W",              exec("$HOME/.local/bin/wallpaper"), { description = "Change wallpaper" })
 
 -- Move focus with mainMod + vim keybinds
 bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }), { description = "Focus left" })

@@ -3,7 +3,11 @@
 # Default apps
 export EDITOR="nvim"
 export TERMINAL="kitty"
-export WALLPAPER="~/.local/assets/wallpapers/wallpaper-6.jpg"
+
+# hyprpaper and hyprlock load ~/.local/state/wallpaper/current, a copy of the last
+# wallpaper picked with `wallpaper` (Super+W); a curated default until then
+[ -e ~/.local/state/wallpaper/current ] || { mkdir -p ~/.local/state/wallpaper &&
+    cp ~/.local/assets/wallpapers/wallpaper-6.jpg ~/.local/state/wallpaper/current; }
 
 # Adds my scripts to the $PATH
 export PATH=$PATH:~/.local/bin

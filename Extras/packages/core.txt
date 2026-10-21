@@ -117,6 +117,7 @@ zk                           # Zettelkasten note taking LSP
 # Apps
 kitty                        # Terminal emulator
 zen-browser-bin              # Web browser (Firefox-based)
+zenity                       # File dialog for the wallpaper picker
 nautilus                     # GUI file manager
 ffmpegthumbnailer            # Video thumbnails for nautilus
 ffmpeg-audio-thumbnailer     # Audio thumbnails for nautilus

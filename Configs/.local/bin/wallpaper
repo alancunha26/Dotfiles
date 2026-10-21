@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+## Pick the wallpaper: the curated ones in ~/.local/assets/wallpapers, or any
+## image on disk. The pick shows right away and is copied to $CURRENT, which
+## hyprpaper and hyprlock load at login, so deleting the original (say, from
+## ~/Downloads) doesn't take the wallpaper with it.
+##
+##   wallpaper              grid of wallpapers in rofi (Super+W)
+##   wallpaper set FILE     use FILE
+##   wallpaper keep         add the current one to the curated ones (when it came from elsewhere)
+
+set -euo pipefail
+
+CURATED=$HOME/.local/assets/wallpapers
+STATE=$HOME/.local/state/wallpaper
+CURRENT=$STATE/current # uwsm/env puts a curated default here on a fresh install
+SOURCE=$STATE/source   # where the current one was copied from: its name for `keep`
+THUMBS=$HOME/.cache/wallpaper-thumbs
+IMAGES=(jpg jpeg png webp JPG JPEG PNG WEBP)
+
+set_file() {
+    local f
+    f=$(realpath -e -- "$1")
+    mkdir -p "$STATE"
+    cp -- "$f" "$STATE/incoming"
+    mv "$STATE/incoming" "$CURRENT"
+    echo "$f" > "$SOURCE"
+    # the original, not $CURRENT: hyprpaper may keep showing what it cached for a path
+    hyprctl hyprpaper wallpaper ",$f,cover" > /dev/null
+}
+
+from_elsewhere() { # did the current wallpaper come from outside the curated folder?
+    local src
+    src=$(cat "$SOURCE" 2> /dev/null) || return 1
+    [[ $src != "$(realpath "$CURATED")"/* ]]
+}
+
+keep() {
+    local name dst n=1
+    if ! from_elsewhere; then
+        notify-send "Wallpaper" "The current wallpaper is already one of yours"
+        return 0
+    fi
+    name=$(basename "$(cat "$SOURCE")")
+    dst=$CURATED/$name
+    while [[ -e $dst ]]; do
+        dst=$CURATED/${name%.*}-$n.${name##*.}
+        n=$((n + 1))
+    done
+    cp -- "$CURRENT" "$dst"
+    realpath "$dst" > "$SOURCE"
+    notify-send "Wallpaper" "Added $(basename "$dst") to your wallpapers"
+}
+
+thumb() { # a small copy for the grid: rofi loading the originals (up to 17 MB) is slow
+    local t
+    t=$THUMBS/$2.jpg
+    if [[ ! -e $t || $1 -nt $t ]]; then
+        mkdir -p "$THUMBS"
+        magick "$1[0]" -thumbnail 480x270^ -gravity center -extent 480x270 -quality 80 "$t" 2> /dev/null || true
+    fi
+    echo "$t"
+}
+
+menu() {
+    local f src choice
+    local -a files=() labels=() icons=()
+    src=$(cat "$SOURCE" 2> /dev/null || true)
+
+    labels+=("Browse files…") icons+=(folder-pictures) files+=(:browse)
+    if from_elsewhere; then
+        labels+=("Add current to my wallpapers") icons+=("$(thumb "$CURRENT" current)") files+=(:keep)
+    fi
+    for f in "$CURATED"/*; do
+        [[ " ${IMAGES[*]} " == *" ${f##*.} "* ]] || continue
+        f=$(realpath "$f")
+        if [[ $f == "$src" ]]; then
+            labels+=("$(basename "${f%.*}") (current)")
+        else
+            labels+=("$(basename "${f%.*}")")
+        fi
+        icons+=("$(thumb "$f" "$(basename "$f")")") files+=("$f")
+    done
+
+    choice=$(for i in "${!labels[@]}"; do printf '%s\0icon\x1f%s\n' "${labels[i]}" "${icons[i]}"; done |
+        rofi -dmenu -i -format i -p $'' -theme "$HOME/.config/rofi/wallpapers.rasi") || return 0
+
+    case ${files[choice]} in
+        :browse)
+            f=$(zenity --file-selection --title="Choose wallpaper" --filename="$HOME/Downloads/" \
+                --file-filter="Images | ${IMAGES[*]/#/*.}" 2> /dev/null) || return 0
+            set_file "$f"
+            ;;
+        :keep) keep ;;
+        *) set_file "${files[choice]}" ;;
+    esac
+}
+
+case ${1:-} in
+    "") menu ;;
+    set) set_file "${2:?usage: wallpaper set FILE}" ;;
+    keep) keep ;;
+    *)
+        echo "usage: wallpaper [set FILE | keep]" >&2
+        exit 1
+        ;;
+esac
