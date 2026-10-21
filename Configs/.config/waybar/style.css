@@ -94,15 +94,17 @@ window#waybar > box {
   transition: all 0.15s ease-in-out;
 }
 
-/* the drawer: song name and controls on one pill, set apart from the icons around it */
+/* the drawer: song name and controls on one pill, set apart from the icons around it.
+   The pills must fit in the bar's 40px (5px margins, no vertical padding): anything
+   taller grows the whole bar, even with the drawer closed, and stretches the workspaces */
 #custom-music-title,
 #custom-music-prev,
 #custom-music-play,
 #custom-music-next {
   background-color: alpha(@color0, 0.6);
   color: @foreground;
-  padding: 2px 6px;
-  margin: 6px 0;
+  padding: 0 6px;
+  margin: 5px 0;
   transition: all 0.15s ease-in-out;
 }
 
@@ -117,7 +119,7 @@ window#waybar > box {
 #custom-music-prev,
 #custom-music-play,
 #custom-music-next {
-  padding: 2px 7px;
+  padding: 0 7px;
   min-width: 16px;
 }
 
@@ -176,8 +178,8 @@ window#waybar > box {
 
 /* same pill as the music drawer */
 #tray {
-  margin: 6px 0 6px 4px;
-  padding: 2px 12px;
+  margin: 5px 0 5px 4px;
+  padding: 0 12px;
   border-radius: 8px;
   background-color: alpha(@color0, 0.6);
 }
