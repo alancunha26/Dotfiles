@@ -46,9 +46,7 @@ xorg-xrdb                    # Loads ~/.Xresources for XWayland apps
 # Bar, launcher, notifications, clipboard, screenshots
 waybar-git                   # System bar (git: clicking workspaces needs Lua-config support, unreleased after 0.15.0; switch back to waybar once a release has it)
 rofi                         # Application launcher (2.x has native wayland)
-rofi-calc                    # Rofi calculator
 rofi-emoji                   # Rofi emoji
-libqalculate                 # Powers rofi calculator
 libnotify                    # For notifications
 dunst                        # Notification daemon
 grim                         # Screenshot tool
@@ -118,6 +116,7 @@ zk                           # Zettelkasten note taking LSP
 kitty                        # Terminal emulator
 zen-browser-bin              # Web browser (Firefox-based)
 zenity                       # File dialog for the wallpaper picker
+gnome-calculator             # Calculator (floats, pinned on top)
 nautilus                     # GUI file manager
 ffmpegthumbnailer            # Video thumbnails for nautilus
 ffmpeg-audio-thumbnailer     # Audio thumbnails for nautilus

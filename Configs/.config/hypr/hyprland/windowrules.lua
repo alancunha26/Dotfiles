@@ -60,6 +60,8 @@ for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop"
     rule({ class = class }, { float = true, size = "monitor_w*0.5 monitor_h*0.5" })
 end
 rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "monitor_w*0.75 monitor_h*0.75" })
+-- the calculator stays on top (pinned: also on every workspace); Super+T unpins it
+rule({ class = "org.gnome.Calculator" }, { float = true, center = true, pin = true })
 
 -- cliamp lives on the hidden "music" workspace and keeps playing there (Super+M)
 rule({ class = "^cliamp$" }, {

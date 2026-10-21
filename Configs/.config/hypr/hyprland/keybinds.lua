@@ -21,6 +21,27 @@ bind(mainMod .. " + Q",              hl.dsp.window.close(), { description = "Clo
 bind(mainMod .. " + E",              exec("nautilus"), { description = "File manager" })
 bind(mainMod .. " + F",              hl.dsp.window.float({ action = "toggle" }), { description = "Float/tile window" })
 bind(mainMod .. " + SHIFT + F",      hl.dsp.window.fullscreen(), { description = "Fullscreen" })
+
+-- Always on top: Hyprland only pins floating windows (a pinned window also shows on
+-- every workspace), so a tiled window floats first and goes back to tiling when unpinned
+local floated_to_pin = {}
+bind(mainMod .. " + T", function()
+    local w = hl.get_active_window()
+    if not w then return end
+    if w.pinned then
+        hl.dispatch(hl.dsp.window.pin())
+        if floated_to_pin[w.address] then
+            hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+        end
+        floated_to_pin[w.address] = nil
+    else
+        if not w.floating then
+            hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+            floated_to_pin[w.address] = true
+        end
+        hl.dispatch(hl.dsp.window.pin())
+    end
+end, { description = "Always on top (on every workspace)" })
 bind(mainMod .. " + SPACE",          exec(rofi .. "launcher.sh"), { description = "App launcher" })
 bind(mainMod .. " + SHIFT + SPACE",  exec(rofi .. "finder.sh"), { description = "Find files" })
 bind(mainMod .. " + Tab",            exec(rofi .. "window.sh"), { description = "Switch window" })
