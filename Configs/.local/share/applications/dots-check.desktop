@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=System Updates
+GenericName=Update Checker
+Comment=What dots update would bring in: package updates, new commits and things to look at
+Keywords=dots;update;upgrade;packages;pacman;yay;prune;
+Icon=system-software-update
+TryExec=dots
+Exec=kitty --class=dots-check -e dots check page
+Terminal=false
+Categories=System;
+StartupWMClass=dots-check
