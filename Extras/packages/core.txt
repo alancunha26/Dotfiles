@@ -116,7 +116,7 @@ zk                           # Zettelkasten note taking LSP
 
 # Apps
 kitty                        # Terminal emulator
-brave-bin                    # Web browser
+zen-browser-bin              # Web browser (Firefox-based)
 nautilus                     # GUI file manager
 ffmpegthumbnailer            # Video thumbnails for nautilus
 ffmpeg-audio-thumbnailer     # Audio thumbnails for nautilus

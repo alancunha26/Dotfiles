@@ -6,3 +6,4 @@ github-cli                   # GitHub cli (gh)
 discord                      # Chat
 gimp                         # Image editor
 godot                        # Game engine
+chromium                     # Chromium-based browser, for web dev
