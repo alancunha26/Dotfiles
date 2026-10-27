@@ -37,6 +37,19 @@ vim.keymap.set('n', 'gX', function()
   end
 end, { desc = 'Open file/url under cursor' })
 
+-- Ctrl+click jumps to the definition (note links via marksman), as before
+-- Neovim 0.13 repurposed <C-LeftMouse> to toggle a multicursor. Clicking on
+-- something without a definition just moves the cursor, no error.
+vim.keymap.set('n', '<C-LeftMouse>', function()
+  local pos = vim.fn.getmousepos()
+  if pos.winid == 0 or pos.line == 0 then
+    return
+  end
+  vim.api.nvim_set_current_win(pos.winid)
+  vim.api.nvim_win_set_cursor(pos.winid, { pos.line, math.max(pos.column - 1, 0) })
+  pcall(vim.cmd.normal, { vim.keycode('<C-]>'), bang = true })
+end, { desc = 'Go to definition under mouse' })
+
 -- [[ Spellcheck ]]
 --  See `:help spell`
 

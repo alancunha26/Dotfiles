@@ -23,8 +23,10 @@
       "active": "",
       "default": ""
     },
+    // explicit ids: "*": N numbers them from the monitor id (id*N+1..), and the
+    // monitor id grows when it reconnects (DPMS/hotplug), giving 6-10 instead of 1-5
     "persistent-workspaces": {
-      "*": 5
+      "1": [], "2": [], "3": [], "4": [], "5": []
     }
   },
   "custom/appmenu": {
