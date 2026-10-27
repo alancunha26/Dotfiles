@@ -12,6 +12,8 @@ initial_directory = "~/Music"
 # Open on Spotify (the default, "cliamp", loads the cliamp radio channels)
 provider = "spotify"
 
+shuffle = false
+repeat = "One"
 [spotify]
 # Needs Spotify Premium. Sign in from the player: select Spotify, press Enter.
 # Our own Spotify app (developer.spotify.com, redirect URI
