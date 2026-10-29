@@ -4,10 +4,6 @@ return {
     return require('modules.zettels.config').is_zk_workspace()
   end,
   ft = "markdown",
-  init = function()
-    -- Grimoire sync starts eagerly (doesn't need zk plugin loaded)
-    require('modules.zettels.sync').setup()
-  end,
   config = function()
     require('zk').setup({
       picker = 'snacks_picker',
@@ -66,29 +62,6 @@ return {
       { '<leader>zv', views.insert, desc = 'Insert zk view' },
       { '<leader>zV', views.update, desc = 'Update zk views' },
       { '<leader>zU', views.update_all, desc = 'Update all zk views' },
-
-      -- Grimoire
-      {
-        '<leader>zw',
-        function()
-          require('modules.zettels.sync').force_navigate()
-        end,
-        desc = 'Preview in Grimoire',
-      },
-      {
-        '<leader>zG',
-        function()
-          require('modules.zettels.sync').toggle_server()
-        end,
-        desc = 'Toggle Grimoire server',
-      },
-      {
-        '<leader>zR',
-        function()
-          require('modules.zettels.sync').clear_cache()
-        end,
-        desc = 'Clear Grimoire cache + stop server',
-      },
     }
   end,
 }

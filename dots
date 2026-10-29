@@ -701,6 +701,22 @@ step_apps() {
   else
     apply "install Claude Code (claude.ai/install.sh)" bash -c 'set -o pipefail; curl -fsSL https://claude.ai/install.sh | bash'
   fi
+
+  # `t3 connect` logs in (OAuth) and writes + enables t3code.service itself, with
+  # a versioned ExecStart, so the unit isn't tracked here; it needs a person at a TTY.
+  if [[ ! -x /opt/t3code-bin/t3code ]] && ! ((DRY_RUN)); then
+    return 0
+  elif systemctl --user is-enabled -q t3code.service 2>/dev/null; then
+    ok "T3 Connect (t3code.service)"
+  elif ! have npx; then
+    info "T3 Connect gets set up once node is installed"
+  elif ! systemctl --user show-environment &>/dev/null || [[ ! -t 0 || ! -t 1 ]]; then
+    note "T3 Code: from your own login, run 'npx t3 connect' (or dots install --only apps)"
+  else
+    local headless=()
+    [[ -z ${WAYLAND_DISPLAY:-}${DISPLAY:-} ]] && headless=(--headless) # device-code login, no browser
+    run npx --yes t3 connect "${headless[@]}"
+  fi
 }
 
 unit_exists() { # system|user unit

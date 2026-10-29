@@ -7,4 +7,4 @@ discord                      # Chat
 gimp                         # Image editor
 godot                        # Game engine
 chromium                     # Chromium-based browser, for web dev
-stably-orca-bin              # Stably AI Orca - Electron-based agentic coding IDE (prebuilt AppImage)
+t3code-bin                   # Desktop control surface for local coding agents

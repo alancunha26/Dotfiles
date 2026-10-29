@@ -120,3 +120,18 @@ if godot_root then
     end,
   })
 end
+
+-- [[ Speed reading ]]
+-- RSVP reader for notes, see lua/modules/speedread.lua. It reads markdown
+-- (plain text is markdown without syntax), so it's only set up for those.
+vim.api.nvim_create_autocmd('FileType', {
+  desc = 'Set up the speed reader for prose buffers',
+  group = vim.api.nvim_create_augroup('speedread-setup', { clear = true }),
+  pattern = { 'markdown', 'text' },
+  callback = function(event)
+    vim.api.nvim_buf_create_user_command(event.buf, 'SpeedRead', function()
+      require('modules.speedread').start()
+    end, { desc = 'Speed read the buffer from the cursor' })
+    vim.keymap.set('n', '<leader>zR', '<cmd>SpeedRead<CR>', { buffer = event.buf, desc = 'Speed read from cursor' })
+  end,
+})

@@ -11,6 +11,7 @@
 ##   music show                  bring it up: cliamp's window (Super+M) or the app's
 
 STATE=${XDG_RUNTIME_DIR:-/tmp}/music-player
+POLL=30 # seconds between full re-reads of the players (see bar)
 
 # Glyphs as escapes, so editing this file can't silently drop them
 ICON=$'\U000f075a' ICON_PAUSED=$'\U000f075b' PLAY=$'\uf04b' PAUSE=$'\uf04c'
@@ -34,9 +35,10 @@ active() { # the most recent player that is playing, else the most recent that i
 }
 
 started() { # move a player to the front of $STATE
-    local p=$1
-    { echo "$p"; grep -vxF -- "$p" "$STATE" 2> /dev/null; } > "$STATE.new"
-    mv "$STATE.new" "$STATE"
+    # the three bar instances can get here at once: each writes its own temp file
+    local p=$1 tmp="$STATE.$BASHPID"
+    { echo "$p"; grep -vxF -- "$p" "$STATE" 2> /dev/null; } > "$tmp"
+    mv "$tmp" "$STATE"
 }
 
 emit() { # mode, status, artist, title
@@ -62,10 +64,16 @@ emit() { # mode, status, artist, title
 }
 
 bar() { # follow every player; whoever starts playing becomes the active one
-    local mode=$1 p status artist title a
+    local mode=$1 p status artist title a fmt=$'{{playerInstance}}\t{{status}}\t{{artist}}\t{{title}}'
     declare -A st=() ar=() ti=()
     emit "$mode"
-    playerctl -a -F metadata --format $'{{playerInstance}}\t{{status}}\t{{artist}}\t{{title}}' 2> /dev/null |
+    # Every $POLL seconds, also re-read all players: a browser is one player for
+    # all its tabs, so when a WhatsApp audio ends over a YouTube video it reports
+    # Stopped and may never send another change while the video keeps playing.
+    {
+        playerctl -a -F metadata --format "$fmt" &
+        while sleep "$POLL"; do playerctl -a metadata --format "$fmt"; done
+    } 2> /dev/null |
         while IFS=$'\t' read -r p status artist title; do
             if [[ -n $p ]]; then
                 [[ $status == Playing && ${st[$p]:-} != Playing ]] && started "$p"
