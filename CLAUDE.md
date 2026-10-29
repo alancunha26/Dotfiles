@@ -49,6 +49,11 @@ There is no test suite. Verify changes with:
 - Provider pinning: with `--noconfirm` pacman silently picks option 1 for a virtual dependency
   (`tessdata` -> Afrikaans). Listing the wanted provider pins it, which is why `core.txt` has
   `tesseract-data-eng`/`por`. `dots` warns about unpinned ones before installing and in `status`.
+- Notifications: `swaync-git` (the calendar widget is unreleased). GTK 4.24 asks the compositor
+  for blur itself, only where CSS sets `backdrop-filter`, and Hyprland follows that over the
+  layer rule, so swaync's glass comes from `swaync/style.css`. Its tile labels are padded with
+  trailing spaces and drawn in a monospace font: that is what left-aligns them (see the comment
+  in `style.css`), so keep new tile names to the same length.
 - `Extras/system/` is copied (not linked) into `/`. The first overwrite keeps the original as
   `<file>.dots-orig`.
 - `Extras/migrations/*.sh`: one-off changes a list can't express (package swaps, deleting
@@ -74,8 +79,11 @@ There is no test suite. Verify changes with:
   (`monitor_w*0.5 monitor_h*0.5`, variables monitor_w/h, window_w/h/x/y, cursor_x/y); percentages
   like `"50% 50%"` pass `--verify-config` but fail at runtime and are silently ignored.
 - Updater: `dots check` (no root, changes nothing) caches its result in
-  `~/.local/state/dots/check/`; the waybar `custom/dots` module reads it (`dots check waybar`, signal
-  9), the page is `dots check page` in a floating kitty (`dots-check` class), and
+  `~/.local/state/dots/check/` and keeps one "dots" card in the swaync panel (`check_notify`:
+  replaced by id from `notify-id`, closed when nothing is pending; swaync mutes it and opens the
+  page on click). The waybar bell (`~/.local/bin/notification-bell`) leaves that card out of its
+  count and turns yellow/red only for attention/errors; the Updates tile is lit while anything is
+  pending. The page is `dots check page` in a floating kitty (`dots-check` class), and
   `dots-check.timer` (in `Configs/.config/systemd/user`, hence `.config/systemd` in `REAL_DIRS`)
   refreshes it hourly. Its network checks run in parallel. Mutating `dots` commands start a
   background re-check on exit, which must not inherit the fd 9 lock.

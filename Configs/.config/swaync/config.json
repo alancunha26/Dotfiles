@@ -1,0 +1,108 @@
+{
+  "$schema": "/etc/xdg/swaync/configSchema.json",
+  "positionX": "right",
+  "positionY": "top",
+  "layer": "overlay",
+  "control-center-layer": "top",
+  "layer-shell": true,
+  "layer-shell-cover-screen": true,
+  "cssPriority": "user",
+  "control-center-margin-top": 22,
+  "control-center-margin-bottom": 22,
+  "control-center-margin-right": 22,
+  "control-center-margin-left": 0,
+  "control-center-width": 440,
+  "fit-to-screen": true,
+  "notification-window-width": 400,
+  "notification-2fa-action": true,
+  "notification-inline-replies": true,
+  "notification-body-image-height": 100,
+  "notification-body-image-width": 200,
+  "timeout": 5,
+  "timeout-low": 5,
+  "timeout-critical": 0,
+  "relative-timestamps": true,
+  "keyboard-shortcuts": true,
+  "notification-grouping": true,
+  "image-visibility": "when-available",
+  "transition-time": 200,
+  "hide-on-clear": false,
+  "hide-on-action": true,
+  "text-empty": "No notifications",
+  "script-fail-notify": true,
+  "scripts": {
+    "open-x-dots-open-file": {
+      "app-name": "^(grimblast|wf-record)$",
+      "run-on": "action",
+      "exec": "swaync-client -cp >/dev/null; IFS=; f=${SWAYNC_HINT_X_DOTS_OPEN#?}; f=${f%?}; if test -f $f; then xdg-open $f; fi; true"
+    },
+    "open-dots-check-page": {
+      "app-name": "^dots$",
+      "run-on": "action",
+      "exec": "swaync-client -cp >/dev/null; kitty --class=dots-check -e $HOME/.local/bin/dots check page; true"
+    }
+  },
+  "notification-visibility": {
+    "dots-card-in-panel-only": {
+      "app-name": "^dots$",
+      "state": "muted"
+    },
+    "low-urgency-is-only-the-dots-card": {
+      "app-name": ".*",
+      "urgency": "Low",
+      "state": "enabled",
+      "override-urgency": "normal"
+    }
+  },
+  "widgets": ["calendar", "buttons-grid", "title", "notifications"],
+  "widget-config": {
+    "calendar": {
+      "show-day-label": false,
+      "date-format": "%A, %B %-d",
+      "show-week-numbers": false
+    },
+    "buttons-grid": {
+      "buttons-per-row": 3,
+      "actions": [
+        {
+          "label": "\nDo not disturb",
+          "type": "toggle",
+          "command": "[ $SWAYNC_TOGGLE_STATE = true ] && swaync-client -dn || swaync-client -df",
+          "update-command": "swaync-client -D"
+        },
+        {
+          "label": "\nScreenshot    ",
+          "command": "swaync-client -cp; sleep 0.3; $HOME/.local/bin/grimblast copysave area --notify --freeze"
+        },
+        {
+          "label": "\nRecord        ",
+          "type": "toggle",
+          "command": "swaync-client -cp; sleep 0.3; $HOME/.local/bin/wf-record area",
+          "update-command": "pgrep -x wf-recorder >/dev/null && echo true || echo false"
+        },
+        {
+          "label": "\nUpdates       ",
+          "type": "toggle",
+          "command": "swaync-client -cp; kitty --class=dots-check -e $HOME/.local/bin/dots check page",
+          "update-command": "updates=0 attention=0 errors=0; . ${XDG_STATE_HOME:-$HOME/.local/state}/dots/check/summary 2>/dev/null; test $((updates + attention + errors)) -gt 0 && echo true || echo false"
+        },
+        {
+          "label": "\nLock          ",
+          "command": "swaync-client -cp; hyprlock"
+        },
+        {
+          "label": "\nPower         ",
+          "command": "swaync-client -cp; $HOME/.config/rofi/powermenu.sh"
+        }
+      ]
+    },
+    "title": {
+      "text": "Notifications",
+      "clear-all-button": true,
+      "button-text": "Clear all"
+    },
+    "notifications": {
+      "vexpand": true
+    }
+  }
+}

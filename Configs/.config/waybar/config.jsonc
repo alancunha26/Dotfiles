@@ -57,7 +57,7 @@
     "cpu",
     "network",
     "custom/recording",
-    "custom/dots",
+    "custom/notification",
     "clock"
   ],
   // ======================
@@ -102,13 +102,15 @@
     "tooltip": false,
     "on-click": "$HOME/.local/bin/music next"
   },
-  "custom/dots": {
-    "exec": "$HOME/.local/bin/dots check waybar",
+  "custom/notification": {
+    // swaync's count and do-not-disturb, yellow/red when dots needs attention
+    "exec": "$HOME/.local/bin/notification-bell",
+    "restart-interval": 5,
     "return-type": "json",
-    "interval": 60,
-    "signal": 9,
-    "on-click": "kitty --class=dots-check -e $HOME/.local/bin/dots check page",
-    "tooltip": true
+    "format": "{text}",
+    "escape": true,
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw"
   },
   "custom/recording": {
     "exec": "$HOME/.local/bin/wf-record status",

@@ -50,8 +50,8 @@ bind(mainMod .. " + V",              exec(rofi .. "clipboard.sh"), { description
 bind(mainMod .. " + period",         exec(rofi .. "emoji.sh"), { description = "Emoji picker" })
 bind(mainMod .. " + C",              exec("hyprpicker -a"), { description = "Color picker" })
 bind(mainMod .. " + SHIFT + Q",      exec("hyprlock"), { description = "Lock screen" })
-bind(mainMod .. " + escape",         exec("dunstctl close-all"), { description = "Dismiss notifications" })
-bind(mainMod .. " + SHIFT + escape", exec("dunstctl history-pop"), { description = "Show last notification" })
+bind(mainMod .. " + escape",         exec("swaync-client --hide-all"), { description = "Dismiss notifications" })
+bind(mainMod .. " + SHIFT + escape", exec("swaync-client -t -sw"), { description = "Notification center" })
 bind(mainMod .. " + slash",          exec("$HOME/.local/bin/keybinds menu"), { description = "Keybind cheat sheet" })
 bind(mainMod .. " + W",              exec("$HOME/.local/bin/wallpaper"), { description = "Change wallpaper" })
 

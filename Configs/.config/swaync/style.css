@@ -1,0 +1,329 @@
+/* Tokyonight Moon, glass like waybar and rofi: Hyprland blurs both swaync layers
+   (layer rules in hypr/hyprland/windowrules.lua). GTK 4.24 asks the compositor for that
+   blur itself, only where CSS sets backdrop-filter, and Hyprland follows it over the
+   layer rule: without backdrop-filter nothing gets blurred. This sheet sits on top of
+   swaync's own style, so it only overrides what differs. */
+
+:root {
+  --cc-bg: rgba(34, 36, 54, 0.6);
+
+  --noti-border-color: rgba(255, 255, 255, 0.04);
+  --noti-bg: 27, 29, 43;
+  --noti-bg-alpha: 0.75;
+  --noti-bg-darker: #1b1d2b;
+  --noti-bg-hover: #2f334d;
+  --noti-bg-focus: rgba(130, 170, 255, 0.12);
+  --noti-close-bg: rgba(255, 255, 255, 0.08);
+  --noti-close-bg-hover: rgba(255, 255, 255, 0.16);
+
+  --text-color: #c8d3f5;
+  --text-color-disabled: #828bb8;
+
+  --bg-selected: #82aaff;
+
+  --notification-icon-size: 40px;
+  --notification-group-icon-size: 24px;
+
+  --border-radius: 12px;
+  --notification-shadow: none;
+  --font-size-body: 13px;
+  --font-size-summary: 14px;
+}
+
+* {
+  font-family: "Noto Sans", "JetBrainsMono Nerd Font Propo";
+}
+
+/* room between the card's edge and what's inside it */
+.notification .notification-default-action {
+  padding: 10px 12px;
+}
+
+.notification .notification-default-action .notification-content .image {
+  margin: 2px 12px 2px 0;
+}
+
+.notification .notification-alt-actions {
+  padding: 0 8px 8px;
+}
+
+.notification .close-button {
+  margin-top: 8px;
+  margin-right: 8px;
+}
+
+/* no ✕ on the dots card: it can't be closed (the bell only puts it back). CSS can only tell
+   it apart by urgency, so it's the one low notification: config.json raises every other
+   app's low to normal. The button sits next to the card, not in it. */
+.notification.low ~ * .close-button {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  -gtk-icon-size: 0;
+}
+
+/* text */
+.notification .text-box .body,
+.notification .text-box .time {
+  color: #828bb8;
+}
+
+.notification .text-box .time {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+/* critical: red outline and title, like the old dunst frame */
+.notification.critical {
+  box-shadow: inset 0 0 0 1px #ff757f;
+}
+
+/* in a collapsed stack only the top card (the last row) keeps the outline */
+.notification-group.collapsed .notification-row:not(:last-child) .notification.critical {
+  box-shadow: none;
+}
+
+.notification.critical .text-box .summary {
+  color: #ff757f;
+}
+
+/* action buttons (Reply, Open...) */
+.notification .notification-action > button,
+.notification .inline-reply-button {
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  box-shadow: none;
+}
+
+.notification .notification-action > button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/*
+ * POP-UPS
+ */
+
+/* GTK drops a blur requested from inside an animated row, so it goes on the row
+   itself, shaped like the card: the row's spacing moves out to a margin */
+/* the pop-ups and the panel sit 24px in: inside Hyprland's 12px window gaps, not flush with them */
+.floating-notifications {
+  padding-top: 20px;
+}
+
+.floating-notifications animatedlistitem {
+  margin: 4px 24px;
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(16px);
+}
+
+.floating-notifications .notification-row .notification-background {
+  padding: 0;
+}
+
+.floating-notifications .notification {
+  background: rgba(34, 36, 54, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.floating-notifications .notification.critical {
+  box-shadow: inset 0 0 0 1px #ff757f, 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/*
+ * PANEL
+ */
+
+.control-center {
+  /* the panel itself follows Hyprland's decoration.rounding; what's inside stays rounder */
+  border-radius: 4px;
+  padding: 6px;
+  backdrop-filter: blur(16px);
+  /* no drop shadow: while the panel slides out, Hyprland draws a snapshot without the
+     blur, and the shadow showed up as a dark band along its left edge */
+  box-shadow: none;
+}
+
+/* "Notifications" + Clear all */
+.widget-title {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.widget-title > label {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.widget-title > button {
+  padding: 2px 10px;
+  font-size: 12px;
+  color: #828bb8;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  box-shadow: none;
+}
+
+.widget-title > button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #c8d3f5;
+}
+
+/* tiles: icon over name, both left-aligned like the cards */
+.widget-buttons-grid {
+  padding: 0;
+}
+
+.widget-buttons-grid flowboxchild {
+  padding: 4px;
+}
+
+/* libadwaita highlights the grid cell too: a square a few pixels around the tile */
+.widget-buttons-grid flowboxchild,
+.widget-buttons-grid flowboxchild:hover,
+.widget-buttons-grid flowboxchild:active,
+.widget-buttons-grid flowboxchild:selected,
+.widget-buttons-grid flowboxchild:focus-visible {
+  background: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.widget-buttons-grid flowboxchild > button {
+  /* a button centers its label as one block; with a monospace font and every name
+     padded to the same length (config.json), the block fills the tile, so the icon
+     and the name read left-aligned */
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #c8d3f5;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: none;
+  outline: none;
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* on the label itself: the `*` rule above would override an inherited font */
+.widget-buttons-grid flowboxchild > button label {
+  font-family: "JetBrainsMono Nerd Font";
+  line-height: 1.4;
+}
+
+.widget-buttons-grid flowboxchild > button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.widget-buttons-grid flowboxchild > button:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked {
+  background-color: #82aaff;
+  color: #1b1d2b;
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked:hover {
+  background-color: alpha(#82aaff, 0.85);
+}
+
+/* calendar (swaync-git): the date, then a card with the month */
+.widget-calendar {
+  margin: 8px 12px 4px;
+  padding: 0;
+}
+
+.widget-calendar .date-label {
+  font-size: 15px;
+  font-weight: bold;
+  opacity: 1;
+  margin-bottom: 8px;
+}
+
+.widget-calendar calendar {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #c8d3f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: var(--border-radius);
+}
+
+.widget-calendar calendar > header {
+  border: none;
+  background: none;
+  color: #828bb8;
+}
+
+.widget-calendar calendar > header > button {
+  min-height: 20px;
+  min-width: 20px;
+  padding: 0;
+  color: #828bb8;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.widget-calendar calendar > grid > label {
+  min-height: 0;
+  padding: 3px 0;
+}
+
+.widget-calendar calendar > grid > label.day-name {
+  color: #828bb8;
+}
+
+.widget-calendar calendar > grid > label.other-month {
+  opacity: 0.35;
+}
+
+.widget-calendar calendar > grid > label.today,
+.widget-calendar calendar > grid > label:selected {
+  color: #1b1d2b;
+  background: #82aaff;
+  border-radius: 6px;
+  font-weight: bold;
+  box-shadow: none;
+}
+
+/* the list lines up with the tiles and the title */
+.widget-notifications {
+  margin: 0 8px 8px;
+  padding: 0;
+}
+
+.control-center .notification-row .notification-background {
+  padding: 4px 4px;
+}
+
+/* every notification sits in a group, and the group's default spacing nearly tripled the
+   gap between cards: the rows' 4px padding alone leaves 8px */
+.control-center .notification-group {
+  margin: 0;
+  padding: 0;
+}
+
+/* keyboard focus (the first card when the panel opens): a lighter card, not a full-width band */
+.notification-row:focus,
+.notification-group:focus {
+  background: none;
+  outline: none;
+}
+
+.control-center .notification-row:focus .notification {
+  background: var(--noti-bg-hover);
+}
+
+/* group headers: app name above a stack */
+.notification-group .notification-group-headers .notification-group-header {
+  font-size: 12px;
+  color: #828bb8;
+}
+
+.control-center-list-placeholder {
+  font-size: 13px;
+}

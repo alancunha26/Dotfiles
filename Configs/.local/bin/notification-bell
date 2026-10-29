@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+## The bell in waybar (custom/notification): swaync's notifications plus what `dots check`
+## found to look at, with swaync's do-not-disturb state:
+##   yellow  some of the count is dots needing a decision (unlisted packages, .pacnew...)
+##   red     the last check couldn't check everything
+## Plain updates only show in the panel's "dots" card, which the count leaves out.
+## One JSON line per change: swaync events come through swaync-client, and the dots
+## summary is read again every few seconds.
+## It also keeps that card in the panel, first, until dots has nothing pending
+## (`dots check card` re-posts it from the last check):
+##   - closed (its ✕, a swipe, Clear all): put back right away
+##   - something new arrived: re-posted, so it's the newest again (swaync sorts by time)
+##   - swaync (re)started empty: restored
+
+CHECK=${XDG_STATE_HOME:-$HOME/.local/state}/dots/check
+card() { "$HOME/.local/bin/dots" check card &>/dev/null; }
+
+card &
+(
+    gdbus monitor --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications 2>/dev/null |
+        while read -r line; do
+            [[ $line =~ NotificationClosed\ \(uint32\ ([0-9]+), ]] || continue
+            if [[ -f $CHECK/notify-id && $(<"$CHECK/notify-id") == "${BASH_REMATCH[1]}" ]]; then card; fi
+        done
+) &
+watcher=$!
+# only our own watcher: waybar may share our process group
+trap 'pkill -P "$watcher" 2>/dev/null; kill "$watcher" 2>/dev/null' EXIT
+
+exec {sw}< <(swaync-client -swb)
+event="" last="" count=0
+while :; do
+    if read -r -t 5 line <&"$sw"; then
+        event=$line
+    elif (($? <= 128)); then
+        exit 0 # swaync-client ended (swaync restarted): waybar starts us again
+    fi
+    [[ -n $event ]] || continue
+
+    # a new notification went above the card: move the card back on top (a second
+    # later, so it's newer: swaync's times are whole seconds)
+    new=$(jq -r '.text' <<<"$event" 2>/dev/null) || new=$count
+    if ((new > count)) && [[ -f $CHECK/notify-id ]]; then (sleep 1 && card) & fi
+    count=$new
+
+    attention=0 errors=0
+    # shellcheck disable=SC1091
+    [[ -f $CHECK/summary ]] && . "$CHECK/summary"
+    card=0
+    [[ -f $CHECK/notify-id ]] && card=1
+
+    out=$(jq -c --argjson card "$card" --argjson attention "$attention" --argjson errors "$errors" '
+        ([(.text | tonumber) - $card, 0] | max) as $real
+        | ($real + $attention) as $n
+        | (if (.alt | startswith("dnd-")) then "dnd-" else "" end) as $dnd
+        | ($dnd + (if $n > 0 then "notification" else "none" end)) as $alt
+        | (if $errors > 0 then ["error"] elif $attention > 0 then ["attention"] else [] end) as $dots
+        | {
+            # the icon is part of the text: waybar hides a module whose text is empty
+            text: ((if $dnd != "" then "󰂛" elif $n > 0 then "󰂚" else "󰂜" end)
+                   + (if $n > 0 then " \($n)" else "" end)),
+            alt: $alt,
+            class: ([$alt] + (if (.class | type) == "array" and (.class | index("cc-open")) then ["cc-open"] else [] end)
+                    + $dots),
+            tooltip: ([if $real > 0 then "\($real) notification(s)" else empty end,
+                       if $errors > 0 then "dots couldn'\''t check everything"
+                       elif $attention > 0 then "dots: \($attention) to look at" else empty end]
+                      | join("\n"))
+          }' <<<"$event" 2>/dev/null) || continue
+    [[ $out == "$last" ]] && continue
+    printf '%s\n' "$out"
+    last=$out
+done

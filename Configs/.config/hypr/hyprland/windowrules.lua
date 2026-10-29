@@ -136,6 +136,8 @@ for namespace, alpha in pairs({
     hl.layer_rule({ match = { namespace = namespace }, blur = true, ignore_alpha = alpha })
 end
 hl.layer_rule({ match = { namespace = "logout_dialog" }, blur = true })
+-- The notification panel slides in from the right edge, like a drawer
+hl.layer_rule({ match = { namespace = "swaync-control-center" }, animation = "slide right" })
 
 -- No animation on slurp's selection overlay, so it never shows up in screenshots/recordings
 hl.layer_rule({ match = { namespace = "selection" }, no_anim = true })

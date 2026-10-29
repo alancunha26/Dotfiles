@@ -28,8 +28,8 @@ Commands:
   remove PKG...        Uninstall packages and delete them from the lists.
   prune                Uninstall explicitly installed packages that no list mentions.
   new-migration TEXT   Create Extras/migrations/<timestamp>-<text>.sh.
-  check [page|waybar]  What `dots update` would bring in (no root, changes nothing).
-                       `page` is the interactive view, `waybar` prints the bar module.
+  check [page]         What `dots update` would bring in (no root, changes nothing).
+                       `page` is the interactive view (the notification panel's dots card opens it).
 
 Options:
   -n, --dry-run        Show what would change without changing anything.
@@ -771,8 +771,9 @@ step_services() {
 #
 # `dots check` collects what `dots update` would bring in, plus what needs a
 # decision, without root and without changing anything. The result is cached
-# in $CHECK_DIR for the waybar module (`dots check waybar`) and its page
-# (`dots check page`); a user timer (dots-check.timer) refreshes it hourly.
+# in $CHECK_DIR for the notification panel (a "dots" card, see check_notify), the
+# waybar bell (~/.local/bin/notification-bell) and the page (`dots check page`); a
+# user timer (dots-check.timer) refreshes it hourly.
 
 # Tokyo Night colors for the report (truecolor; the page runs in kitty)
 T_HEAD=$'\e[1;38;2;130;170;255m' T_SEC=$'\e[38;2;192;153;255m' T_NEW=$'\e[38;2;195;232;141m'
@@ -912,7 +913,7 @@ check_collect() {
     "$updates" "$attention" "${#failed[@]}" "$(date +%s)" $((${#unl[@]} + ${#orph[@]})) "${#pacnew[@]}" "${#bad[@]}" \
     >"$CHECK_DIR/summary.tmp"
   mv -f "$CHECK_DIR/summary.tmp" "$CHECK_DIR/summary"
-  pkill -RTMIN+9 -x waybar 2>/dev/null || true # refresh the bar now
+  check_notify
 }
 
 check_summary() { # load the cached summary (zeros when there is none)
@@ -943,28 +944,40 @@ check_show() { # header + cached report; cut to fit the terminal unless $1 is "a
   return 0
 }
 
-check_waybar() { # JSON for the waybar custom/dots module; empty text hides it
-  local updates attention errors checked class=updates tooltip
+# The "dots" card in the notification panel: one notification that every check replaces
+# (its id is in $CHECK_DIR/notify-id), closed only when there's nothing left to do. swaync
+# keeps it out of the pop-ups and opens the page when it's clicked (swaync/config.json).
+# The waybar bell (~/.local/bin/notification-bell) leaves it out of its count and runs
+# `dots check card` to put it back when it's closed and back on top when something new
+# arrives (re-posting makes it the newest; swaync sorts by time).
+check_notify() {
+  local updates attention errors checked prunable pacnew unlinked id="" title body
+  have notify-send || return 0
   check_summary
-  if ((errors)); then
-    class=error
-  elif ((attention)); then
-    class=attention
-  elif ((updates == 0)); then
-    printf '{"text": ""}\n'
+  [[ -f $CHECK_DIR/notify-id ]] && id=$(<"$CHECK_DIR/notify-id")
+  if ((updates + attention + errors == 0)); then
+    # forget the id first: the bell puts back a closed card whose id is still there
+    rm -f "$CHECK_DIR/notify-id"
+    if [[ -n $id ]]; then
+      gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications \
+        --method org.freedesktop.Notifications.CloseNotification "$id" &>/dev/null || true
+    fi
     return 0
   fi
-  # \n stays literal: it is JSON's newline escape, not the shell's
-  tooltip="$updates update(s), $attention to look at"
-  if ((errors)); then tooltip+='\ncould not check everything'; fi
-  tooltip+='\nclick for details'
-  printf '{"text": "%s %d", "class": "%s", "tooltip": "%s"}\n' "󰚰" $((updates + attention)) "$class" "$tooltip"
+  title="$updates update(s), $attention to look at"
+  if ((errors)); then title+=", couldn't check everything"; fi
+  # One line per section of the page: "Packages: 3 repo · 1 AUR"
+  body=$(sed 's/\x1b\[[0-9;]*m//g' "$CHECK_DIR/report" | awk 'NF && !/^ /' |
+    sed -E 's/ +\(.*\)$//; s/  +/: /; s/: *$//')
+  id=$(notify-send -a dots -u low -i system-software-update -p ${id:+-r "$id"} "$title" "$body" 2>/dev/null) || return 0
+  if [[ -n $id ]]; then printf '%s\n' "$id" >"$CHECK_DIR/notify-id"; fi
+  return 0
 }
 
 # The page draws right away from the cached result and keeps every key
 # available; a fresh check runs in the background and the page redraws when
 # it finishes.
-check_page() { # the floating window behind the waybar module
+check_page() { # the floating window behind the panel's dots card and the Updates tile
   local key keys bg=0 updates attention errors checked prunable pacnew unlinked
 
   start_check() {
@@ -1021,14 +1034,14 @@ check_page() { # the floating window behind the waybar module
 
 cmd_check() {
   case ${1:-} in
-    waybar) check_waybar ;;
     page) check_page ;;
     quiet) check_collect ;;
+    card) check_notify ;; # re-post the panel card from the last check (the bell runs this)
     "")
       check_collect
       if [[ -t 1 ]]; then check_show; else check_show | sed 's/\x1b\[[0-9;]*m//g'; fi
       ;;
-    *) die "usage: dots check [page|waybar|quiet]" ;;
+    *) die "usage: dots check [page|quiet|card]" ;;
   esac
 }
 

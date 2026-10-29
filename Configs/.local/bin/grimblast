@@ -318,7 +318,8 @@ elif [ "$ACTION" = "edit" ]; then
 else
   if [ "$ACTION" = "copysave" ]; then
     takeScreenshot - "$GEOM" "$OUTPUT" | tee "$FILE" | wl-copy --type image/png || die "Clipboard error"
-    notifyOk "$WHAT copied to buffer and saved to $FILE" -i "$FILE"
+    # x-dots-open: clicking the notification opens the file (a swaync script, config.json)
+    notifyOk "$WHAT copied to buffer and saved to $FILE" -i "$FILE" -h "string:x-dots-open:$FILE"
     echo "$FILE"
   else
     notifyError "Error taking screenshot with grim"

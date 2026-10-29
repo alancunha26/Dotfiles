@@ -34,10 +34,11 @@ if pgrep -x wf-recorder > /dev/null; then
     rm -f "$THUMB"
     [ -f "$FILE" ] && ffmpeg -y -loglevel error -i "$FILE" \
         -vf 'thumbnail,scale=320:-2' -frames:v 1 "$THUMB" 2> /dev/null
+    # x-dots-open: clicking the notification opens the video (a swaync script, config.json)
     if [ -f "$THUMB" ]; then
-        notify-send -i "$THUMB" "Recording stopped" "Saved to $FILE"
+        notify-send -a wf-record -h "string:x-dots-open:$FILE" -i "$THUMB" "Recording stopped" "Saved to $FILE"
     else
-        notify-send "Recording stopped" "Saved to $FILE"
+        notify-send -a wf-record -h "string:x-dots-open:$FILE" "Recording stopped" "Saved to $FILE"
     fi
     pkill -RTMIN+8 -x waybar
     exit 0

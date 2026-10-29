@@ -48,7 +48,7 @@ waybar-git                   # System bar (git: clicking workspaces needs Lua-co
 rofi                         # Application launcher (2.x has native wayland)
 rofi-emoji                   # Rofi emoji
 libnotify                    # For notifications
-dunst                        # Notification daemon
+swaync-git                   # Notification daemon + panel (git: the calendar widget is unreleased after 0.12.6; switch back to swaync once a release has it)
 grim                         # Screenshot tool
 slurp                        # Region selector for screenshot/screenshare
 wf-recorder                  # Screen recorder for wlroots compositors

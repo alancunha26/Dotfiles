@@ -140,24 +140,6 @@ window#waybar > box {
   color: alpha(@foreground, 0.7);
 }
 
-#custom-dots {
-  margin: 0 8px;
-  color: @foreground;
-  transition: all 0.15s ease-in-out;
-}
-
-#custom-dots:hover {
-  opacity: 0.7;
-}
-
-#custom-dots.attention {
-  color: @color3;
-}
-
-#custom-dots.error {
-  color: @color1;
-}
-
 #custom-recording.recording {
   margin: 0 8px;
   font-size: 16px;
@@ -257,4 +239,34 @@ window#waybar > box {
 
 #idle_inhibitor:hover {
   opacity: 0.7;
+}
+
+#custom-notification {
+  margin: 0 8px;
+  font-size: 15px;
+  color: @foreground;
+  transition: all 0.15s ease-in-out;
+}
+
+#custom-notification:hover {
+  opacity: 0.7;
+}
+
+#custom-notification.notification {
+  color: @color4;
+}
+
+/* do not disturb: dimmed */
+#custom-notification.dnd-notification,
+#custom-notification.dnd-none {
+  color: @color7;
+}
+
+/* dots needs a decision / couldn't check everything (dots check): wins over the above */
+#custom-notification.attention {
+  color: @color3;
+}
+
+#custom-notification.error {
+  color: @color1;
 }

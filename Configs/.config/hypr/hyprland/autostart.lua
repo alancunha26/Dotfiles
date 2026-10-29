@@ -16,7 +16,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -- systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
 
     -- Everything else
-    hl.exec_cmd("uwsm app -t service -s s -- dunst")
+    hl.exec_cmd("uwsm app -t service -s s -- swaync")
     hl.exec_cmd("uwsm app -t service -s a -- nm-applet --indicator")
     hl.exec_cmd("uwsm app -t service -s s -- wl-paste --type text --watch cliphist store")
     hl.exec_cmd("uwsm app -t service -s s -- wl-paste --type image --watch cliphist store")

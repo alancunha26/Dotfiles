@@ -57,6 +57,9 @@ hl.config({
     },
 
     misc = {
+        -- An app that asks for focus gets it (switching workspace): clicking a notification
+        -- hands the app an activation token, and this is what lets it jump to the window
+        focus_on_activate       = true,
         force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
     },
@@ -70,3 +73,8 @@ hl.animation({ leaf = "border",      enabled = true, speed = 6, bezier = "quart"
 hl.animation({ leaf = "borderangle", enabled = true, speed = 6, bezier = "quart" })
 hl.animation({ leaf = "fade",        enabled = true, speed = 6, bezier = "quart" })
 hl.animation({ leaf = "workspaces",  enabled = true, speed = 6, bezier = "quart" })
+
+-- Closing layers start slow: swaync's panel layer spans the whole screen, so its "slide right"
+-- travels 1920px and the panel (the right 440px) would leave in the first frames on "quart"
+hl.curve("easein", { type = "bezier", points = { { 0.6, 0 }, { 0.9, 0.4 } } })
+hl.animation({ leaf = "layersOut",   enabled = true, speed = 4, bezier = "easein" })
