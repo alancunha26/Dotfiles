@@ -194,7 +194,7 @@
 .widget-buttons-grid flowboxchild > button {
   /* a button centers its label as one block; with a monospace font and every name
      padded to the same length (config.json), the block fills the tile, so the icon
-     and the name read left-aligned */
+     and the name read left-aligned. Keep new tile names the same length. */
   min-width: 0;
   padding: 10px 12px;
   font-size: 12px;

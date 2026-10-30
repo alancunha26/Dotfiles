@@ -9,6 +9,21 @@
 #
 # Fresh machine (as your user, from a TTY):
 #   bash <(curl -fsSL https://raw.githubusercontent.com/alancunha26/Dotfiles/main/dots) install
+#
+# Conventions (`dots lint` checks the first three):
+#   - apply "..." eval '...' strings use the caller's named locals, never $1 (inside apply, $1 is `eval`).
+#   - A function's last statement is never `cond && action`: under set -e it returns 1 when cond is false.
+#   - Everything that changes the machine goes through run/srun/apply, so --dry-run only prints it.
+#     Read-only checks run in both modes, so a dry run reflects the real state.
+#   - Each step runs in a subshell with its own set -e (bash ignores set -e inside `func || ...`), so
+#     warn/note write to files in $RUN_DIR and variables set in a step don't survive it. pacman and
+#     migrations failures are fatal; other steps fail alone and the run continues.
+#   - The ERR trap prints the failing command, so helpers used in < <(...) (orphans, as_deps,
+#     pacnew_files, ...) must return 0 when they simply find nothing.
+#   - dots holds a lock on fd 9; background jobs must close it (9>&-, see sudo_keepalive).
+#   - State lives in ~/.local/state/dots/: backups/<timestamp>/ (anything moved out of the way), logs/
+#     (on a TTY, install/update/add/remove/prune re-exec under `script`), migrations/ and lock.
+#   - A new install step is a step_<name> function plus entries in STEPS and STEP_TITLES.
 # Intentional: eval strings and $ON_ERR are single-quoted so they expand later; "~/" in messages is display text.
 # shellcheck disable=SC2016,SC2064,SC2088
 set -Eeuo pipefail
@@ -30,6 +45,8 @@ Commands:
   new-migration TEXT   Create Extras/migrations/<timestamp>-<text>.sh.
   check [page]         What `dots update` would bring in (no root, changes nothing).
                        `page` is the interactive view (the notification panel's dots card opens it).
+  lint                 Static checks on this repo (no root, changes nothing): bash -n, shellcheck
+                       when installed, house rules for dots, Hyprland binds, launchers.
 
 Options:
   -n, --dry-run        Show what would change without changing anything.
@@ -54,7 +71,7 @@ THEMES_URL=${DOTS_THEMES_REPO:-https://github.com/alancunha26/Themes.git}
 # their own files in them: their contents are linked one by one. Everything
 # else in Configs/ is linked as a whole, so new files there land in the repo.
 REAL_DIRS=(.config .config/cliamp .config/gtk-4.0 .config/systemd .config/systemd/user .local .local/bin
-  .local/share .local/share/applications .claude)
+  .local/share .local/share/applications .claude .claude/skills)
 
 SYSTEM_SERVICES=(NetworkManager.service lactd.service fstrim.timer reflector.timer)
 DISPLAY_MANAGER=ly@tty2.service # replaces the getty on the same tty
@@ -773,7 +790,10 @@ step_services() {
 # decision, without root and without changing anything. The result is cached
 # in $CHECK_DIR for the notification panel (a "dots" card, see check_notify), the
 # waybar bell (~/.local/bin/notification-bell) and the page (`dots check page`); a
-# user timer (dots-check.timer) refreshes it hourly.
+# user timer (dots-check.timer, in Configs/.config/systemd/user, hence that path in
+# REAL_DIRS) refreshes it hourly. The bell counts the card as one notification and goes
+# yellow/red for attention/errors; the Updates tile is lit while anything is pending.
+# The page runs in a floating kitty (class dots-check). The network checks run in parallel.
 
 # Tokyo Night colors for the report (truecolor; the page runs in kitty)
 T_HEAD=$'\e[1;38;2;130;170;255m' T_SEC=$'\e[38;2;192;153;255m' T_NEW=$'\e[38;2;195;232;141m'
@@ -1287,6 +1307,93 @@ cmd_adopt() {
   done
 }
 
+# Static checks, no root and no changes. The house rules are awk so they run without
+# shellcheck; shellcheck, Hyprland's own validator and desktop-file-validate join in when installed.
+LINT_FAILED=0
+lint_report() { # label offenders: empty offenders = pass
+  if [[ -z $2 ]]; then
+    ok "$1"
+  else
+    printf '  %s✗%s %s\n' "$RED" "$RESET" "$1"
+    sed 's/^/      /' <<<"$2"
+    LINT_FAILED=1
+  fi
+}
+
+# apply "..." eval '...': inside apply, $1 is `eval`, so the string must use named locals.
+lint_apply_eval() {
+  awk '
+    { line = $0; while (line ~ /\\$/ && (getline nxt) > 0) { sub(/\\$/, " ", line); line = line nxt } }
+    line !~ /^[[:space:]]*#/ && line ~ /apply .*[[:space:]]eval[[:space:]]/ && line ~ /\047[^\047]*\$(\{?[0-9@*])/ { print FILENAME": "line }
+  ' "$SELF"
+}
+
+# A function must not end in `cond && action` (returns 1 under set -e when cond is false).
+# [[ ]] and (( )) become T, quoted strings are dropped, so `[[ a && b ]]` and
+# `apply ... eval 'a && b'` don't trip it; only a test, `have` or `booted` before && does.
+lint_last_statement() {
+  awk '
+    function bare(l) {
+      gsub(/\047[^\047]*\047/, "", l); gsub(/"[^"]*"/, "", l)
+      gsub(/\[\[[^]]*\]\]/, "T", l); gsub(/\(\([^)]*\)\)/, "T", l)
+      return l
+    }
+    function bad(l) {
+      l = bare(l)
+      return l !~ /\|\|/ && l ~ /(^|[;{][[:space:]]*|^[[:space:]]*!?[[:space:]]*)(T|have [^ ]+|booted|test [^&]*)[[:space:]]*&&/
+    }
+    /^[a-z_0-9]+\(\) \{.*; \}$/ { l = $0; sub(/^[^{]*\{/, "", l); if (bad(l)) print NR": "$0; next }
+    /^}/ { if (bad(stmt)) print NR-1": "stmt }
+    !/^[[:space:]]*(#|$)/ { stmt = (stmt ~ /(&&|\\)[[:space:]]*$/ ? stmt " " $0 : $0) }
+  ' "$SELF"
+}
+
+# Every Hyprland bind carries a description: Super+/ lists them from `hyprctl binds`.
+lint_binds() {
+  local f files=()
+  for f in "$HOME_SRC"/.config/hypr/hyprland.lua "$HOME_SRC"/.config/hypr/hyprland/*.lua; do
+    if [[ -f $f ]]; then files+=("$f"); fi
+  done
+  ((${#files[@]})) || return 0
+  awk '
+    FNR == 1 { collecting = 0 }
+    !collecting && /(^|[^[:alnum:]_.])(hl\.)?bind\(/ && !/^[[:space:]]*(--|local )/ { collecting = 1; depth = 0; text = ""; start = FNR }
+    collecting {
+      line = $0; sub(/--.*$/, "", line); text = text line "\n"
+      o = gsub(/\(/, "(", line); c = gsub(/\)/, ")", line); depth += o - c
+      if (depth <= 0) { if (text !~ /description[[:space:]]*=/) print FILENAME":"start; collecting = 0 }
+    }
+  ' "${files[@]}"
+}
+
+lint_tool() { # label command...: an external checker; shown only when it fails
+  local label=$1 out
+  shift
+  if out=$("$@" 2>&1); then ok "$label"; else lint_report "$label" "${out:-failed}"; fi
+}
+
+cmd_lint() {
+  header "Lint"
+  lint_tool "bash -n dots" bash -n "$SELF"
+  if have shellcheck; then
+    lint_tool "shellcheck" shellcheck -x "$SELF" "$MIGRATIONS"/*.sh
+  else
+    warn "shellcheck is not installed: skipped (the house-rule checks below still run)"
+  fi
+  lint_report "apply ... eval strings use named locals, not \$1" "$(lint_apply_eval)"
+  lint_report "no function ends in 'cond && action'" "$(lint_last_statement)"
+  lint_report "every Hyprland bind has a description" "$(lint_binds)"
+  if have Hyprland && [[ -f $HOME_SRC/.config/hypr/hyprland.lua ]]; then
+    lint_tool "Hyprland --verify-config" bash -c \
+      'Hyprland --verify-config -c "$1" | grep -q "config ok"' _ "$HOME_SRC/.config/hypr/hyprland.lua"
+  fi
+  local apps=("$HOME_SRC"/.local/share/applications/*.desktop)
+  if have desktop-file-validate && ((${#apps[@]})); then
+    lint_tool "desktop-file-validate" desktop-file-validate --no-hints "${apps[@]}"
+  fi
+  exit "$LINT_FAILED"
+}
+
 cmd_new_migration() {
   (($#)) || die 'usage: dots new-migration "what it does"'
   local slug file
@@ -1361,6 +1468,7 @@ case $CMD in
   remove) cmd_remove "${ARGS[@]}" ;;
   prune) cmd_prune ;;
   new-migration) cmd_new_migration "${ARGS[@]}" ;;
+  lint) cmd_lint ;;
   "" | help) usage ;;
   *) die "unknown command: $CMD (see dots --help)" ;;
 esac
