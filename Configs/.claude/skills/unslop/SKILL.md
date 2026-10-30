@@ -7,6 +7,7 @@ description: "Sentence-level pass that cuts AI tells and length from prose. Use 
 
 ## Overrides
 
+- These rules also govern your own chat replies: write them this way as you go. A SessionStart hook (`hooks/unslop-context.sh`) loads this file every session.
 - Change prose only. Code, quoted output, and the repo's PR template headings and checkboxes stay as written. Rule 13 applies to prose, not to code or quotes.
 
 Edit text to remove AI patterns. Scan for the patterns below, then rewrite. Preserve meaning and match the intended tone.

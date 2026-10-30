@@ -14,3 +14,4 @@ skill blast-radius
 skill interrogate
 skill visual-parity
 agent comment-sicko
+hook unslop-context.sh
