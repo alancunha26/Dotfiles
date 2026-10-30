@@ -81,8 +81,8 @@ There is no test suite. Verify changes with:
 - Updater: `dots check` (no root, changes nothing) caches its result in
   `~/.local/state/dots/check/` and keeps one "dots" card in the swaync panel (`check_notify`:
   replaced by id from `notify-id`, closed when nothing is pending; swaync mutes it and opens the
-  page on click). The waybar bell (`~/.local/bin/notification-bell`) leaves that card out of its
-  count and turns yellow/red only for attention/errors; the Updates tile is lit while anything is
+  page on click). The waybar bell (`~/.local/bin/notification-bell`) counts that card as one
+  notification and turns yellow/red for attention/errors; the Updates tile is lit while anything is
   pending. The page is `dots check page` in a floating kitty (`dots-check` class), and
   `dots-check.timer` (in `Configs/.config/systemd/user`, hence `.config/systemd` in `REAL_DIRS`)
   refreshes it hourly. Its network checks run in parallel. Mutating `dots` commands start a

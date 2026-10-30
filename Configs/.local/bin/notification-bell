@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-## The bell in waybar (custom/notification): swaync's notifications plus what `dots check`
-## found to look at, with swaync's do-not-disturb state:
-##   yellow  some of the count is dots needing a decision (unlisted packages, .pacnew...)
+## The bell in waybar (custom/notification): swaync's notifications, the panel's "dots"
+## card counting as one, with swaync's do-not-disturb state:
+##   yellow  the card has something needing a decision (unlisted packages, .pacnew...)
 ##   red     the last check couldn't check everything
-## Plain updates only show in the panel's "dots" card, which the count leaves out.
 ## One JSON line per change: swaync events come through swaync-client, and the dots
 ## summary is read again every few seconds.
 ## It also keeps that card in the panel, first, until dots has nothing pending
@@ -43,15 +42,15 @@ while :; do
     if ((new > count)) && [[ -f $CHECK/notify-id ]]; then (sleep 1 && card) & fi
     count=$new
 
-    attention=0 errors=0
+    updates=0 attention=0 errors=0
     # shellcheck disable=SC1091
     [[ -f $CHECK/summary ]] && . "$CHECK/summary"
     card=0
     [[ -f $CHECK/notify-id ]] && card=1
 
-    out=$(jq -c --argjson card "$card" --argjson attention "$attention" --argjson errors "$errors" '
-        ([(.text | tonumber) - $card, 0] | max) as $real
-        | ($real + $attention) as $n
+    out=$(jq -c --argjson card "$card" --argjson updates "$updates" --argjson attention "$attention" --argjson errors "$errors" '
+        (.text | tonumber) as $n
+        | ([$n - $card, 0] | max) as $real
         | (if (.alt | startswith("dnd-")) then "dnd-" else "" end) as $dnd
         | ($dnd + (if $n > 0 then "notification" else "none" end)) as $alt
         | (if $errors > 0 then ["error"] elif $attention > 0 then ["attention"] else [] end) as $dots
@@ -63,8 +62,8 @@ while :; do
             class: ([$alt] + (if (.class | type) == "array" and (.class | index("cc-open")) then ["cc-open"] else [] end)
                     + $dots),
             tooltip: ([if $real > 0 then "\($real) notification(s)" else empty end,
-                       if $errors > 0 then "dots couldn'\''t check everything"
-                       elif $attention > 0 then "dots: \($attention) to look at" else empty end]
+                       if $card > 0 then "dots: \($updates) update(s), \($attention) to look at" else empty end,
+                       if $errors > 0 then "dots couldn'\''t check everything" else empty end]
                       | join("\n"))
           }' <<<"$event" 2>/dev/null) || continue
     [[ $out == "$last" ]] && continue
