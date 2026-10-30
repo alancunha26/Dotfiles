@@ -15,5 +15,4 @@ echo
 awk '/^---$/ {n++; next} n>=2' "$f"
 p="$latest/skills/poteto-mode/SKILL.md"
 if [ -f "$p" ]; then echo; awk '/^## Writing the reply/{f=1; print; next} f && /^## /{exit} f' "$p"; fi
-if [ -f "$HOME/.claude/pstack-local/unslop.md" ]; then echo; cat "$HOME/.claude/pstack-local/unslop.md"; fi
 exit 0
