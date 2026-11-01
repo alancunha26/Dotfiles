@@ -49,6 +49,7 @@ bind(mainMod .. " + Delete",         exec(rofi .. "powermenu.sh"), { description
 bind(mainMod .. " + V",              exec(rofi .. "clipboard.sh"), { description = "Clipboard history" })
 bind(mainMod .. " + period",         exec(rofi .. "emoji.sh"), { description = "Emoji picker" })
 bind(mainMod .. " + C",              exec("hyprpicker -a"), { description = "Color picker" })
+bind(mainMod .. " + SHIFT + X",      exec("wlcrosshairctl toggle"), { description = "Toggle crosshair overlay" })
 bind(mainMod .. " + SHIFT + Q",      exec("hyprlock"), { description = "Lock screen" })
 bind(mainMod .. " + escape",         exec("swaync-client --hide-all"), { description = "Dismiss notifications" })
 bind(mainMod .. " + SHIFT + escape", exec("swaync-client -t -sw"), { description = "Notification center" })

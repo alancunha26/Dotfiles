@@ -3,3 +3,4 @@
 steam                        # Valve's game store and launcher
 gamescope                    # SteamOS session compositing window manager
 ttf-liberation               # Arial-compatible fonts Steam expects
+wlcrosshair                  # Crosshair overlay (red dot), toggled with Super+Shift+X

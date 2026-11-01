@@ -1,0 +1,4 @@
+path = "~/.config/wlcrosshair/crosshair.png"
+output = "DP-1"
+size = 8
+opacity = 0.9
