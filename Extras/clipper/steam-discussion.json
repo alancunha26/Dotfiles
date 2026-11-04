@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "Steam discussion",
+  "behavior": "create",
+  "noteNameFormat": "{{selector:.forum_op .topic|trim|safe_name}}",
+  "path": "clippings",
+  "noteContentFormat": "{{selectorHtml:.forum_op .content|markdown}}\n\n{% set authors = selector:.commentthread_comments .commentthread_author_link %}{% set times = selector:.commentthread_comments .commentthread_comment_timestamp[data-timestamp]?title %}{% set posts = selectorHtml:.commentthread_comments .commentthread_comment_text %}{% if posts %}## Replies\n\n{% for post in posts %}### {{authors[loop.index0]|trim}} ({{times[loop.index0]}})\n\n{{post|markdown}}\n\n{% endfor %}{% endif %}",
+  "properties": [
+    { "name": "title", "value": "{{selector:.forum_op .topic|trim}}", "type": "text" },
+    { "name": "author", "value": "{{selector:.forum_op_author|trim}}", "type": "multitext" },
+    { "name": "source", "value": "{{url}}", "type": "text" },
+    { "name": "date", "value": "{{selector:.forum_op .date?data-timestamp|date:(\"YYYY-MM-DD\", \"X\")}}", "type": "date" },
+    { "name": "tags", "value": "object/article", "type": "multitext" }
+  ],
+  "triggers": [
+    "/^https:\\/\\/steamcommunity\\.com\\/.*discussions\\/.*\\/\\d+/"
+  ]
+}

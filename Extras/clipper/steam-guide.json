@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "Steam guide",
+  "behavior": "create",
+  "noteNameFormat": "{{selector:.workshopItemTitle|trim|safe_name}}",
+  "path": "clippings",
+  "noteContentFormat": "{{selectorHtml:.guideTopDescription|markdown}}\n\n{% set titles = selector:.guide.subSections > .subSection > .subSectionTitle %}{% set sections = selectorHtml:.guide.subSections > .subSection > .subSectionDesc %}{% for section in sections %}## {{titles[loop.index0]|trim}}\n\n{{section|markdown}}\n\n{% endfor %}",
+  "properties": [
+    { "name": "title", "value": "{{selector:.workshopItemTitle|trim}}", "type": "text" },
+    { "name": "author", "value": "{% set names = selector:.creatorsBlock .friendBlockContent %}{% if names %}{% for name in names %}{{name|split:\"\\n\"|first|trim}}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}", "type": "multitext" },
+    { "name": "source", "value": "{{url}}", "type": "text" },
+    { "name": "date", "value": "{{selector:.detailsStatRight|first|trim}}", "type": "text" },
+    { "name": "tags", "value": "object/article", "type": "multitext" }
+  ],
+  "triggers": [
+    "https://steamcommunity.com/sharedfiles/filedetails/"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "X post",
+  "behavior": "create",
+  "noteNameFormat": "{{title|safe_name}}",
+  "path": "clippings",
+  "noteContentFormat": "{{content}}",
+  "properties": [
+    { "name": "title", "value": "{{title}}", "type": "text" },
+    { "name": "author", "value": "{{author}}", "type": "multitext" },
+    { "name": "source", "value": "{{url}}", "type": "text" },
+    { "name": "date", "value": "{{published|date:\"YYYY-MM-DD\"}}", "type": "date" },
+    { "name": "tags", "value": "object/article", "type": "multitext" }
+  ],
+  "triggers": [
+    "/^https:\\/\\/(x|twitter)\\.com\\/[^\\/]+\\/(status|article)\\/\\d+/",
+    "/^https:\\/\\/x\\.com\\/i\\/(status|article)\\/\\d+/"
+  ]
+}

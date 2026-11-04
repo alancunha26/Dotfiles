@@ -8,3 +8,4 @@ gimp                         # Image editor
 godot                        # Game engine
 chromium                     # Chromium-based browser, for web dev
 t3code-bin                   # Desktop control surface for local coding agents
+discord-chat-exporter-gui    # Exports Discord chat logs to a file - GUI
