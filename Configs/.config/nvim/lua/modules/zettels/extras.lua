@@ -178,143 +178,6 @@ local function get_task_range(lines, start_idx)
   return start_idx, end_idx
 end
 
---- Find the most recent daily note before `today` (YYYY-MM-DD), or nil if none.
-local function find_prev_daily(today)
-  local files = vim.fn.glob(notes_path .. '/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', false, true)
-  table.sort(files, function(a, b)
-    return a > b
-  end)
-  for _, file in ipairs(files) do
-    local d = file:match('(%d%d%d%d%-%d%d%-%d%d)%.md$')
-    if d and d < today then
-      return file
-    end
-  end
-  return nil
-end
-
---- Extract unchecked goals (with continuations) from the previous daily note's
---- `## Goals` section AND mark each bullet line as strikethrough in place.
---- Goals that are empty placeholders (`- [ ]` with no content) or already
---- struck through (`~~...~~`) are skipped.
---- Returns a list of tasks; each task is a list of lines (bullet + any
---- continuation lines) preserving the original, non-struck content.
-local function extract_and_strike_goals(filepath)
-  local lines = vim.fn.readfile(filepath)
-  local tasks = {}
-  local in_goals = false
-  local modified = false
-  local i = 1
-  while i <= #lines do
-    local line = lines[i]
-    if line:match('^##%s+Goals%s*$') then
-      in_goals = true
-      i = i + 1
-    elseif in_goals and line:match('^##%s+') then
-      in_goals = false
-      i = i + 1
-    elseif in_goals then
-      local prefix, content = line:match('^(%- %[ %]%s+)(.+)$')
-      if prefix and content and not content:match('^~~') then
-        local _, end_idx = get_task_range(lines, i)
-        local task = {}
-        for k = i, end_idx do
-          table.insert(task, lines[k])
-        end
-        table.insert(tasks, task)
-        lines[i] = prefix .. '~~' .. content .. '~~'
-        for k = i + 1, end_idx do
-          local indent, cont = lines[k]:match('^(%s+)(.+)$')
-          if indent and cont and not cont:match('^~~') then
-            lines[k] = indent .. '~~' .. cont .. '~~'
-          end
-        end
-        modified = true
-        i = end_idx + 1
-      else
-        i = i + 1
-      end
-    else
-      i = i + 1
-    end
-  end
-  if modified then
-    vim.fn.writefile(lines, filepath)
-  end
-  return tasks
-end
-
---- Replace the empty `- [ ]` placeholder in today's `## Goals` section with
---- the carried-over tasks (each task is a list of lines).
-local function carry_over_goals(filepath, tasks)
-  if #tasks == 0 then
-    return
-  end
-  local lines = vim.fn.readfile(filepath)
-  local new_lines = {}
-  local in_goals = false
-  local replaced = false
-  for _, line in ipairs(lines) do
-    if line:match('^##%s+Goals%s*$') then
-      in_goals = true
-      table.insert(new_lines, line)
-    elseif in_goals and not replaced and line:match('^%- %[ %]%s*$') then
-      for _, task in ipairs(tasks) do
-        for _, l in ipairs(task) do
-          table.insert(new_lines, l)
-        end
-      end
-      replaced = true
-    elseif in_goals and line:match('^##%s+') then
-      in_goals = false
-      table.insert(new_lines, line)
-    else
-      table.insert(new_lines, line)
-    end
-  end
-  vim.fn.writefile(new_lines, filepath)
-end
-
---- Ensure today's daily note exists. Creates it via `zk new --group daily` and
---- runs goal carryover (from the most recent prior daily) on first creation.
---- Returns the path, or nil on failure.
-local function ensure_daily_note()
-  local date = os.date('%Y-%m-%d')
-  local daily_path = notes_path .. '/' .. date .. '.md'
-
-  if vim.fn.filereadable(daily_path) == 1 then
-    return daily_path
-  end
-
-  local result = vim
-    .system({ 'zk', 'new', '--group', 'daily', '--print-path', '--no-input', notes_path }, { text = true })
-    :wait()
-
-  if result.code ~= 0 then
-    vim.notify('Failed to create daily note: ' .. (result.stderr or ''), vim.log.levels.ERROR)
-    return nil
-  end
-
-  local prev = find_prev_daily(date)
-  if prev then
-    local carried = extract_and_strike_goals(prev)
-    if #carried > 0 then
-      carry_over_goals(daily_path, carried)
-      local prev_date = vim.fn.fnamemodify(prev, ':t:r')
-      vim.notify(string.format('Carried %d goal(s) from %s', #carried, prev_date), vim.log.levels.INFO)
-    end
-  end
-
-  return daily_path
-end
-
-function M.open_daily()
-  local daily_path = ensure_daily_note()
-  if daily_path then
-    vim.cmd('edit ' .. daily_path)
-  end
-end
-
 function M.buffers()
   -- Get only loaded buffers
   local buffers = vim.api.nvim_list_bufs()
@@ -468,6 +331,9 @@ end
 -- Backlog & Capture
 -- ============================================================================
 
+local desktop_path = notes_path .. '/vro8.md'
+local desktop_section = 'Tasks'
+
 local function get_backlog_path()
   local backlog_path = notes_path .. '/backlog.md'
 
@@ -483,7 +349,7 @@ local function get_backlog_path()
       '# Backlog',
       '',
       "Long-horizon items I want to remember but haven't committed to. When I",
-      "intend to actually do one, I move it to today's Journal Goals.",
+      'intend to actually do one, I move it to The Desktop.',
       '',
     }
     vim.fn.writefile(content, backlog_path)
@@ -559,6 +425,10 @@ local function append_to_section(filepath, section_name, new_lines)
   while insert_pos > section_start and (lines[insert_pos] == nil or lines[insert_pos]:match('^%s*$')) do
     insert_pos = insert_pos - 1
   end
+  if not lines[insert_pos]:match('^[%-*%s]') then
+    insert_pos = insert_pos + 1
+    table.insert(lines, insert_pos, '')
+  end
   insert_lines(lines, insert_pos + 1, new_lines)
   vim.fn.writefile(lines, filepath)
   return true
@@ -601,13 +471,13 @@ function M.open_backlog()
   vim.cmd('edit ' .. get_backlog_path())
 end
 
---- Capture a new task. Picks destination (today's Goals or backlog), prompts
+--- Capture a new task. Picks destination (The Desktop or backlog), prompts
 --- for text, appends to the chosen target.
 function M.capture()
-  local destinations = {
-    { text = "Today's Goals", target = 'today' },
-    { text = 'Backlog', target = 'backlog' },
-  }
+  local destinations = { { text = 'Backlog', target = 'backlog' } }
+  if vim.fn.filereadable(desktop_path) == 1 then
+    table.insert(destinations, 1, { text = 'The Desktop', target = 'desktop' })
+  end
 
   Snacks.picker({
     title = 'Capture To',
@@ -632,14 +502,12 @@ function M.capture()
           text = vim.fn.trim(text)
           local task_line = '- [ ] ' .. text
 
-          if item.target == 'today' then
-            local daily_path = ensure_daily_note()
-            if not daily_path then
-              return
-            end
-            if append_to_section(daily_path, 'Goals', task_line) then
-              reload_buffer_if_open(daily_path)
-              vim.notify("Captured to today's Goals", vim.log.levels.INFO)
+          if item.target == 'desktop' then
+            if append_to_section(desktop_path, desktop_section, task_line) then
+              reload_buffer_if_open(desktop_path)
+              vim.notify('Captured to The Desktop', vim.log.levels.INFO)
+            else
+              vim.notify('No "' .. desktop_section .. '" section in The Desktop', vim.log.levels.ERROR)
             end
           else
             append_to_backlog_file(task_line)
@@ -657,26 +525,29 @@ local function in_backlog()
   return vim.fn.expand('%:t') == 'backlog.md'
 end
 
---- True if the current buffer is today's daily note.
-local function in_today_daily()
-  return vim.fn.expand('%:t') == os.date('%Y-%m-%d') .. '.md'
-end
-
---- Move a known backlog task (already removed from source) into today's Goals.
+--- Move a known backlog task (already removed from source) into The Desktop.
+--- Returns the task to the backlog if The Desktop has no section for it.
 local function commit_pull(task_lines)
   task_lines = as_lines(task_lines)
-  local daily_path = ensure_daily_note()
-  if daily_path then
-    append_to_section(daily_path, 'Goals', task_lines)
-    reload_buffer_if_open(daily_path)
-    vim.notify('Pulled to today: ' .. task_lines[1]:gsub('^%- %[ %]%s+', ''), vim.log.levels.INFO)
+  if not append_to_section(desktop_path, desktop_section, task_lines) then
+    append_to_backlog_file(task_lines)
+    reload_buffer_if_open(get_backlog_path())
+    vim.notify('No "' .. desktop_section .. '" section in The Desktop', vim.log.levels.ERROR)
+    return
   end
+  reload_buffer_if_open(desktop_path)
+  vim.notify('Pulled to The Desktop: ' .. task_lines[1]:gsub('^%- %[ %]%s+', ''), vim.log.levels.INFO)
 end
 
---- Pull a backlog item into today's Goals. If the cursor is on a `- [ ]` line
+--- Pull a backlog item into The Desktop. If the cursor is on a `- [ ]` line
 --- in `backlog.md`, that task (including continuation lines) is pulled
 --- directly. Otherwise shows a picker of backlog items.
 function M.pull_from_backlog()
+  if vim.fn.filereadable(desktop_path) == 0 then
+    vim.notify('This vault has no Desktop to pull into', vim.log.levels.WARN)
+    return
+  end
+
   local backlog_path = get_backlog_path()
 
   if in_backlog() then
@@ -726,7 +597,7 @@ function M.pull_from_backlog()
   end
 
   Snacks.picker({
-    title = 'Pull to Today',
+    title = 'Pull to The Desktop',
     items = items,
     layout = { preset = 'vscode' },
     format = function(item)
@@ -762,7 +633,7 @@ end
 
 --- Push a task to the backlog. If the cursor is on a `- [ ]` line in a file
 --- other than the backlog itself, that task (including continuation lines) is
---- pushed directly. Otherwise shows a picker of today's Goals.
+--- pushed directly. Otherwise shows a picker of tasks on The Desktop.
 function M.push_to_backlog()
   local cursor_line = vim.api.nvim_get_current_line()
 
@@ -785,28 +656,28 @@ function M.push_to_backlog()
     return
   end
 
-  local daily_path = ensure_daily_note()
-  if not daily_path then
+  if vim.fn.filereadable(desktop_path) == 0 then
+    vim.notify('Not on a task, and this vault has no Desktop', vim.log.levels.WARN)
     return
   end
 
-  local daily_lines = vim.fn.readfile(daily_path)
+  local desktop_lines = vim.fn.readfile(desktop_path)
   local tasks_by_id = {}
   local items = {}
-  local in_goals = false
+  local in_section = false
   local i = 1
-  while i <= #daily_lines do
-    local l = daily_lines[i]
-    if l:match('^##%s+Goals%s*$') then
-      in_goals = true
+  while i <= #desktop_lines do
+    local l = desktop_lines[i]
+    if l == '## ' .. desktop_section then
+      in_section = true
       i = i + 1
-    elseif in_goals and l:match('^##%s+') then
+    elseif in_section and l:match('^##%s+') then
       break
-    elseif in_goals and l:match('^%- %[ %]%s*%S') and not l:match('~~') then
-      local _, end_idx = get_task_range(daily_lines, i)
+    elseif in_section and l:match('^%- %[ %]%s*%S') then
+      local _, end_idx = get_task_range(desktop_lines, i)
       local task_lines = {}
       for k = i, end_idx do
-        table.insert(task_lines, daily_lines[k])
+        table.insert(task_lines, desktop_lines[k])
       end
       tasks_by_id[i] = { lnum = i, task_lines = task_lines }
       table.insert(items, {
@@ -820,7 +691,7 @@ function M.push_to_backlog()
   end
 
   if #items == 0 then
-    vim.notify("No goals in today's note to push", vim.log.levels.WARN)
+    vim.notify('No tasks on The Desktop to push', vim.log.levels.WARN)
     return
   end
 
@@ -840,18 +711,18 @@ function M.push_to_backlog()
           return
         end
 
-        local cur_lines = vim.fn.readfile(daily_path)
+        local cur_lines = vim.fn.readfile(desktop_path)
         local found = find_task_at(cur_lines, data.task_lines, data.lnum)
         if not found then
-          vim.notify('Could not find goal to remove', vim.log.levels.ERROR)
+          vim.notify('Could not find task to remove', vim.log.levels.ERROR)
           return
         end
 
         for _ = 1, #data.task_lines do
           table.remove(cur_lines, found)
         end
-        vim.fn.writefile(cur_lines, daily_path)
-        reload_buffer_if_open(daily_path)
+        vim.fn.writefile(cur_lines, desktop_path)
+        reload_buffer_if_open(desktop_path)
 
         append_to_backlog_file(data.task_lines)
         reload_buffer_if_open(get_backlog_path())
