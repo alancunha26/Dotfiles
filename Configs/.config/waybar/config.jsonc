@@ -168,7 +168,7 @@
     "format": "{icon}",
     "scroll-step": 5,
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
-    "on-click": "$TERMINAL --class=wiremix -e wiremix --tab output",
+    "on-click": "pavucontrol --tab=3",
     "tooltip-format": "Output: {node_name} ({volume}%)",
     "format-muted": "",
     "format-icons": [
@@ -182,7 +182,7 @@
     "scroll-step": 5,
     "format": "",
     "format-muted": "",
-    "on-click": "$TERMINAL --class=wiremix -e wiremix --tab input",
+    "on-click": "pavucontrol --tab=4",
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
     "tooltip-format": "Input: {node_name} ({volume}%)"
   },

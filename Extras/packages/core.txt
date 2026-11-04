@@ -17,7 +17,6 @@ wireplumber                  # Pipewire session manager
 libpulse                     # pactl (used by wf-record)
 alsa-utils                   # alsamixer / alsactl (audio fixes)
 pavucontrol                  # GUI volume control
-wiremix                      # TUI audio manager
 
 # Network
 networkmanager               # Network manager

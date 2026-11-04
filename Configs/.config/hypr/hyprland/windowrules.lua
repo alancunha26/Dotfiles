@@ -41,10 +41,10 @@ rule({ class = "^md\\.obsidian\\.Obsidian$", title = "Settings - .*" }, {
 -- Floating apps
 for _, class in ipairs({
     "top", "htop", "vlc", "kvantummanager", "qt5ct", "qt6ct", "nwg-look", "org.kde.ark",
-    "org.pulseaudio.pavucontrol", "nm-applet", "Signal", "com.github.rafostar.Clapper",
+    "nm-applet", "Signal", "com.github.rafostar.Clapper",
     "app.drey.Warp", "net.davidotek.pupgui2", "yad", "eog", "io.github.alainm23.planify",
     "io.gitlab.theevilskeleton.Upscaler", "com.github.unrud.VideoDownloader",
-    "io.gitlab.adhami3310.Impression", "io.missioncenter.MissionCenter", "org.gnome.Nautilus",
+    "io.gitlab.adhami3310.Impression", "io.missioncenter.MissionCenter",
     "org.pwmt.zathura", "zoom",
 }) do
     rule({ class = class }, { float = true })
@@ -56,8 +56,8 @@ rule({ class = "steam", title = "Steam" }, { center = true, size = "1100 700" })
 rule({ class = "steam", title = "Friends List" }, { size = "460 800" })
 
 -- Floating with custom sizes
-for _, class in ipairs({ "mpv", "nm-connection-editor", "wiremix", "top", "htop", "btop", "dots-check" }) do
-    rule({ class = class }, { float = true, size = "monitor_w*0.5 monitor_h*0.5" })
+for _, class in ipairs({ "mpv", "nm-connection-editor", "org.gnome.Nautilus", "org.pulseaudio.pavucontrol", "top", "htop", "btop", "dots-check" }) do
+    rule({ class = class }, { float = true, size = "monitor_w*0.75 monitor_h*0.75" })
 end
 rule({ class = "org.corectrl.CoreCtrl" }, { float = true, size = "monitor_w*0.75 monitor_h*0.75" })
 -- the calculator stays on top (pinned: also on every workspace); Super+T unpins it
