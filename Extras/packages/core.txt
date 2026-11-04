@@ -114,6 +114,8 @@ zk                           # Zettelkasten note taking LSP
 
 # Apps
 kitty                        # Terminal emulator
+# /etc/zen/policies/policies.json (Extras/system) replaces the package's policies.json, so it repeats that file's two policies.
+# ExtensionSettings has no install_url: with one, Zen runs its URL installer at every launch, without one it installs only missing add-ons.
 zen-browser-bin              # Web browser (Firefox-based)
 zenity                       # File dialog for the wallpaper picker
 gnome-calculator             # Calculator (floats, pinned on top)
@@ -128,3 +130,4 @@ tesseract-data-eng           # OCR language data for mupdf (pinned: pacman would
 tesseract-data-por           # OCR language data, Portuguese
 cliamp                       # Terminal music player: local files, Spotify (Premium), YouTube, radio
 cava                         # Audio visualizer
+openai-codex                 # OpenAIs lightweight coding agent that runs in your terminal

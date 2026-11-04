@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+## Toggle the crosshair overlay on the focused monitor (Super+Shift+X).
+##
+## wlcrosshair requires a connector name in its config and exits if that name is
+## gone. DP-N changes between boots on this two-GPU machine, so the name can't live
+## in the repo: this copies ~/.config/wlcrosshair/config.toml to a runtime directory,
+## adds the current name, and points the daemon there. Running only while shown means
+## a new monitor or connector name applies on the next toggle.
+
+set -euo pipefail
+
+wlcrosshairctl quit 2> /dev/null && exit 0
+
+RUNTIME=$XDG_RUNTIME_DIR/crosshair
+mkdir -p "$RUNTIME/wlcrosshair"
+OUTPUT=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name')
+{
+    cat "$HOME/.config/wlcrosshair/config.toml"
+    echo "output = \"$OUTPUT\""
+} > "$RUNTIME/wlcrosshair/config.toml"
+
+uwsm app -t service -s s -- env XDG_CONFIG_HOME="$RUNTIME" wlcrosshair
+
+# the daemon starts hidden and needs a moment to open its socket
+for _ in {1..20}; do
+    wlcrosshairctl show 2> /dev/null && exit 0
+    sleep 0.1
+done
+echo "crosshair: wlcrosshair did not start" >&2
+exit 1

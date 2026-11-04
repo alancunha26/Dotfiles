@@ -4,8 +4,8 @@
     "localPath": "/home/alancunha/.repos/github.com/alancunha26/5etools-importer/images"
   },
   "homebrew": "/home/alancunha/.repos/github.com/alancunha26/5etools-importer/homebrew",
-  "output": "/home/alancunha/.repos/github.com/alancunha26/dnd-notes/zettels",
-  "state": "/home/alancunha/.repos/github.com/alancunha26/dnd-notes/.zk/importer",
+  "output": "/home/alancunha/.repos/github.com/alancunha26/notes-dnd/zettels",
+  "state": "/home/alancunha/.repos/github.com/alancunha26/notes-dnd/.zk/importer",
   "virtualBooks": [
     {
       "id": "BndD",

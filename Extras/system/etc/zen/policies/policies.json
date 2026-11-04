@@ -1,0 +1,17 @@
+{
+  "policies": {
+    "DisableAppUpdate": true,
+    "DefaultSerialGuardSetting": 3,
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "normal_installed"
+      },
+      "78272b6fa58f4a1abaac99321d503a20@proton.me": {
+        "installation_mode": "normal_installed"
+      },
+      "clipper@obsidian.md": {
+        "installation_mode": "normal_installed"
+      }
+    }
+  }
+}

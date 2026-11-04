@@ -24,14 +24,8 @@
     "command": "npx -y ccstatusline@2.2.32",
     "padding": 0
   },
-  "extraKnownMarketplaces": {
-    "cursor-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "cursor/plugins"
-      }
-    }
-  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
   "effortLevel": "xhigh",
   "modelSettings": {
     "claude-fable-5-1": {
@@ -39,8 +33,5 @@
     }
   },
   "skipDangerousModePermissionPrompt": true,
-  "skipAutoPermissionPrompt": true,
-  "enabledPlugins": {
-    "pstack@cursor-plugins": true
-  }
+  "skipAutoPermissionPrompt": true
 }

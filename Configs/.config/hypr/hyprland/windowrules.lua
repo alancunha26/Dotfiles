@@ -141,3 +141,4 @@ hl.layer_rule({ match = { namespace = "swaync-control-center" }, animation = "sl
 
 -- No animation on slurp's selection overlay, so it never shows up in screenshots/recordings
 hl.layer_rule({ match = { namespace = "selection" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "wlcrosshair" }, no_anim = true })
