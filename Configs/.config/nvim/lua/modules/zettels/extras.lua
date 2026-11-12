@@ -160,24 +160,6 @@ function M.open_index()
   vim.cmd('edit ' .. notes_path .. '/index.md')
 end
 
---- Given an array of lines and a 1-indexed start of a task line, return the
---- end index that includes the bullet line plus any continuation lines
---- (indented non-bullet, non-empty lines). Single-line tasks return start == end.
-local function get_task_range(lines, start_idx)
-  local end_idx = start_idx
-  local i = start_idx + 1
-  while i <= #lines do
-    local line = lines[i]
-    if line and line:match('^%s+%S') and not line:match('^%s*[%-*]%s') then
-      end_idx = i
-      i = i + 1
-    else
-      break
-    end
-  end
-  return start_idx, end_idx
-end
-
 function M.buffers()
   -- Get only loaded buffers
   local buffers = vim.api.nvim_list_bufs()
@@ -328,35 +310,11 @@ function M.headings()
 end
 
 -- ============================================================================
--- Backlog & Capture
+-- Capture
 -- ============================================================================
 
 local desktop_path = notes_path .. '/vro8.md'
 local desktop_section = 'Tasks'
-
-local function get_backlog_path()
-  local backlog_path = notes_path .. '/backlog.md'
-
-  if vim.fn.filereadable(backlog_path) == 0 then
-    local date = os.date('%Y-%m-%d')
-    local content = {
-      '---',
-      'title: Backlog',
-      'date: ' .. date,
-      'tags: []',
-      '---',
-      '',
-      '# Backlog',
-      '',
-      "Long-horizon items I want to remember but haven't committed to. When I",
-      'intend to actually do one, I move it to The Desktop.',
-      '',
-    }
-    vim.fn.writefile(content, backlog_path)
-  end
-
-  return backlog_path
-end
 
 --- Normalize a value to an array of lines.
 local function as_lines(value)
@@ -371,19 +329,6 @@ local function insert_lines(target, pos, new_lines)
   for k = #new_lines, 1, -1 do
     table.insert(target, pos, new_lines[k])
   end
-end
-
---- Append lines to the backlog file (after the last non-blank line).
-local function append_to_backlog_file(new_lines)
-  new_lines = as_lines(new_lines)
-  local backlog_path = get_backlog_path()
-  local lines = vim.fn.readfile(backlog_path)
-  local insert_pos = #lines
-  while insert_pos > 0 and lines[insert_pos]:match('^%s*$') do
-    insert_pos = insert_pos - 1
-  end
-  insert_lines(lines, insert_pos + 1, new_lines)
-  vim.fn.writefile(lines, backlog_path)
 end
 
 --- Append lines to the named `## section` in a markdown file.
@@ -434,29 +379,6 @@ local function append_to_section(filepath, section_name, new_lines)
   return true
 end
 
---- Find the start index of a task whose lines exactly match `task_lines`,
---- preferring `expected_idx`. Returns nil if no match.
-local function find_task_at(file_lines, task_lines, expected_idx)
-  local function matches_at(start)
-    for k = 1, #task_lines do
-      if file_lines[start + k - 1] ~= task_lines[k] then
-        return false
-      end
-    end
-    return true
-  end
-
-  if expected_idx and matches_at(expected_idx) then
-    return expected_idx
-  end
-  for k = 1, #file_lines - #task_lines + 1 do
-    if matches_at(k) then
-      return k
-    end
-  end
-  return nil
-end
-
 --- Reload the buffer for `filepath` from disk if it's currently loaded.
 local function reload_buffer_if_open(filepath)
   local bufnr = vim.fn.bufnr(filepath)
@@ -467,269 +389,28 @@ local function reload_buffer_if_open(filepath)
   end
 end
 
-function M.open_backlog()
-  vim.cmd('edit ' .. get_backlog_path())
-end
-
---- Capture a new task. Picks destination (The Desktop or backlog), prompts
---- for text, appends to the chosen target.
 function M.capture()
-  local destinations = { { text = 'Backlog', target = 'backlog' } }
-  if vim.fn.filereadable(desktop_path) == 1 then
-    table.insert(destinations, 1, { text = 'The Desktop', target = 'desktop' })
-  end
-
-  Snacks.picker({
-    title = 'Capture To',
-    items = destinations,
-    layout = { preset = 'vscode' },
-    format = function(item)
-      return { { item.text } }
-    end,
-    confirm = function(picker, item)
-      picker:close()
-
-      vim.schedule(function()
-        vim.ui.input({ prompt = 'Task: ' }, function(text)
-          vim.schedule(function()
-            vim.cmd('stopinsert')
-          end)
-
-          if not text or text == '' then
-            return
-          end
-
-          text = vim.fn.trim(text)
-          local task_line = '- [ ] ' .. text
-
-          if item.target == 'desktop' then
-            if append_to_section(desktop_path, desktop_section, task_line) then
-              reload_buffer_if_open(desktop_path)
-              vim.notify('Captured to The Desktop', vim.log.levels.INFO)
-            else
-              vim.notify('No "' .. desktop_section .. '" section in The Desktop', vim.log.levels.ERROR)
-            end
-          else
-            append_to_backlog_file(task_line)
-            reload_buffer_if_open(get_backlog_path())
-            vim.notify('Captured to backlog', vim.log.levels.INFO)
-          end
-        end)
-      end)
-    end,
-  })
-end
-
---- True if the current buffer is `backlog.md`.
-local function in_backlog()
-  return vim.fn.expand('%:t') == 'backlog.md'
-end
-
---- Move a known backlog task (already removed from source) into The Desktop.
---- Returns the task to the backlog if The Desktop has no section for it.
-local function commit_pull(task_lines)
-  task_lines = as_lines(task_lines)
-  if not append_to_section(desktop_path, desktop_section, task_lines) then
-    append_to_backlog_file(task_lines)
-    reload_buffer_if_open(get_backlog_path())
-    vim.notify('No "' .. desktop_section .. '" section in The Desktop', vim.log.levels.ERROR)
-    return
-  end
-  reload_buffer_if_open(desktop_path)
-  vim.notify('Pulled to The Desktop: ' .. task_lines[1]:gsub('^%- %[ %]%s+', ''), vim.log.levels.INFO)
-end
-
---- Pull a backlog item into The Desktop. If the cursor is on a `- [ ]` line
---- in `backlog.md`, that task (including continuation lines) is pulled
---- directly. Otherwise shows a picker of backlog items.
-function M.pull_from_backlog()
   if vim.fn.filereadable(desktop_path) == 0 then
-    vim.notify('This vault has no Desktop to pull into', vim.log.levels.WARN)
+    vim.notify('This vault has no Desktop to capture into', vim.log.levels.WARN)
     return
   end
 
-  local backlog_path = get_backlog_path()
+  vim.ui.input({ prompt = 'Task: ' }, function(text)
+    vim.schedule(function()
+      vim.cmd('stopinsert')
+    end)
 
-  if in_backlog() then
-    local bufnr = vim.api.nvim_get_current_buf()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local cursor_line = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1] or ''
-
-    if cursor_line:match('^%- %[ %]%s*%S') then
-      local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      local _, end_idx = get_task_range(buf_lines, lnum)
-      local task_lines = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, end_idx, false)
-
-      vim.api.nvim_buf_set_lines(bufnr, lnum - 1, end_idx, false, {})
-      vim.api.nvim_buf_call(bufnr, function()
-        vim.cmd('silent write')
-      end)
-      commit_pull(task_lines)
+    if not text or text == '' then
       return
     end
-  end
 
-  local lines = vim.fn.readfile(backlog_path)
-  local tasks_by_id = {}
-  local items = {}
-  local i = 1
-  while i <= #lines do
-    if lines[i]:match('^%- %[ %]%s*%S') then
-      local _, end_idx = get_task_range(lines, i)
-      local task_lines = {}
-      for k = i, end_idx do
-        table.insert(task_lines, lines[k])
-      end
-      tasks_by_id[i] = { lnum = i, task_lines = task_lines }
-      table.insert(items, {
-        text = task_lines[1]:gsub('^%- %[ %]%s+', ''),
-        task_id = i,
-      })
-      i = end_idx + 1
+    if append_to_section(desktop_path, desktop_section, '- [ ] ' .. vim.fn.trim(text)) then
+      reload_buffer_if_open(desktop_path)
+      vim.notify('Captured to The Desktop', vim.log.levels.INFO)
     else
-      i = i + 1
+      vim.notify('No "' .. desktop_section .. '" section in The Desktop', vim.log.levels.ERROR)
     end
-  end
-
-  if #items == 0 then
-    vim.notify('Backlog is empty', vim.log.levels.WARN)
-    return
-  end
-
-  Snacks.picker({
-    title = 'Pull to The Desktop',
-    items = items,
-    layout = { preset = 'vscode' },
-    format = function(item)
-      return { { item.text } }
-    end,
-    confirm = function(picker, item)
-      picker:close()
-
-      vim.schedule(function()
-        local data = tasks_by_id[item.task_id]
-        if not data then
-          vim.notify('Lost task data', vim.log.levels.ERROR)
-          return
-        end
-
-        local cur_lines = vim.fn.readfile(backlog_path)
-        local found = find_task_at(cur_lines, data.task_lines, data.lnum)
-        if not found then
-          vim.notify('Could not find backlog task to remove', vim.log.levels.ERROR)
-          return
-        end
-
-        for _ = 1, #data.task_lines do
-          table.remove(cur_lines, found)
-        end
-        vim.fn.writefile(cur_lines, backlog_path)
-        reload_buffer_if_open(backlog_path)
-        commit_pull(data.task_lines)
-      end)
-    end,
-  })
-end
-
---- Push a task to the backlog. If the cursor is on a `- [ ]` line in a file
---- other than the backlog itself, that task (including continuation lines) is
---- pushed directly. Otherwise shows a picker of tasks on The Desktop.
-function M.push_to_backlog()
-  local cursor_line = vim.api.nvim_get_current_line()
-
-  if not in_backlog() and cursor_line:match('^%- %[ %]') then
-    local bufnr = vim.api.nvim_get_current_buf()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local _, end_idx = get_task_range(buf_lines, lnum)
-    local task_lines = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, end_idx, false)
-
-    vim.api.nvim_buf_set_lines(bufnr, lnum - 1, end_idx, false, {})
-    if vim.api.nvim_buf_get_name(bufnr) ~= '' then
-      vim.api.nvim_buf_call(bufnr, function()
-        vim.cmd('silent write')
-      end)
-    end
-    append_to_backlog_file(task_lines)
-    reload_buffer_if_open(get_backlog_path())
-    vim.notify('Pushed to backlog', vim.log.levels.INFO)
-    return
-  end
-
-  if vim.fn.filereadable(desktop_path) == 0 then
-    vim.notify('Not on a task, and this vault has no Desktop', vim.log.levels.WARN)
-    return
-  end
-
-  local desktop_lines = vim.fn.readfile(desktop_path)
-  local tasks_by_id = {}
-  local items = {}
-  local in_section = false
-  local i = 1
-  while i <= #desktop_lines do
-    local l = desktop_lines[i]
-    if l == '## ' .. desktop_section then
-      in_section = true
-      i = i + 1
-    elseif in_section and l:match('^##%s+') then
-      break
-    elseif in_section and l:match('^%- %[ %]%s*%S') then
-      local _, end_idx = get_task_range(desktop_lines, i)
-      local task_lines = {}
-      for k = i, end_idx do
-        table.insert(task_lines, desktop_lines[k])
-      end
-      tasks_by_id[i] = { lnum = i, task_lines = task_lines }
-      table.insert(items, {
-        text = task_lines[1]:gsub('^%- %[ %]%s+', ''),
-        task_id = i,
-      })
-      i = end_idx + 1
-    else
-      i = i + 1
-    end
-  end
-
-  if #items == 0 then
-    vim.notify('No tasks on The Desktop to push', vim.log.levels.WARN)
-    return
-  end
-
-  Snacks.picker({
-    title = 'Push to Backlog',
-    items = items,
-    layout = { preset = 'vscode' },
-    format = function(item)
-      return { { item.text } }
-    end,
-    confirm = function(picker, item)
-      picker:close()
-      vim.schedule(function()
-        local data = tasks_by_id[item.task_id]
-        if not data then
-          vim.notify('Lost task data', vim.log.levels.ERROR)
-          return
-        end
-
-        local cur_lines = vim.fn.readfile(desktop_path)
-        local found = find_task_at(cur_lines, data.task_lines, data.lnum)
-        if not found then
-          vim.notify('Could not find task to remove', vim.log.levels.ERROR)
-          return
-        end
-
-        for _ = 1, #data.task_lines do
-          table.remove(cur_lines, found)
-        end
-        vim.fn.writefile(cur_lines, desktop_path)
-        reload_buffer_if_open(desktop_path)
-
-        append_to_backlog_file(data.task_lines)
-        reload_buffer_if_open(get_backlog_path())
-        vim.notify('Pushed to backlog', vim.log.levels.INFO)
-      end)
-    end,
-  })
+  end)
 end
 
 function M.toggle_task()
@@ -840,32 +521,6 @@ function M.rename_note()
       vim.log.levels.INFO
     )
   end)
-end
-
-function M.find_backlog()
-  local backlog_path = get_backlog_path()
-  local lines = vim.fn.readfile(backlog_path)
-
-  local items = {}
-  for i, line in ipairs(lines) do
-    if line:match('^%- %[ %]') then
-      local task_text = line:gsub('^%- %[ %] ', '')
-      table.insert(items, {
-        text = task_text,
-        file = backlog_path,
-        pos = { i, 0 },
-        task = task_text,
-      })
-    end
-  end
-
-  Snacks.picker({
-    title = 'Backlog',
-    items = items,
-    format = function(item, picker)
-      return { { item.task } }
-    end,
-  })
 end
 
 return M

@@ -49,12 +49,8 @@ return {
       { '<leader>zh', extras.headings, desc = 'Find headings' },
       { '<leader>zz', extras.open_index, desc = 'Open index zettel' },
 
-      -- Backlog & capture
-      { '<leader>zo', extras.open_backlog, desc = 'Open backlog' },
-      { '<leader>zc', extras.capture, desc = 'Capture task (Desktop / backlog)' },
-      { '<leader>zp', extras.pull_from_backlog, desc = 'Pull backlog item into Desktop' },
-      { '<leader>zP', extras.push_to_backlog, desc = 'Push current line to backlog' },
-      { '<leader>zs', extras.find_backlog, desc = 'Find backlog items' },
+      -- Capture
+      { '<leader>zc', extras.capture, desc = 'Capture task to Desktop' },
       { '<leader>zx', extras.toggle_task, desc = 'Toggle task checkbox' },
 
       -- Views
