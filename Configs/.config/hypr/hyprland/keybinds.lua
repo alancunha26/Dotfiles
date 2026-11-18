@@ -55,6 +55,7 @@ bind(mainMod .. " + escape",         exec("swaync-client --hide-all"), { descrip
 bind(mainMod .. " + SHIFT + escape", exec("swaync-client -t -sw"), { description = "Notification center" })
 bind(mainMod .. " + slash",          exec("$HOME/.local/bin/keybinds menu"), { description = "Keybind cheat sheet" })
 bind(mainMod .. " + W",              exec("$HOME/.local/bin/wallpaper"), { description = "Change wallpaper" })
+bind(mainMod .. " + CTRL + SPACE",   exec("hyprctl switchxkblayout all next"), { description = "Switch keyboard layout (US intl / ABNT2)" })
 
 -- Move focus with mainMod + vim keybinds
 bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }), { description = "Focus left" })

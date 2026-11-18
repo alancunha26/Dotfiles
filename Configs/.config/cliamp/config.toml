@@ -13,7 +13,7 @@ initial_directory = "~/Music"
 provider = "spotify"
 
 shuffle = false
-repeat = "One"
+repeat = "Off"
 [spotify]
 # Needs Spotify Premium. Sign in from the player: select Spotify, press Enter.
 # Our own Spotify app (developer.spotify.com, redirect URI

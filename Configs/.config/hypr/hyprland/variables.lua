@@ -36,8 +36,8 @@ hl.config({
     },
 
     input = {
-        kb_layout          = "us",
-        kb_variant         = "intl",
+        kb_layout          = "us,br",
+        kb_variant         = "intl,abnt2",
         kb_model           = "",
         kb_options         = "",
         kb_rules           = "",

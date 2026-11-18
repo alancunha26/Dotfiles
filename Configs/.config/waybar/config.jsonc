@@ -58,7 +58,7 @@
     "network",
     "custom/recording",
     "custom/notification",
-    "clock"
+    "group/datetime"
   ],
   // ======================
   "group/music": {
@@ -185,6 +185,21 @@
     "on-click": "pavucontrol --tab=4",
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
     "tooltip-format": "Input: {node_name} ({volume}%)"
+  },
+  // date and keyboard layout share one pill, like the tray and music drawers
+  "group/datetime": {
+    "orientation": "inherit",
+    "modules": [
+      "clock",
+      "hyprland/language"
+    ]
+  },
+  "hyprland/language": {
+    "format": "{}",
+    "format-en": "US",
+    "format-pt": "BR",
+    "tooltip-format": "{long}",
+    "on-click": "hyprctl switchxkblayout all next"
   },
   "clock": {
     "format": "{:%a %b %d %H:%M}",
