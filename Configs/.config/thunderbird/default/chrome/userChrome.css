@@ -1,0 +1,471 @@
+@import "clean.css";
+@import "tokens.css";
+@import "search.css";
+
+/* Tokyo Night Moon on top of Clean (clean.css): the folder pane and top bar sit on a dark base,
+   and the message list and reader are one rounded panel on it. Corners and gaps follow Hyprland
+   (rounding 4, gaps_in 6). Gecko loads this as a user sheet, which loses to the app's own sheets
+   unless a declaration is !important. */
+
+@media not (prefers-contrast) {
+  :root {
+    --tn-base: #191b29;
+    --tn-panel: #222436;
+    --tn-raise: #2f334d;
+    --tn-line: #3b4261;
+    --tn-text: #c8d3f5;
+    --tn-muted: #828bb8;
+    --tn-accent: #82aaff;
+    --tn-tint: color-mix(in srgb, #82aaff 20%, #222436);
+    --tn-radius: 4px;
+    --tn-gap: 6px;
+    --tn-sidebar: 300px;
+
+    --cl-content: var(--tn-panel) !important;
+    --cl-chrome: var(--tn-base) !important;
+    --cl-hairline: var(--tn-raise) !important;
+    --cl-text: var(--tn-text) !important;
+    --cl-text-2: var(--tn-muted) !important;
+    --cl-hover: rgba(200, 211, 245, 0.06) !important;
+    --cl-pill: var(--tn-raise) !important;
+    --cl-field: var(--tn-panel) !important;
+    --cl-accent: var(--tn-accent) !important;
+    --cl-accent-text: var(--tn-base) !important;
+    --cl-accent-ink: var(--tn-accent) !important;
+    --cl-radius: var(--tn-radius) !important;
+
+    --layout-background-0: var(--tn-panel) !important;
+    --layout-background-1: var(--tn-panel) !important;
+    --layout-background-2: var(--tn-base) !important;
+
+    font-family: "Adwaita Sans", sans-serif !important;
+
+    /* Icons: 16px everywhere (the relaxed density makes them 20-24px), outline only. */
+    --spaces-icon-size: 16px !important;
+    --spaces-button-padding: 8px !important;
+    --spaces-padding: 8px !important;
+    --folder-pane-icon-size: 16px !important;
+  }
+
+  #folderTree .container > .icon,
+  #messageHeader .message-header-view-button,
+  #messageHeader .message-header-view-button .toolbarbutton-icon {
+    fill: transparent !important;
+  }
+
+  #messengerWindow,
+  #navigation-toolbox,
+  #titlebar,
+  #tabs-toolbar {
+    --toolbar-background-color: var(--tn-base) !important;
+    background-color: var(--tn-base) !important;
+    background-image: none !important;
+  }
+
+  #threadTree {
+    --selected-item-color: var(--tn-tint) !important;
+    --selected-item-text-color: var(--tn-text) !important;
+  }
+
+  /* Top row: the search field over the sidebar column, then the tabs, both 32px tall with
+     Hyprland's corners. The tab row always shows (mail.tabs.autoHide is off) so the layout does
+     not jump when a second tab opens. The search field sits over the row's left padding, which is
+     the sidebar's fixed width (--tn-sidebar). */
+  #tabs-toolbar {
+    padding: var(--tn-gap) var(--tn-gap) 0 var(--tn-sidebar) !important;
+    min-block-size: 0 !important;
+    align-items: center !important;
+  }
+
+  /* Ctrl+K focuses a search field only if it and every element around it has a size, and opens a
+     search tab otherwise (QuickSearchFocus in mailWindowOverlay.js). The fixed fields leave their
+     wrappers empty, so those keep 1px of height, cancelled by the margin. */
+  unified-toolbar,
+  .contentTabToolbox:has(> .glodaTabToolbar) {
+    min-block-size: 1px !important;
+    margin-block-end: -1px !important;
+  }
+
+  #unifiedToolbarContainer {
+    position: fixed !important;
+    inset-block-start: 3px !important;
+    inset-inline-start: calc(var(--tn-rail) + 9px) !important;
+    inline-size: calc(var(--tn-sidebar) - 18px) !important;
+    z-index: 3 !important;
+    background: transparent !important;
+  }
+
+  #unifiedToolbar,
+  #unifiedToolbarContent,
+  #unifiedToolbarContent .search-bar {
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+  }
+
+  #unifiedToolbarContent {
+    padding: 0 3px !important;
+    min-block-size: 32px !important;
+  }
+
+  #unifiedToolbarContent .spacer {
+    display: none !important;
+  }
+
+  global-search-bar {
+    --button-border-radius: var(--tn-radius) !important;
+    --search-bar-background: var(--tn-panel) !important;
+    --search-bar-focus-background: var(--tn-panel) !important;
+    --search-bar-border-color: var(--tn-line) !important;
+    flex: 1 !important;
+    block-size: 32px !important;
+    max-inline-size: none !important;
+    margin: 0 !important;
+  }
+
+  global-search-bar .kbd-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    inline-size: calc(var(--tn-sidebar) - 70px) !important;
+  }
+
+  global-search-bar .kbd-container kbd {
+    background-color: var(--tn-raise) !important;
+    border: none !important;
+    border-radius: var(--tn-radius) !important;
+    padding: 0 5px !important;
+    font-size: 0.75em !important;
+    color: var(--tn-muted) !important;
+  }
+
+  global-search-bar .kbd-container kbd:first-of-type {
+    margin-inline-start: auto !important;
+  }
+
+  .tabmail-tab {
+    min-block-size: 32px !important;
+    max-block-size: 32px !important;
+    margin: 0 var(--tn-gap) 0 0 !important;
+    padding: 0 !important;
+  }
+
+  .tabmail-tab .tab-background {
+    margin: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--tn-radius) !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  .tabmail-tab[selected] .tab-background {
+    background-color: var(--tn-panel) !important;
+    border-color: var(--tn-line) !important;
+  }
+
+  .tabmail-tab:not([selected]):hover .tab-background {
+    background-color: var(--cl-hover) !important;
+  }
+
+  .tabmail-tab:not([selected]) .tab-label-container {
+    color: var(--tn-muted) !important;
+  }
+
+  /* One search field at a time. On a search results tab, the sidebar search hides and the tab's
+     own field (which edits that tab's search) takes its exact spot: 4px from the top, 12px right
+     of the rail, the sidebar's width minus its padding, 32px tall. */
+  :root:has(#tabpanelcontainer > .deck-selected .glodaTabToolbar) #unifiedToolbarContainer {
+    visibility: hidden !important;
+  }
+
+  .glodaTabToolbar {
+    position: fixed !important;
+    inset-block-start: 4px !important;
+    inset-inline-start: calc(var(--tn-rail) + 12px) !important;
+    inline-size: calc(var(--tn-sidebar) - 24px) !important;
+    min-block-size: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    z-index: 3 !important;
+  }
+
+  .glodaTabToolbar > spacer {
+    display: none !important;
+  }
+
+  .remote-gloda-search-container {
+    flex: 1 !important;
+    margin: 0 !important;
+  }
+
+  .remote-gloda-search {
+    min-block-size: 32px !important;
+    margin: 0 !important;
+    border: 1px solid var(--tn-line) !important;
+    border-radius: var(--tn-radius) !important;
+    background-color: var(--tn-panel) !important;
+    color: var(--tn-text) !important;
+  }
+
+  /* Side rail (Mail, Address Book, Calendar, Tasks, Chat, Settings) on the base, with Hyprland's
+     corners. Window-relative positions add its width (--tn-rail), which is 0 while it is hidden. */
+  :root {
+    --tn-rail: var(--spaces-total-width);
+  }
+
+  :root:has(#spacesToolbar[hidden]) {
+    --tn-rail: 0px;
+  }
+
+  #spacesToolbar {
+    border-inline-end: none !important;
+    background: var(--tn-base) !important;
+  }
+
+  .spaces-toolbar-button {
+    border-radius: var(--tn-radius) !important;
+    color: var(--tn-muted) !important;
+
+    &:hover {
+      color: var(--tn-text) !important;
+      background-color: var(--cl-hover) !important;
+    }
+
+    &.current {
+      color: var(--tn-accent) !important;
+      background-color: var(--tn-tint) !important;
+    }
+
+    & img {
+      fill: transparent !important;
+    }
+  }
+
+  #spacesPinnedButton {
+    display: none !important;
+  }
+
+  /* Folder pane */
+  body[class*="layout-"] {
+    --folderPaneSplitter-width: var(--tn-sidebar) !important;
+    background-color: var(--tn-base) !important;
+  }
+
+  /* Tabs without a folder pane (a search result opened in a tab) give its column to the panel. */
+  body[class*="layout-"]:has(#folderPane.collapsed-by-splitter) {
+    --folderPaneSplitter-width: 0px !important;
+  }
+
+  body:has(#folderPane.collapsed-by-splitter) #threadPane {
+    margin-inline-start: calc(2 * var(--tn-gap)) !important;
+  }
+
+  #folderPaneSplitter,
+  #folderPaneSplitter:not(:hover, .splitter-resizing) {
+    pointer-events: none !important;
+    border-color: transparent !important;
+    background-color: transparent !important;
+  }
+
+  #folderTree {
+    padding-inline: 4px !important;
+  }
+
+  #folderPaneHeaderBar {
+    padding: 0 12px 12px !important;
+  }
+
+  #folderPaneWriteMessage {
+    flex: 1 !important;
+    min-block-size: 36px !important;
+    border-radius: var(--tn-radius) !important;
+    font-weight: 600 !important;
+  }
+
+  #folderTree li[data-server-type] > .container > .name {
+    color: var(--tn-muted) !important;
+    font-size: 0.9em !important;
+    font-weight: 600 !important;
+  }
+
+  #folderTree li[data-server-type] > .container > .icon {
+    display: none !important;
+  }
+
+  /* Accounts are colour coded by their place in the folder pane, so the colours do not depend on
+     Betterbird's per-machine account numbers. */
+  #folderTree li[data-server-type]:not([data-server-type="none"]) {
+    --tn-account: var(--tn-accent);
+    --folder-color-inbox: var(--tn-account) !important;
+    --folder-color-draft: var(--tn-account) !important;
+    --folder-color-sent: var(--tn-account) !important;
+    --folder-color-archive: var(--tn-account) !important;
+    --folder-color-spam: var(--tn-account) !important;
+    --folder-color-trash: var(--tn-account) !important;
+    --folder-color-template: var(--tn-account) !important;
+    --folder-color-newsletter: var(--tn-account) !important;
+    --folder-color-rss: var(--tn-account) !important;
+    --folder-color-outbox: var(--tn-account) !important;
+    --folder-color-folder: var(--tn-account) !important;
+    --folder-color-folder-filter: var(--tn-account) !important;
+    --folder-color-folder-rss: var(--tn-account) !important;
+  }
+
+  #folderTree li:nth-child(4n + 1 of [data-server-type]:not([data-server-type="none"])) {
+    --tn-account: #c099ff !important;
+  }
+
+  #folderTree li:nth-child(4n + 2 of [data-server-type]:not([data-server-type="none"])) {
+    --tn-account: #86e1fc !important;
+  }
+
+  #folderTree li:nth-child(4n + 3 of [data-server-type]:not([data-server-type="none"])) {
+    --tn-account: #c3e88d !important;
+  }
+
+  #folderTree li:nth-child(4n + 4 of [data-server-type]:not([data-server-type="none"])) {
+    --tn-account: #ff966c !important;
+  }
+
+  /* Proton Bridge shows its folders and labels under two parent rows, "Folders" and "Labels"
+     (row labels start with the folder name). Labels get the tag icon; Folders get a stack of
+     folders, drawn as a mask so it takes the account colour. */
+  #folderTree li[data-server-type] > ul > li:is([aria-label="Labels"], [aria-label^="Labels, "]) > .container > .icon {
+    content: var(--icon-tag) !important;
+  }
+
+  #folderTree li[data-server-type] > ul > li:is([aria-label="Folders"], [aria-label^="Folders, "]) > .container > .icon {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'/%3E") !important;
+    background-color: var(--tn-account) !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.2' stroke-linejoin='round'%3E%3Cpath d='M1.6 6.6a1 1 0 0 1 1-1h2.9l1.2 1.2h4.6a1 1 0 0 1 1 1v4.6a1 1 0 0 1-1 1H2.6a1 1 0 0 1-1-1z'/%3E%3Cpath d='M4.4 4.4V3.6a1 1 0 0 1 1-1h2.5l1.2 1.2h4.3a1 1 0 0 1 1 1v5.4a1 1 0 0 1-1 1h-.6'/%3E%3C/svg%3E") center / 16px no-repeat !important;
+  }
+
+  #folderTree li[data-server-type]:not([data-server-type="none"]) .unread-count {
+    color: var(--tn-account) !important;
+  }
+
+  #folderTree li[data-server-type]:not([data-server-type="none"]) > .container > .name::before {
+    content: "" !important;
+    display: inline-block !important;
+    inline-size: 8px !important;
+    block-size: 8px !important;
+    border-radius: 50% !important;
+    margin-inline-end: 8px !important;
+    background-color: var(--tn-account) !important;
+  }
+
+  /* One panel: the message list and the reader, split by a single line. */
+  body.layout-vertical #messagePaneSplitter:not(:hover, .splitter-resizing) {
+    border-color: var(--tn-line) !important;
+  }
+
+  body.layout-vertical #messagePaneSplitter {
+    margin-block: 0 var(--tn-gap) !important;
+  }
+
+  #threadPane,
+  #messagePane,
+  #accountCentralBrowser {
+    background-color: var(--tn-panel) !important;
+    border: 1px solid var(--tn-line) !important;
+    border-radius: var(--tn-radius) !important;
+    overflow: clip !important;
+    margin-block: 0 var(--tn-gap) !important;
+  }
+
+  #messagePane,
+  #accountCentralBrowser {
+    margin-inline-end: var(--tn-gap) !important;
+  }
+
+  body.layout-vertical:not(:has(#messagePane.collapsed-by-splitter)) #threadPane {
+    border-inline-end: none !important;
+    border-start-end-radius: 0 !important;
+    border-end-end-radius: 0 !important;
+  }
+
+  body.layout-vertical #messagePane {
+    border-inline-start: none !important;
+    border-start-start-radius: 0 !important;
+    border-end-start-radius: 0 !important;
+  }
+
+  .list-header-bar,
+  #threadPaneHeaderBar {
+    background-color: transparent !important;
+  }
+
+  #threadTree[rows="thread-card"] .card-layout > td {
+    background-image: none !important;
+    padding-block: 3px !important;
+  }
+
+  #threadTree[rows="thread-card"] .card-container {
+    border-radius: var(--tn-radius) !important;
+  }
+
+  /* Reader: header on the panel, then the banner and the email as cards. */
+  #messagepanebox {
+    background-color: var(--tn-panel) !important;
+    padding: 16px !important;
+  }
+
+  #messageHeader {
+    --toolbarbutton-header-bordercolor: transparent !important;
+    --toolbarbutton-active-bordercolor: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 4px 12px !important;
+  }
+
+  #header-splitter {
+    display: none !important;
+  }
+
+  #headerSubjectSecurityContainer {
+    order: -1 !important;
+    margin-block-end: 6px !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+  }
+
+  #messageHeader .message-header-view-button .toolbarbutton-text {
+    display: none !important;
+  }
+
+  #messageHeader .message-header-view-button:not([is="toolbarbutton-menu-button"]),
+  #messageHeader .message-header-view-button > :is(.toolbarbutton-menubutton-button, .toolbarbutton-menubutton-dropmarker) {
+    border-radius: var(--tn-radius) !important;
+  }
+
+  #messageHeader .message-header-view-button:not([is="toolbarbutton-menu-button"], [disabled]):hover,
+  #messageHeader .message-header-view-button:not([disabled]) > :is(.toolbarbutton-menubutton-button, .toolbarbutton-menubutton-dropmarker):hover {
+    background-color: var(--cl-hover) !important;
+  }
+
+  notification-message {
+    --message-bar-background-color: var(--tn-raise) !important;
+    --message-bar-text-color: var(--tn-text) !important;
+    --message-bar-icon-color: #ffc777 !important;
+    --icon-color-warning: #ffc777 !important;
+    border: none !important;
+    border-radius: var(--tn-radius) !important;
+    overflow: clip !important;
+  }
+
+  #mail-notification-top notification-message {
+    margin: 0 0 12px !important;
+  }
+
+  #messagepane {
+    border-radius: var(--tn-radius) !important;
+    overflow: clip !important;
+  }
+}
+
+#button-appmenu,
+.titlebar-buttonbox-container,
+#folderPaneGetMessages {
+  display: none !important;
+}

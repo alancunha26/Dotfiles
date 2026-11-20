@@ -1,0 +1,86 @@
+/* Tokyo Night Moon for Betterbird's shared colour tokens, which menus, popups, dropdowns and the
+   Settings, Address Book, Calendar and search pages are drawn from. Imported by userChrome.css and
+   userContent.css, and limited to Betterbird's own pages so web pages and mail that reuse these
+   variable names keep their colours. Corners follow Hyprland's rounding (4). */
+
+@-moz-document url-prefix("about:"), url-prefix("chrome:") {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-gray-05: #e2e8ff !important;
+      --color-gray-10: #c8d3f5 !important;
+      --color-gray-20: #b4c2f0 !important;
+      --color-gray-30: #a9b8e8 !important;
+      --color-gray-40: #828bb8 !important;
+      --color-gray-50: #636da6 !important;
+      --color-gray-60: #3b4261 !important;
+      --color-gray-70: #2f334d !important;
+      --color-gray-80: #222436 !important;
+      --color-gray-90: #191b29 !important;
+      --color-black: #191b29 !important;
+      --color-neutral-200: #3b4261 !important;
+
+      --color-surface-base-dark: #222436 !important;
+      --color-surface-lower-dark: #191b29 !important;
+      --color-surface-subtle-dark: #1e2030 !important;
+      --color-surface-raised-dark: #2f334d !important;
+      --color-surface-deep-dark: #3b4261 !important;
+      --color-surface-border-dark: #3b4261 !important;
+      --color-surface-border-intense-dark: #545c7e !important;
+
+      --color-text-base-dark: #c8d3f5 !important;
+      --color-text-secondary-dark: #a9b8e8 !important;
+      --color-text-muted-dark: #828bb8 !important;
+      --color-text-highlight-dark: #82aaff !important;
+      --color-text-brand-dark: #82aaff !important;
+
+      --color-primary-default-dark: #82aaff !important;
+      --color-primary-hover-dark: #9ab8ff !important;
+      --color-primary-pressed-dark: #65bcff !important;
+      --color-primary-soft-dark: #2d3f76 !important;
+      --color-accent-blue-dark: #82aaff !important;
+      --color-blue-40: #82aaff !important;
+      --color-blue-50: #82aaff !important;
+      --color-blue-60: #65bcff !important;
+
+      --layout-background-0: #222436 !important;
+      --layout-background-1: #222436 !important;
+      --layout-background-2: #191b29 !important;
+      --layout-background-3: #2f334d !important;
+      --layout-background-4: #3b4261 !important;
+      --layout-color-0: #e2e8ff !important;
+      --layout-color-1: #c8d3f5 !important;
+      --layout-color-2: #828bb8 !important;
+      --layout-color-3: #636da6 !important;
+      --layout-border-0: #2f334d !important;
+      --layout-border-1: #3b4261 !important;
+      --layout-border-2: #545c7e !important;
+
+      --selected-item-color: #82aaff !important;
+      --selected-item-text-color: #191b29 !important;
+      --tree-view-bg: #222436 !important;
+      --sidebar-background-color: #191b29 !important;
+
+      --button-border-radius: 4px !important;
+      --border-radius-small: 4px !important;
+      --border-radius-medium: 4px !important;
+      --border-radius-large: 4px !important;
+      --button-border-color: transparent !important;
+      --input-border-color: #3b4261 !important;
+      --focus-outline-color: #82aaff !important;
+
+      --background-color-canvas: #222436 !important;
+      --background-color-box: #1e2030 !important;
+      --text-color: #c8d3f5 !important;
+      --text-color-deemphasized: #828bb8 !important;
+      --border-color: #3b4261 !important;
+      --border-color-interactive: #545c7e !important;
+      --link-color: #82aaff !important;
+      --in-content-page-background: #222436 !important;
+      --in-content-box-background: #1e2030 !important;
+      --in-content-box-border-color: #3b4261 !important;
+      --in-content-text-color: #c8d3f5 !important;
+      --in-content-deemphasized-text: #828bb8 !important;
+      --in-content-border-color: #3b4261 !important;
+    }
+  }
+}

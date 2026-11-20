@@ -1,0 +1,29 @@
+@import "tokens.css";
+@import "search.css";
+
+/* Message bodies in dark mode sit on the base colour, so the email reads as its own card on the
+   reader panel; Thunderbird paints the dark message page from these two tokens (messageBody.css).
+   The compose editor hard-codes its dark background. */
+
+@-moz-document url-prefix("imap:"), url-prefix("mailbox:"), url-prefix("news:"),
+  url-prefix("snews:"), url-prefix("nntp:"), url-prefix("ews:") {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-gray-90: #191b29 !important;
+      --color-text-base-dark: #c8d3f5 !important;
+    }
+
+    :any-link {
+      color: #82aaff;
+    }
+  }
+}
+
+@-moz-document url-prefix("about:blank") {
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #222436 !important;
+      color: #c8d3f5 !important;
+    }
+  }
+}

@@ -1,0 +1,224 @@
+/* The global search results page (Ctrl+K, then Enter) in the mail view's layout: filters in a
+   sidebar-width column on the base, results in one rounded panel. Imported by userChrome.css and
+   userContent.css and limited to that page. */
+
+@-moz-document url-prefix("chrome://messenger/content/glodaFacetView.xhtml") {
+  :root {
+    --tn-base: #191b29;
+    --tn-panel: #222436;
+    --tn-raise: #2f334d;
+    --tn-line: #3b4261;
+    --tn-text: #c8d3f5;
+    --tn-muted: #828bb8;
+    --tn-dim: #636da6;
+    --tn-accent: #82aaff;
+    --tn-tint: color-mix(in srgb, #82aaff 20%, #222436);
+    --tn-hover: rgba(200, 211, 245, 0.05);
+    --tn-sidebar: 300px;
+  }
+
+  body {
+    font-family: "Adwaita Sans", sans-serif !important;
+    background-color: var(--tn-base) !important;
+  }
+
+  #gloda-facet-view {
+    background-color: var(--tn-base) !important;
+    color: var(--tn-text) !important;
+  }
+
+  .facets-sidebar {
+    box-sizing: border-box !important;
+    inline-size: var(--tn-sidebar) !important;
+    max-inline-size: var(--tn-sidebar) !important;
+    padding: 4px 12px 12px !important;
+    background-color: transparent !important;
+    color: var(--tn-text) !important;
+  }
+
+  #filter-header-label,
+  .facets-sidebar :is(h1, h2, h3, .facet-header) {
+    color: var(--tn-muted) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    margin-block: 14px 6px !important;
+  }
+
+  .barry {
+    border: none !important;
+  }
+
+  .bar {
+    border: none !important;
+    border-radius: 4px !important;
+
+    &:is(:hover, :focus) {
+      background-color: var(--tn-hover) !important;
+
+      & > :is(.bar-link, .bar-count) {
+        color: var(--tn-text) !important;
+      }
+    }
+
+    &[selected="true"] {
+      background-color: var(--tn-tint) !important;
+    }
+  }
+
+  .bar-link,
+  .bar[selected="true"] > .bar-link {
+    color: var(--tn-text) !important;
+    padding-block: 5px !important;
+  }
+
+  .bar-count,
+  .bar[selected="true"] > .bar-count {
+    color: var(--tn-dim) !important;
+    line-height: 2em !important;
+  }
+
+  .facet-checkbox-bubble {
+    border: none !important;
+    border-radius: 4px !important;
+    background-color: var(--tn-hover) !important;
+    color: var(--tn-text) !important;
+  }
+
+  .facet-more {
+    color: var(--tn-accent) !important;
+  }
+
+  #main-column {
+    box-sizing: border-box !important;
+    min-block-size: calc(100vh - 6px) !important;
+    margin: 0 6px 6px 0 !important;
+    padding: 16px 20px !important;
+    background-color: var(--tn-panel) !important;
+    border: 1px solid var(--tn-line) !important;
+    border-radius: 4px !important;
+  }
+
+  #header {
+    margin-block-start: 0 !important;
+    max-inline-size: none !important;
+  }
+
+  #data-column {
+    max-inline-size: none !important;
+    margin-inline-end: 0 !important;
+  }
+
+  .results-message-header {
+    border: none !important;
+    padding-inline: 12px !important;
+  }
+
+  .results-message-showall-button,
+  .gloda-timeline-button,
+  #sortby {
+    border: none !important;
+    border-radius: 4px !important;
+    background-color: var(--tn-raise) !important;
+    color: var(--tn-text) !important;
+  }
+
+  /* The whole card opens the message: the subject (the only element with a click handler) is
+     stretched over the card. */
+  .message {
+    position: relative !important;
+    cursor: pointer !important;
+  }
+
+  .message-line {
+    position: static !important;
+  }
+
+  .message-subject::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+  }
+
+  .message-attachments {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .message {
+    font-family: inherit !important;
+    font-size: 0.95rem !important;
+    padding: 10px 12px !important;
+    margin-block-end: 4px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    color: var(--tn-text) !important;
+
+    &:hover {
+      background-color: var(--tn-hover) !important;
+      border: none !important;
+      box-shadow: none !important;
+
+      & .message-subject {
+        color: var(--tn-accent) !important;
+      }
+    }
+
+    &:focus,
+    &[unread="true"]:focus {
+      border: none !important;
+      padding: 10px 12px !important;
+      background-color: var(--tn-tint) !important;
+    }
+  }
+
+  .message-header {
+    margin-block-end: 4px !important;
+  }
+
+  .message-subject {
+    color: var(--tn-text) !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+
+    &:is(:hover, :focus) {
+      background-color: transparent !important;
+      color: var(--tn-accent) !important;
+    }
+  }
+
+  .message-meta,
+  .message-author,
+  .message-recipients {
+    color: var(--tn-muted) !important;
+  }
+
+  .message-body {
+    font-family: inherit !important;
+    font-size: 0.9rem !important;
+    color: var(--tn-muted) !important;
+    margin-inline-start: 0 !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    overflow: hidden !important;
+  }
+
+  .message-body-fulltext-match {
+    background-color: var(--tn-tint) !important;
+    color: var(--tn-accent) !important;
+    border-radius: 3px !important;
+    padding-inline: 2px !important;
+  }
+
+  .popup-menu {
+    background-color: #1e2030 !important;
+    border: 1px solid var(--tn-line) !important;
+    border-radius: 4px !important;
+    color: var(--tn-text) !important;
+  }
+}
