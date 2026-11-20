@@ -1060,7 +1060,7 @@ machine_rows() {
 repeat() { local s; printf -v s '%*s' "$2" ''; printf '%s' "${s// /$1}"; }
 plural() { if (($1 == 1)); then printf '%s %s' "$1" "$2"; else printf '%s %s' "$1" "${3:-${2}s}"; fi; } # N one [many]
 
-wrap() { # print $2 in lines of at most $1 characters, broken at spaces
+wrap_at() { # print $2 in lines of at most $1 characters, broken at spaces (wrap above lists packages)
   local w=$1 word line="" words
   ((w < 8)) && w=8
   read -ra words <<<"$2"
@@ -1093,7 +1093,7 @@ lines_out() { # $1 = first prefix, $2 = following prefix, $3 = prefix width, $4 
   while IFS= read -r line; do
     if ((first)); then OUT+="$1$4$line$T_OFF"$'\n'; else OUT+="$2$4$line$T_OFF"$'\n'; fi
     first=0
-  done < <(wrap $((BW - $3 < 90 ? BW - $3 : 90)) "$5") # prose stays at a readable width
+  done < <(wrap_at $((BW - $3 < 90 ? BW - $3 : 90)) "$5") # prose stays at a readable width
 }
 
 draw_section() { # $1 = title, $2 = rows ("kind<US>state<US>label<US>text", kind row|sub|cmd)
@@ -1470,7 +1470,7 @@ cmd_status() { # $1 = "" | refresh | copy N | page
   read -r rows cols < <(term_size)
   if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
     status_render "$cols"
-    while IFS= read -r n; do printf '%s %s%s\n' "$T_DIM" "$n" "$T_OFF"; done < <(wrap $((cols - 1)) "copy a command: dots status copy N · check again: dots status refresh")
+    while IFS= read -r n; do printf '%s %s%s\n' "$T_DIM" "$n" "$T_OFF"; done < <(wrap_at $((cols - 1)) "copy a command: dots status copy N · check again: dots status refresh")
   else
     status_render "$cols" | sed 's/\x1b\[[0-9;]*m//g'
   fi

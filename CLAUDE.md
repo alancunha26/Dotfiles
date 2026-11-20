@@ -61,7 +61,7 @@ keeps the machine in sync. The repo must be cloned to `~/.dotfiles`. `dots --hel
 ## Terminal output
 
 Every report a script here prints (`dots status`, its page, future ones) follows one pattern. The
-helpers are in `dots` (`draw_section`, `rule`, `wrap`, `check_columns`); copy them, don't invent a
+helpers are in `dots` (`draw_section`, `rule`, `wrap_at`, `check_columns`); copy them, don't invent a
 new look.
 
 - Header line: bold blue name, the totals, host and age on the right (dropped when it doesn't fit).
