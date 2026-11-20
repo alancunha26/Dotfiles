@@ -38,6 +38,13 @@ rule({ class = "^md\\.obsidian\\.Obsidian$", title = "Settings - .*" }, {
     center = true,
 })
 
+-- Betterbird opens each message being written in its own window, titled "Write: <subject> - Betterbird"
+rule({ class = "^eu\\.betterbird\\.Betterbird$", title = "Write: .*" }, {
+    float  = true,
+    size   = "monitor_w*0.55 monitor_h*0.75",
+    center = true,
+})
+
 -- Floating apps
 for _, class in ipairs({
     "top", "htop", "vlc", "kvantummanager", "qt5ct", "qt6ct", "nwg-look", "org.kde.ark",
