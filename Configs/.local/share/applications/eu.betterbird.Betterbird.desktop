@@ -1,0 +1,26 @@
+# Overrides /usr/share/applications/eu.betterbird.Betterbird.desktop to run Betterbird on XWayland.
+# On Wayland it draws menus as subsurfaces, and Hyprland 0.57 places nested ones (submenus) at
+# twice their offset and clips menus at the window edge; delete this file once that is fixed.
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Betterbird
+GenericName=Mail Client
+Comment=Send and receive mail with Betterbird
+Keywords=Email;E-mail;Newsgroup;Feed;RSS
+Exec=env MOZ_ENABLE_WAYLAND=0 GDK_BACKEND=x11 betterbird %u
+Terminal=false
+Icon=betterbird
+Categories=Network;Email;
+MimeType=message/rfc822;x-scheme-handler/mailto;x-scheme-handler/net.thunderbird;application/x-xpinstall;application/x-extension-ics;text/calendar;text/vcard;text/x-vcard;x-scheme-handler/webcal;x-scheme-handler/webcals;x-scheme-handler/mid;
+StartupNotify=true
+StartupWMClass=eu.betterbird.Betterbird
+Actions=ComposeMessage;OpenAddressBook;
+
+[Desktop Action ComposeMessage]
+Name=Write new message
+Exec=env MOZ_ENABLE_WAYLAND=0 GDK_BACKEND=x11 betterbird -compose
+
+[Desktop Action OpenAddressBook]
+Name=Open address book
+Exec=env MOZ_ENABLE_WAYLAND=0 GDK_BACKEND=x11 betterbird -addressbook
