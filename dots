@@ -959,7 +959,7 @@ check_summary() { # load the cached summary (zeros when there is none)
 }
 
 # "rows cols" of the terminal, read from /dev/tty because these run inside pipes and $(...)
-term_size() { stty size </dev/tty 2>/dev/null || echo 24 100; }
+term_size() { { stty size </dev/tty; } 2>/dev/null || echo 24 100; }
 
 # This machine against the repo, as status rows (see draw_section); computed live, not cached.
 machine_rows() {
