@@ -91,6 +91,8 @@ application/xhtml+xml=zen.desktop
 application/x-extension-xhtml=zen.desktop
 application/x-extension-xht=zen.desktop
 x-scheme-handler/t3code=com.t3tools.T3Code.desktop
+x-scheme-handler/mailto=eu.betterbird.Betterbird.desktop
+message/rfc822=eu.betterbird.Betterbird.desktop
 
 [Added Associations]
 text/*=kitty-open.desktop;

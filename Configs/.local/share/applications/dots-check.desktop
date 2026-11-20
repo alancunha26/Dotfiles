@@ -6,7 +6,7 @@ Comment=What dots update would bring in: package updates, new commits and things
 Keywords=dots;update;upgrade;packages;pacman;yay;prune;
 Icon=system-software-update
 TryExec=dots
-Exec=kitty --class=dots-check -e dots check page
+Exec=kitty --class=dots-check -e dots status page
 Terminal=false
 Categories=System;
 StartupWMClass=dots-check

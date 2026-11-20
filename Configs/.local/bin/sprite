@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+## Pixel-art sprites for truecolor terminals.
+##   sprite play [-a ART] [-m MESSAGE] COMMAND [ARG...]  play ART centered while COMMAND runs (its
+##                                                      output is discarded), e.g. as a loading
+##                                                      screen; exits with COMMAND's status
+##   sprite print [-a ART] [-f N]                        print frame N (default 0) as text
+##   sprite gif [-a ART] [-s SCALE]                      build ART as a GIF, each pixel SCALE×SCALE
+##                                                      (default 9), and print its path
+##   sprite import [-w WIDTH] IMAGE NAME                 turn a pixel-art PNG or GIF (every frame)
+##                                                      into the sprite NAME, scaled down to WIDTH
+##                                                      pixels if given (for upscaled art)
+## A sprite is ~/.local/share/sprites/ART.txt (default night-window): "<letter> <rrggbb>" palette
+## lines, then frames of one letter per pixel separated by blank lines; "." is transparent. Frames
+## play at 0.12s each. In kitty, play shows the GIF (ImageMagick builds it into
+## ~/.cache/sprites/ART@SCALE.gif, again when the sprite changes) with `kitten icat`, as large as
+## fits up to 12×. Elsewhere each character cell shows two pixels: ▀ in the top pixel's color over
+## the bottom one's. import keeps up to 62 colors (one letter each), reducing larger palettes.
+set -euo pipefail
+
+sprites=${XDG_DATA_HOME:-$HOME/.local/share}/sprites
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/sprites
+usage() { sed -n 's/^## \{0,1\}//p' "$0" | sed -n '2,10p' >&2; exit 2; }
+cmd=${1:-}
+(($#)) && shift
+art=night-window message="" frame=0 scale=9 width=""
+while getopts a:m:f:s:w: opt; do
+  case $opt in
+    a) art=$OPTARG ;;
+    m) message=$OPTARG ;;
+    f) frame=$OPTARG ;;
+    s) scale=$OPTARG ;;
+    w) width=$OPTARG ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND - 1))
+file=$sprites/$art.txt
+
+frames() { # one frame per NUL; $1 $2 = row and column of its top-left cell, 0 0 for plain lines
+  awk -v top="$1" -v left="$2" '
+    function rgb(h) { return strtonum("0x" substr(h, 1, 2)) ";" strtonum("0x" substr(h, 3, 2)) ";" strtonum("0x" substr(h, 5, 2)) }
+    function emit(   r, c, out, fg, bg, last, code, ch) {
+      for (r = 0; r < n; r += 2) {
+        out = out (top ? sprintf("\033[%d;%dH", top + r / 2, left) : r ? "\n" : "")
+        last = ""
+        for (c = 1; c <= length(px[r]); c++) {
+          fg = substr(px[r], c, 1)
+          bg = r + 1 < n ? substr(px[r + 1], c, 1) : "."
+          if (fg == "." && bg == ".") { code = "\033[0m"; ch = " " }
+          else if (fg == ".") { code = "\033[0;38;2;" pal[bg] "m"; ch = "▄" }
+          else if (bg == ".") { code = "\033[0;38;2;" pal[fg] "m"; ch = "▀" }
+          else { code = "\033[38;2;" pal[fg] ";48;2;" pal[bg] "m"; ch = "▀" }
+          if (code != last) out = out code
+          last = code
+          out = out ch
+        }
+        out = out "\033[0m"
+      }
+      printf "%s%c", out, 0
+      n = 0
+    }
+    NF == 2 && length($1) == 1 { pal[$1] = rgb($2); next }
+    /^$/ { if (n) emit(); next }
+    { px[n++] = $0 }
+    END { if (n) emit() }' "$file"
+}
+
+gif() { # build $cache/$art@$1.gif unless it's newer than the art; print its path
+  local out=$cache/$art@$1.gif tmp
+  if [[ ! -s $out || $file -nt $out ]]; then
+    tmp=$(mktemp -d)
+    awk -v dir="$tmp" '
+      function emit(   f, r, c, ch) {
+        f = sprintf("%s/%03d.ppm", dir, k++)
+        printf "P3\n%d %d\n255\n", length(px[0]), n > f
+        for (r = 0; r < n; r++)
+          for (c = 1; c <= length(px[r]); c++) {
+            ch = substr(px[r], c, 1)
+            print (ch == "." ? "255 0 255" : pal[ch]) > f
+          }
+        close(f)
+        n = 0
+      }
+      NF == 2 && length($1) == 1 { pal[$1] = strtonum("0x" substr($2, 1, 2)) " " strtonum("0x" substr($2, 3, 2)) " " strtonum("0x" substr($2, 5, 2)); next }
+      /^$/ { if (n) emit(); next }
+      { px[n++] = $0 }
+      END { if (n) emit() }' "$file"
+    mkdir -p "$cache"
+    magick -delay 12 -loop 0 -dispose Background "$tmp"/*.ppm -scale "$(($1 * 100))%" -transparent '#ff00ff' "$out.tmp.gif"
+    mv -f "$out.tmp.gif" "$out"
+    rm -rf "$tmp"
+  fi
+  printf '%s\n' "$out"
+}
+
+import_image() { # $1 = image, $2 = sprite name
+  local out=$sprites/$2.txt opts=() n
+  [[ -f $1 ]] || { echo "sprite: no such image: $1" >&2; exit 2; }
+  [[ ! -e $out ]] || { echo "sprite: $out exists" >&2; exit 2; }
+  if [[ -n $width ]]; then opts+=(-sample "${width}x"); fi
+  n=$(magick "$1" -coalesce "${opts[@]}" -alpha on -append -unique-colors -format '%w' info:)
+  if ((n > 62)); then opts+=(+dither -remap "$(magick "$1" -coalesce "${opts[@]}" -append +dither -colors 62 -unique-colors "$cache/import-palette.png" && echo "$cache/import-palette.png")"); fi
+  mkdir -p "$sprites"
+  magick "$1" -coalesce "${opts[@]}" -alpha on -depth 8 txt:- | awk '
+    BEGIN { letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" }
+    /^# ImageMagick pixel enumeration/ { split($5, d, /[,:]/); w[++f] = d[1]; h[f] = d[2]; next }
+    {
+      split($1, xy, /[,:]/)
+      hex = toupper(substr($3, 2, 6))
+      a = length($3) >= 9 ? strtonum("0x" substr($3, 8, 2)) : 255
+      if (a < 128) ch = "."
+      else {
+        if (!(hex in letter)) { letter[hex] = substr(letters, ++used, 1); order[used] = hex }
+        ch = letter[hex]
+      }
+      px[f, xy[2], xy[1]] = ch
+    }
+    END {
+      for (i = 1; i <= used; i++) printf "%s %s\n", letter[order[i]], tolower(order[i])
+      for (k = 1; k <= f; k++) {
+        print ""
+        for (y = 0; y < h[k]; y++) {
+          row = ""
+          for (x = 0; x < w[k]; x++) row = row ((k, y, x) in px ? px[k, y, x] : ".")
+          print row
+        }
+      }
+    }' >"$out"
+  rm -f "$cache/import-palette.png"
+  printf '%s\n' "$out"
+}
+
+case $cmd in
+  play) ;;
+  print)
+    mapfile -d '' -t all < <(frames 0 0)
+    printf '%s\n' "${all[frame % ${#all[@]}]}"
+    exit 0
+    ;;
+  gif)
+    gif "$scale"
+    exit 0
+    ;;
+  import)
+    (($# == 2)) || usage
+    mkdir -p "$cache"
+    import_image "$1" "$2"
+    exit 0
+    ;;
+  *) usage ;;
+esac
+
+(($#)) || usage
+"$@" </dev/null >/dev/null 2>&1 &
+cmd=$!
+kitty=0
+trap 'kill "$cmd" 2>/dev/null || true; if ((kitty)); then kitten icat --clear --stdin=no </dev/tty >/dev/tty; fi; printf "\e[0m\e[?25h\e[2J\e[H"' EXIT
+printf '\e[?25l\e[2J'
+
+read -r rows cols < <(stty size </dev/tty 2>/dev/null || echo 24 80)
+all=() w=0 px=0 h=0 top=$((rows / 2))
+if [[ -f $file ]]; then
+  w=$(awk 'NF == 1 { print length; exit }' "$file")
+  px=$(awk '/^$/ { if (n) exit; next } NF == 1 { n++ } END { print n + 0 }' "$file")
+  h=$(((px + 1) / 2))
+fi
+if ((w)) && [[ -n ${KITTY_WINDOW_ID:-} ]] && command -v kitten magick >/dev/null; then
+  IFS=x read -r pw ph < <(kitten icat --print-window-size </dev/tty 2>/dev/null || printf 0x0; echo)
+  cw=$((pw / cols)) ch=$((ph / rows)) s=0
+  if ((cw && ch)); then
+    s=$((pw / w < (ph - 3 * ch) / px ? pw / w : (ph - 3 * ch) / px))
+    if ((s > 12)); then s=12; fi
+  fi
+  if ((s >= 1)); then
+    bw=$(((w * s + cw - 1) / cw)) h=$(((px * s + ch - 1) / ch))
+    top=$(((rows - h - 2) / 2 + 1))
+    kitten icat --stdin=no --loop -1 --place "${bw}x${h}@$(((cols - bw) / 2))x$((top - 1))" "$(gif "$s")" </dev/tty >/dev/tty
+    kitty=1
+  fi
+fi
+if ((!kitty && w && cols >= w && rows >= h + 2)); then
+  top=$(((rows - h - 2) / 2 + 1))
+  mapfile -d '' -t all < <(frames "$top" $(((cols - w) / 2 + 1)))
+fi
+dim=$'\e[38;2;99;109;166m' i=0
+while kill -0 "$cmd" 2>/dev/null; do
+  if ((${#all[@]})); then printf '%s' "${all[i % ${#all[@]}]}"; fi
+  if [[ -n $message ]]; then
+    text="$message$(printf '%.*s' $(((i / 3) % 4)) ...)"
+    printf '\e[%d;%dH\e[2K%s%s\e[0m' $((top + h + 1)) $(((cols - ${#message} - 3) / 2 + 1)) "$dim" "$text"
+  fi
+  i=$((i + 1))
+  sleep 0.12
+done
+rc=0
+wait "$cmd" || rc=$?
+exit "$rc"

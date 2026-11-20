@@ -39,7 +39,7 @@
     "open-dots-check-page": {
       "app-name": "^dots$",
       "run-on": "action",
-      "exec": "swaync-client -cp >/dev/null; kitty --class=dots-check -e $HOME/.local/bin/dots check page; true"
+      "exec": "swaync-client -cp >/dev/null; kitty --class=dots-check -e $HOME/.local/bin/dots status page; true"
     }
   },
   "notification-visibility": {
@@ -83,7 +83,7 @@
         {
           "label": "\nUpdates       ",
           "type": "toggle",
-          "command": "swaync-client -cp; kitty --class=dots-check -e $HOME/.local/bin/dots check page",
+          "command": "swaync-client -cp; kitty --class=dots-check -e $HOME/.local/bin/dots status page",
           "update-command": "updates=0 attention=0 errors=0; . ${XDG_STATE_HOME:-$HOME/.local/state}/dots/check/summary 2>/dev/null; test $((updates + attention + errors)) -gt 0 && echo true || echo false"
         },
         {

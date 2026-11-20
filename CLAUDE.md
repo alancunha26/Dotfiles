@@ -57,3 +57,25 @@ keeps the machine in sync. The repo must be cloned to `~/.dotfiles`. `dots --hel
   of `dots`; `dots lint` enforces the lintable ones.
 - Settings live at the top (`REAL_DIRS`, services, `STEPS`, ...). Facts about the update check,
   providers and runtimes sit in the comments next to the code they describe.
+
+## Terminal output
+
+Every report a script here prints (`dots status`, its page, future ones) follows one pattern. The
+helpers are in `dots` (`draw_section`, `rule`, `wrap`, `check_columns`); copy them, don't invent a
+new look.
+
+- Header line: bold blue name, the totals, host and age on the right (dropped when it doesn't fit).
+- Sections: a purple title followed by a dim line to the box width; a blank line between sections,
+  no closing rule and no right edge.
+- Rows hang on one dim tree column (`├`, the last `└`), then a state glyph and the label:
+  ✓ green ok, ↓ blue new upstream, ! yellow needs you, ✗ red failed. Only the glyph carries the
+  state, plus the text of rows that need you (yellow) or failed (red). A fine area is one row;
+  only problems open sub rows. Labels take their section's longest label plus 2 spaces, and row
+  and sub-row text share one column. A row that opened sub rows gets a dim `│` spacer before the
+  next row. Prose wraps at 90 characters even in wider windows; package columns are 6 apart.
+- Commands to run are numbered sub rows, `[N] $` dim and the command cyan; `dots status copy N`
+  and the page's `c` copy them exactly, so wrapping them on screen is safe.
+- Nothing may depend on the terminal wrapping or cutting: text wraps itself at the box width
+  (`min(columns, 160)`), aligned columns use only single-width characters, and less cuts long lines
+  under `--header`. Check new output at 210, 160, 110, 60 and 30 columns for lines over the width.
+- Colors only on a terminal and without `NO_COLOR`; otherwise strip them (clig.dev).

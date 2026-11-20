@@ -40,5 +40,14 @@ fi
 # Startup zoxide as cd
 eval "$(zoxide init zsh --cmd cd)"
 
-# Run fastfetch
-fastfetch
+# Run fastfetch. The cat logo (a GIF kitty plays, 56 columns at full size) shrinks to leave the
+# info boxes their ~56 columns plus padding, and is left out when under 20 columns would remain.
+# Rows are about 0.31 × columns: the art is 56×38 pixels and kitty's cells here are 9×20 px.
+() {
+  local w=$(( COLUMNS - 61 < 56 ? COLUMNS - 61 : 56 ))
+  if (( w >= 20 )); then
+    fastfetch --logo-width $w --logo-height $(( (w * 31 + 99) / 100 ))
+  else
+    fastfetch --logo-type none
+  fi
+}

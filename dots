@@ -36,15 +36,16 @@ Usage: dots <command> [options]
 Commands:
   install              Set up everything. Safe to re-run: skips what is already done.
   update               Pull the repo, upgrade the system, then apply everything again.
-  status               Show how this machine differs from the repo (changes nothing).
+  status [refresh]     What's new upstream (from the last check, hourly) and how this machine
+                       differs from the repo (no root, changes nothing). `refresh` checks now.
+  status copy N        Copy command [N] from the status to the clipboard.
+  status page          The interactive view (the notification panel's dots card opens it).
   link                 Only (re)create the symlinks from Configs/ into $HOME.
   adopt PATH...        Move files or directories from $HOME into Configs/ and link them back.
   add PKG...           Install packages and record them in a list (default: extras).
   remove PKG...        Uninstall packages and delete them from the lists.
   prune                Uninstall explicitly installed packages that no list mentions.
   new-migration TEXT   Create Extras/migrations/<timestamp>-<text>.sh.
-  check [page]         What `dots update` would bring in (no root, changes nothing).
-                       `page` is the interactive view (the notification panel's dots card opens it).
   lint                 Static checks on this repo (no root, changes nothing): bash -n, shellcheck
                        when installed, house rules for dots, Hyprland binds, launchers.
 
@@ -70,12 +71,14 @@ THEMES_URL=${DOTS_THEMES_REPO:-https://github.com/alancunha26/Themes.git}
 # Directories that stay real directories in $HOME, because other programs keep
 # their own files in them: their contents are linked one by one. Everything
 # else in Configs/ is linked as a whole, so new files there land in the repo.
+# .config/thunderbird is Betterbird's profile root; its default/ profile gets user.js and chrome/.
 REAL_DIRS=(.config .config/cliamp .config/gtk-4.0 .config/systemd .config/systemd/user .local .local/bin
-  .local/share .local/share/applications .claude .claude/skills)
+  .local/share .local/share/applications .claude .claude/skills .config/thunderbird .config/thunderbird/default)
 
 SYSTEM_SERVICES=(NetworkManager.service lactd.service fstrim.timer reflector.timer)
 DISPLAY_MANAGER=ly@tty2.service # replaces the getty on the same tty
-USER_SERVICES=(waybar.service hyprpolkitagent.service hyprpaper.service hypridle.service dots-check.timer)
+USER_SERVICES=(waybar.service hyprpolkitagent.service hyprpaper.service hypridle.service dots-check.timer
+  protonmail-bridge.service)
 
 ZSH_PLUGINS=(https://github.com/zsh-users/zsh-autosuggestions https://github.com/jeffreytse/zsh-vi-mode)
 NPM_GLOBALS=(yarn pnpm short-unique-id)
@@ -721,6 +724,42 @@ step_apps() {
 
   # No `t3 connect` here: it enables t3code.service, which owns ~/.t3/userdata at
   # boot, and the desktop app then refuses to start because it won't share that home.
+
+  # Betterbird uses the fixed profile ~/.config/thunderbird/default, where link puts user.js and
+  # chrome/. A new install only adopts the Default=1 profile if compatibility.ini says an install
+  # in the same directory (/opt/betterbird, from betterbird-bin) used it; otherwise it creates a
+  # random <id>.default-default and ignores ours. Only on first setup: Betterbird owns these after.
+  local tb=$HOME/.config/thunderbird
+  if [[ ! -e $tb/profiles.ini ]]; then
+    apply "register the Betterbird profile ~/.config/thunderbird/default" eval '
+      mkdir -p -- "$tb/default" &&
+        printf "[Profile0]\nName=default\nIsRelative=1\nPath=default\nDefault=1\n\n[General]\nStartWithLastProfile=1\nVersion=2\n" >"$tb/profiles.ini" &&
+        printf "[Compatibility]\nLastPlatformDir=/opt/betterbird\nLastAppDir=/opt/betterbird\n" >"$tb/default/compatibility.ini"'
+  fi
+
+  # fastfetch's logo is the cat sprite as a GIF that kitty plays (night-window@9.gif: one
+  # pixel per column of a 9px-wide cell); sprite rebuilds it here when the sprite changed.
+  if have magick; then quiet run "$HOME/.local/bin/sprite" gif; fi
+
+  local name what cmd
+  while IFS=$'\x1f' read -r name what cmd; do note "$name: $what${cmd:+. Run: $cmd}"; done < <(mail_todo)
+}
+
+# Mail accounts can't come from the repo: Bridge keeps its login in the keyring and makes a new
+# IMAP password on every login, and Betterbird stores accounts in prefs.js. One line per account
+# Betterbird doesn't have yet, "name<US>what to do<US>command" (US = \x1f, so empty fields
+# survive `read`): install/update show them as notes, status as rows, the check counts them.
+# Bridge's CLI won't start while the service runs, hence the stop/start around it.
+mail_todo() {
+  local prefs=$HOME/.config/thunderbird/default/prefs.js
+  have betterbird || return 0
+  grep -qs 'mail\.server\.[^"]*\.hostname", "127\.0\.0\.1"' "$prefs" ||
+    printf '%s\x1f%s\x1f%s\n' "Proton Mail" \
+      "log in to Bridge ('login', then 'info' for the IMAP password), then add it in Betterbird: IMAP 127.0.0.1:1143, SMTP 127.0.0.1:1025, STARTTLS, accept the certificate" \
+      "systemctl --user stop protonmail-bridge && protonmail-bridge-core --cli; systemctl --user start protonmail-bridge"
+  grep -qs 'mail\.server\.[^"]*\.hostname", "outlook\.office365\.com"' "$prefs" ||
+    printf '%s\x1f%s\x1f%s\n' "Outlook" "turn on IMAP in outlook.com settings, then add the account in Betterbird and sign in with OAuth2" ""
+  return 0
 }
 
 unit_exists() { # system|user unit
@@ -763,7 +802,8 @@ step_services() {
       warn "$u doesn't exist (is its package installed?)"
     elif systemctl --user is-enabled -q "$u" 2>/dev/null; then
       ok "$u (user)"
-    elif [[ $u == *.timer ]]; then
+    elif [[ $u == *.timer || $u == protonmail-bridge.service ]]; then
+      # The others need the graphical session; Bridge only needs the keyring, so start it now.
       run systemctl --user enable --now "$u"
     else
       run systemctl --user enable "$u"
@@ -776,7 +816,7 @@ step_services() {
 # `dots check` collects what `dots update` would bring in, plus what needs a
 # decision, without root and without changing anything. The result is cached
 # in $CHECK_DIR for the notification panel (a "dots" card, see check_notify), the
-# waybar bell (~/.local/bin/notification-bell) and the page (`dots check page`); a
+# waybar bell (~/.local/bin/notification-bell) and the page (`dots status page`); a
 # user timer (dots-check.timer, in Configs/.config/systemd/user, hence that path in
 # REAL_DIRS) refreshes it hourly. The bell counts the card as one notification and goes
 # yellow/red for attention/errors; the Updates tile is lit while anything is pending.
@@ -785,6 +825,7 @@ step_services() {
 # Tokyo Night colors for the report (truecolor; the page runs in kitty)
 T_HEAD=$'\e[1;38;2;130;170;255m' T_SEC=$'\e[38;2;192;153;255m' T_NEW=$'\e[38;2;195;232;141m'
 T_WARN=$'\e[38;2;255;199;119m' T_ERR=$'\e[38;2;255;117;127m' T_DIM=$'\e[38;2;99;109;166m' T_OFF=$'\e[0m'
+T_BLUE=$'\e[38;2;130;170;255m' T_CYAN=$'\e[38;2;134;225;252m' T_TEXT=$'\e[1;38;2;200;211;245m'
 
 check_repos() { # "name<TAB>dir" for every other git repo `dots update` pulls
   local d
@@ -797,16 +838,15 @@ check_repos() { # "name<TAB>dir" for every other git repo `dots update` pulls
 fetch_quietly() { timeout 60 env GIT_SSH_COMMAND='ssh -o BatchMode=yes' git -C "$1" fetch -q &>/dev/null; }
 incoming() { git -C "$1" log --format='%h %s' 'HEAD..@{u}' 2>/dev/null || true; }
 
-# Gather everything into $CHECK_DIR/report (the page body) and $CHECK_DIR/summary.
+# Gather everything into $CHECK_DIR: summary (the counts the bell, the card and the page
+# read), upstream (status rows, see draw_section) and packages ("name<TAB>old<TAB>new").
 check_collect() {
-  local updates=0 attention=0 out rc line name dir lines=() report failed=()
+  local updates=0 attention=0 rc line name dir lines=() failed=() rows others=0
   mkdir -p "$CHECK_DIR"
   exec 8>"$CHECK_DIR/lock"
   flock -w 600 8 || return 0 # another check is running; its result will do
-  report=$(mktemp)
-
-  sec() { printf '\n%s%s%s  %s\n' "$T_SEC" "$1" "$T_OFF" "$2" >>"$report"; }
-  item() { printf '  %s\n' "$*" >>"$report"; }
+  rows=$(mktemp)
+  r() { local IFS=$'\x1f'; printf '%s\n' "$*" >>"$rows"; } # kind state label text
 
   # The network checks don't depend on each other: run them all at once, each
   # writing its result into $work, and wait for the slowest.
@@ -829,51 +869,57 @@ check_collect() {
   done < <(check_repos)
   wait "${pids[@]}" 2>/dev/null || true
 
-  # Dotfiles repo
-  if [[ $(<"$work/dotfiles") == ok ]]; then
+  if [[ $(<"$work/dotfiles") != ok ]]; then
+    r row err Dotfiles "couldn't fetch the repo"
+    failed+=(dotfiles)
+  else
     mapfile -t lines < <(incoming "$DOTFILES")
     if ((${#lines[@]})); then
-      sec "Dotfiles repo" "${#lines[@]} new commit(s)"
-      for line in "${lines[@]}"; do item "$T_DIM${line%% *}$T_OFF ${line#* }"; done
+      r row new Dotfiles "$(plural ${#lines[@]} "new commit")"
+      for line in "${lines[@]:0:5}"; do r sub "" "${line%% *}" "${line#* }"; done
+      if ((${#lines[@]} > 5)); then r sub "" "" "… $((${#lines[@]} - 5)) more"; fi
       updates=$((updates + ${#lines[@]}))
+    else
+      r row ok Dotfiles "up to date"
     fi
-  else
-    failed+=("couldn't fetch the dotfiles repo")
   fi
 
   # Packages: repo (checkupdates: 0 = updates, 2 = none) and AUR, -git/nightly included
   local repo_pkgs=() aur_pkgs=()
   rc=$(<"$work/repo.rc")
-  if ((rc == 0)); then mapfile -t repo_pkgs <"$work/repo"; elif ((rc != 2)); then failed+=("couldn't check the package repos"); fi
-  [[ -s $work/aur ]] && mapfile -t aur_pkgs <"$work/aur"
-  if ((${#repo_pkgs[@]} + ${#aur_pkgs[@]})); then
-    sec "Packages" "${#repo_pkgs[@]} repo · ${#aur_pkgs[@]} AUR"
-    for line in "${repo_pkgs[@]}" "${aur_pkgs[@]}"; do
-      read -r name old _ new <<<"$line"
-      if [[ $new == latest-commit ]]; then
-        item "$(printf '%-28s %s' "$name" "${T_WARN}new commits${T_OFF}")"
-      else
-        item "$(printf '%-28s %s %s→%s %s' "$name" "$old" "$T_DIM" "$T_OFF" "$T_NEW$new$T_OFF")"
-      fi
-    done
+  if ((rc == 0)); then mapfile -t repo_pkgs <"$work/repo"; fi
+  if [[ -s $work/aur ]]; then mapfile -t aur_pkgs <"$work/aur"; fi
+  : >"$CHECK_DIR/packages.tmp"
+  for line in "${repo_pkgs[@]}" "${aur_pkgs[@]}"; do
+    read -r name old _ new <<<"$line"
+    printf '%s\t%s\t%s\n' "$name" "$old" "$new" >>"$CHECK_DIR/packages.tmp"
+  done
+  if ((rc != 0 && rc != 2)); then
+    r row err Packages "couldn't check the package repos"
+    failed+=(packages)
+  elif ((${#repo_pkgs[@]} + ${#aur_pkgs[@]})); then
+    r row new Packages "${#repo_pkgs[@]} repo · ${#aur_pkgs[@]} AUR"
     updates=$((updates + ${#repo_pkgs[@]} + ${#aur_pkgs[@]}))
+  else
+    r row ok Packages "up to date"
   fi
 
   # The other repos `dots update` pulls: just their new commits
-  local other=0
   while IFS=$'\t' read -r i name dir; do
     if [[ $(<"$work/repo-$i") != ok ]]; then
-      failed+=("couldn't fetch $name")
+      r row err "$name" "couldn't fetch"
+      failed+=("$name")
       continue
     fi
     mapfile -t lines < <(incoming "$dir")
     ((${#lines[@]})) || continue
-    ((other++)) || sec "Other repos" ""
-    item "$(printf '%-28s %s' "$name" "${#lines[@]} new commit(s)")"
-    for line in "${lines[@]:0:5}"; do item "  $T_DIM${line%% *}$T_OFF ${line#* }"; done
-    ((${#lines[@]} > 5)) && item "  $T_DIM… $((${#lines[@]} - 5)) more$T_OFF"
+    others=$((others + 1))
+    r row new "$name" "$(plural ${#lines[@]} "new commit")"
+    for line in "${lines[@]:0:3}"; do r sub "" "${line%% *}" "${line#* }"; done
+    if ((${#lines[@]} > 3)); then r sub "" "" "… $((${#lines[@]} - 3)) more"; fi
     updates=$((updates + 1))
   done < <(cat "$work/repos" 2>/dev/null)
+  if ((others == 0)); then r row ok "Other repos" "up to date"; fi
   rm -rf "$work"
 
   # Local state `dots update` will settle on its own
@@ -882,40 +928,22 @@ check_collect() {
   mapfile -t etc_new < <(etc_drift missing)
   mapfile -t migr < <(pending_migrations)
   mapfile -t stale < <(stale_links)
-  if ((${#miss[@]} + ${#migr[@]} + ${#stale[@]} + ${#etc_new[@]})); then
-    sec "Waiting for dots update" ""
-    ((${#miss[@]})) && item "${#miss[@]} listed package(s) not installed: ${miss[*]}"
-    ((${#etc_new[@]})) && item "${#etc_new[@]} new system file(s) to install: ${etc_new[*]}"
-    ((${#migr[@]})) && item "${#migr[@]} pending migration(s): ${migr[*]}"
-    ((${#stale[@]})) && item "${#stale[@]} stale link(s): ${stale[*]/#$HOME/\~}"
-    updates=$((updates + ${#miss[@]} + ${#migr[@]} + ${#stale[@]} + ${#etc_new[@]}))
-  fi
+  updates=$((updates + ${#miss[@]} + ${#migr[@]} + ${#stale[@]} + ${#etc_new[@]}))
 
   # Things that need a decision: `dots update` alone won't resolve them
-  local unl orph prov bad drift pacnew
+  local unl orph prov bad drift pacnew mail
   mapfile -t unl < <(unlisted)
   mapfile -t orph < <(orphans)
   mapfile -t prov < <(default_providers | awk '{ print $1 " -> " $2 }')
   mapfile -t bad < <(bad_links)
   mapfile -t drift < <(etc_drift changed)
   mapfile -t pacnew < <(pacnew_files)
-  attention=$((${#unl[@]} + ${#orph[@]} + ${#prov[@]} + ${#bad[@]} + ${#drift[@]} + ${#pacnew[@]}))
-  if ((attention)); then
-    sec "Needs your attention" "${T_DIM}(dots status for details)$T_OFF"
-    ((${#unl[@]})) && item "$T_WARN${#unl[@]}$T_OFF package(s) in no list: ${unl[*]}  $T_DIM(dots add, or dots prune)$T_OFF"
-    ((${#orph[@]})) && item "$T_WARN${#orph[@]}$T_OFF orphan(s): ${orph[*]}  $T_DIM(dots prune)$T_OFF"
-    ((${#prov[@]})) && item "$T_WARN${#prov[@]}$T_OFF default provider pick(s): ${prov[*]}  $T_DIM(dots add the one you want)$T_OFF"
-    ((${#bad[@]})) && item "$T_WARN${#bad[@]}$T_OFF config(s) not linked  $T_DIM(dots link)$T_OFF"
-    ((${#drift[@]})) && item "$T_WARN${#drift[@]}$T_OFF /etc file(s) differ from Extras/system: ${drift[*]}"
-    ((${#pacnew[@]})) && item "$T_WARN${#pacnew[@]}$T_OFF .pacnew file(s): ${pacnew[*]}  $T_DIM(sudo DIFFPROG='nvim -d' pacdiff)$T_OFF"
-  fi
+  mapfile -t mail < <(mail_todo)
+  attention=$((${#unl[@]} + ${#orph[@]} + ${#prov[@]} + ${#bad[@]} + ${#drift[@]} + ${#pacnew[@]} + ${#mail[@]}))
 
-  if ((${#failed[@]})); then
-    sec "${T_ERR}Couldn't check everything$T_OFF" ""
-    for line in "${failed[@]}"; do item "$T_ERR$line$T_OFF"; done
-  fi
-
-  mv -f "$report" "$CHECK_DIR/report"
+  mv -f "$rows" "$CHECK_DIR/upstream"
+  mv -f "$CHECK_DIR/packages.tmp" "$CHECK_DIR/packages"
+  rm -f "$CHECK_DIR/report"
   printf 'updates=%d\nattention=%d\nerrors=%d\nchecked=%d\nprunable=%d\npacnew=%d\nunlinked=%d\n' \
     "$updates" "$attention" "${#failed[@]}" "$(date +%s)" $((${#unl[@]} + ${#orph[@]})) "${#pacnew[@]}" "${#bad[@]}" \
     >"$CHECK_DIR/summary.tmp"
@@ -930,25 +958,293 @@ check_summary() { # load the cached summary (zeros when there is none)
   source "$CHECK_DIR/summary"
 }
 
-check_show() { # header + cached report; cut to fit the terminal unless $1 is "all"
-  local updates attention errors checked age rows total
-  check_summary
-  age=$((($(date +%s) - checked) / 60))
-  if ((checked == 0)); then
-    printf '%sdots%s  not checked yet\n' "$T_HEAD" "$T_OFF"
-  elif ((updates + attention == 0)); then
-    printf '%sdots ── everything is up to date%s   %schecked %d min ago%s\n' "$T_HEAD" "$T_OFF" "$T_DIM" "$age" "$T_OFF"
+# "rows cols" of the terminal, read from /dev/tty because these run inside pipes and $(...)
+term_size() { stty size </dev/tty 2>/dev/null || echo 24 100; }
+
+# This machine against the repo, as status rows (see draw_section); computed live, not cached.
+machine_rows() {
+  local miss unl orph prov bad stale etc_new drift pacnew migr mail state name what cmd parts
+  r() { local IFS=$'\x1f'; printf '%s\n' "$*"; } # kind state label text
+  mapfile -t miss < <(missing)
+  mapfile -t unl < <(unlisted)
+  mapfile -t orph < <(orphans)
+  mapfile -t prov < <(default_providers | awk '{ print $1 " -> " $2 }')
+  mapfile -t bad < <(bad_links)
+  mapfile -t stale < <(stale_links)
+  mapfile -t etc_new < <(etc_drift missing)
+  mapfile -t drift < <(etc_drift changed)
+  mapfile -t pacnew < <(pacnew_files)
+  mapfile -t mail < <(mail_todo)
+
+  parts="$(listed | wc -l) listed"
+  if ((${#miss[@]} + ${#unl[@]} + ${#orph[@]} + ${#prov[@]} == 0)); then
+    r row ok Packages "$parts · none unlisted · no orphans"
   else
-    printf '%sdots ── %d update(s), %d to look at%s   %schecked %d min ago%s\n' \
-      "$T_HEAD" "$updates" "$attention" "$T_OFF" "$T_DIM" "$age" "$T_OFF"
+    state=new
+    if ((${#unl[@]} + ${#orph[@]} + ${#prov[@]})); then state=warn; fi
+    r row "$state" Packages "$parts"
+    if ((${#miss[@]})); then
+      r sub "" "not installed" "${miss[*]}"
+      r cmd "" "" "dots update"
+    fi
+    if ((${#unl[@]})); then
+      r sub "" "in no list" "${unl[*]}"
+      r cmd "" "" "dots add -g extras ${unl[*]}"
+      r cmd "" "" "dots prune"
+    fi
+    if ((${#orph[@]})); then
+      r sub "" "orphans" "${orph[*]}"
+      r cmd "" "" "dots prune"
+    fi
+    if ((${#prov[@]})); then r sub "" "providers" "pacman picked ${prov[*]}; pin the one you want with dots add"; fi
   fi
-  [[ -f $CHECK_DIR/report ]] || return 0
-  total=$(wc -l <"$CHECK_DIR/report")
-  rows=$total
-  [[ ${1:-} == all ]] || rows=$(($(tput lines 2>/dev/null || echo 40) - 5))
-  head -n "$rows" "$CHECK_DIR/report"
-  if ((total > rows)); then printf '\n  %s… %d more lines: press a for everything%s\n' "$T_DIM" $((total - rows)) "$T_OFF"; fi
-  return 0
+
+  if ((${#bad[@]} + ${#stale[@]} == 0)); then
+    r row ok Links "all in place"
+  else
+    r row warn Links "${#bad[@]} not linked · ${#stale[@]} stale"
+    for name in "${bad[@]}"; do r sub "" "" "$name"; done
+    if ((${#stale[@]})); then r sub "" "stale" "${stale[*]/#$HOME/\~}"; fi
+    r cmd "" "" "dots link"
+  fi
+
+  if ((${#etc_new[@]} + ${#drift[@]} + ${#pacnew[@]} == 0)); then
+    r row ok "System files" "match Extras/system · no .pacnew"
+  else
+    state=new
+    if ((${#drift[@]} + ${#pacnew[@]})); then state=warn; fi
+    r row "$state" "System files" "${#etc_new[@]} to install · ${#drift[@]} differ · ${#pacnew[@]} .pacnew"
+    if ((${#etc_new[@]})); then
+      r sub "" "to install" "${etc_new[*]}"
+      r cmd "" "" "dots update"
+    fi
+    if ((${#drift[@]})); then r sub "" "differ" "${drift[*]}"; fi
+    if ((${#pacnew[@]})); then
+      r sub "" ".pacnew" "${pacnew[*]}"
+      r cmd "" "" "sudo DIFFPROG='nvim -d' pacdiff"
+    fi
+  fi
+
+  if [[ ! -d $STATE/migrations ]]; then
+    r row new Migrations "dots hasn't run on this machine yet"
+    r cmd "" "" "dots install"
+  else
+    mapfile -t migr < <(pending_migrations)
+    if ((${#migr[@]})); then
+      r row new Migrations "${#migr[@]} pending"
+      r sub "" "" "${migr[*]}"
+      r cmd "" "" "dots update"
+    else
+      r row ok Migrations "none pending"
+    fi
+  fi
+
+  if ! have betterbird; then return 0; fi
+  if ((${#mail[@]} == 0)); then
+    r row ok Mail "accounts set up"
+    return 0
+  fi
+  r row warn Mail "$(plural ${#mail[@]} account) not set up"
+  for name in "${mail[@]}"; do
+    IFS=$'\x1f' read -r name what cmd <<<"$name"
+    r sub "" "$name" "$what"
+    if [[ -n $cmd ]]; then r cmd "" "" "$cmd"; fi
+  done
+}
+
+# Terminal output house style (CLAUDE.md, "Terminal output"): a section is a dim box rule with
+# its title, rows "│ ├ ✓ Label  text" with the tree drawn in the row's state color (ok green,
+# new blue, warn yellow, err red) and the last row on "└ └", sub rows hanging under their row,
+# and commands numbered for `dots status copy N`. Everything wraps at the box width itself, so
+# nothing relies on the terminal wrapping or cutting lines (less cuts them under --header).
+repeat() { local s; printf -v s '%*s' "$2" ''; printf '%s' "${s// /$1}"; }
+plural() { if (($1 == 1)); then printf '%s %s' "$1" "$2"; else printf '%s %s' "$1" "${3:-${2}s}"; fi; } # N one [many]
+
+wrap() { # print $2 in lines of at most $1 characters, broken at spaces
+  local w=$1 word line="" words
+  ((w < 8)) && w=8
+  read -ra words <<<"$2"
+  for word in "${words[@]}"; do
+    while ((${#word} > w)); do
+      if [[ -n $line ]]; then printf '%s\n' "$line" && line=""; fi
+      printf '%s\n' "${word:0:w}"
+      word=${word:w}
+    done
+    if [[ -z $line ]]; then
+      line=$word
+    elif ((${#line} + 1 + ${#word} <= w)); then
+      line+=" $word"
+    else
+      printf '%s\n' "$line"
+      line=$word
+    fi
+  done
+  printf '%s\n' "$line"
+}
+
+rule() { # a section heading: the title, then a dim line to the box width
+  local t=$1
+  if ((${#t} > BW - 6)); then t="${t:0:$((BW - 7))}…"; fi
+  OUT+=" $T_SEC$t$T_OFF $T_DIM$(repeat ─ $((BW - ${#t} - 2)))$T_OFF"$'\n'
+}
+
+lines_out() { # $1 = first prefix, $2 = following prefix, $3 = prefix width, $4 = color, $5 = text
+  local first=1 line
+  while IFS= read -r line; do
+    if ((first)); then OUT+="$1$4$line$T_OFF"$'\n'; else OUT+="$2$4$line$T_OFF"$'\n'; fi
+    first=0
+  done < <(wrap $((BW - $3 < 90 ? BW - $3 : 90)) "$5") # prose stays at a readable width
+}
+
+draw_section() { # $1 = title, $2 = rows ("kind<US>state<US>label<US>text", kind row|sub|cmd)
+  local rows kind state label text i last=-1 c glyph tc trunk branch cont pad lw=0 sw=0 col
+  mapfile -t rows <<<"$2"
+  for i in "${!rows[@]}"; do
+    IFS=$'\x1f' read -r kind state label text <<<"${rows[i]}"
+    if [[ $kind == row ]]; then
+      last=$i
+      if ((${#label} > lw)); then lw=${#label}; fi
+    elif [[ $kind == sub ]] && ((${#label} > sw)); then
+      sw=${#label}
+    fi
+  done
+  # Labels get their longest width plus 2 spaces; row and sub-row text share one column.
+  if ((lw > 18)); then lw=18; fi
+  if ((sw > 16)); then sw=16; fi
+  col=$((5 + lw + 2))
+  if ((sw && 7 + sw + 2 > col)); then col=$((7 + sw + 2)); fi
+  rule "$1"
+  for i in "${!rows[@]}"; do
+    IFS=$'\x1f' read -r kind state label text <<<"${rows[i]}"
+    case $kind in
+      row)
+        case $state in
+          ok) c=$T_NEW glyph=✓ tc="" ;;
+          new) c=$T_BLUE glyph=↓ tc="" ;;
+          err) c=$T_ERR glyph=✗ tc=$T_ERR ;;
+          *) c=$T_WARN glyph=! tc=$T_WARN ;;
+        esac
+        if ((i == last)); then branch="└" trunk="     " cont=" "; else branch="├" trunk=" $T_DIM│$T_OFF   " cont="$T_DIM│$T_OFF"; fi
+        printf -v pad '%-*s' $((col - 5)) "${label:0:lw}"
+        lines_out " $T_DIM$branch$T_OFF $c$glyph$T_OFF $pad" " $cont$(repeat ' ' $((col - 2)))" "$col" "$tc" "$text"
+        ;;
+      sub | cmd)
+        if [[ ${rows[i + 1]:-row$'\x1f'} == row$'\x1f'* ]]; then branch="└ " cont="  "; else branch="├ " cont="│ "; fi
+        if [[ $kind == cmd ]]; then
+          CMDS+=("$text")
+          printf -v pad '[%d] $ ' "${#CMDS[@]}"
+          lines_out "$trunk$T_DIM$branch$pad$T_OFF" "$trunk$T_DIM$cont$T_OFF$(repeat ' ' ${#pad})" $((7 + ${#pad})) "$T_CYAN" "$text"
+        elif [[ -n $label ]]; then
+          printf -v pad '%-*s' $((col - 7)) "${label:0:sw}"
+          lines_out "$trunk$T_DIM$branch$T_OFF$pad" "$trunk$T_DIM$cont$T_OFF$(repeat ' ' $((col - 7)))" "$col" "" "$text"
+        else
+          lines_out "$trunk$T_DIM$branch$T_OFF" "$trunk$T_DIM$cont$T_OFF" 7 "$T_DIM" "$text"
+        fi
+        # a row that opened sub rows gets a spacer before the next row
+        if [[ $branch == "└ " && ${trunk} != "     " ]]; then OUT+=" $T_DIM│$T_OFF"$'\n'; fi
+        ;;
+    esac
+  done
+}
+
+# The whole status for a terminal $1 columns wide, with colors (callers strip them when not on
+# a terminal); fills CMDS with its numbered commands. Upstream comes from the last check (the
+# hourly timer, `dots status refresh`), this machine is read now.
+status_render() {
+  local updates attention errors checked prunable pacnew unlinked left right age OUT="" BW
+  BW=$(($1 < 160 ? $1 : 160))
+  ((BW < 30)) && BW=30
+  CMDS=()
+  check_summary
+  if ((updates + attention == 0)); then left="all up to date"; else left="$(plural "$updates" update) · $(plural "$attention" "needs you" "need you")"; fi
+  if ((errors)); then left+=" · couldn't check everything"; fi
+  age=$((($(date +%s) - checked) / 60))
+  if ((checked == 0)); then right="${HOSTNAME:-} · not checked yet"; else right="${HOSTNAME:-} · checked $age min ago"; fi
+  if ((8 + ${#left} + 2 + ${#right} <= BW)); then
+    OUT+="$T_HEAD dots$T_OFF$T_DIM · $T_OFF$T_TEXT$left$T_OFF$(repeat ' ' $((BW - 8 - ${#left} - ${#right})))$T_DIM$right$T_OFF"$'\n\n'
+  else
+    OUT+="$T_HEAD dots$T_OFF$T_DIM · $T_OFF$T_TEXT${left:0:$((BW - 8))}$T_OFF"$'\n\n'
+  fi
+  if [[ -s $CHECK_DIR/upstream ]]; then
+    draw_section Upstream "$(<"$CHECK_DIR/upstream")"
+  else
+    draw_section Upstream "row"$'\x1f'"new"$'\x1f'"Upstream"$'\x1f'"not checked yet"$'\n'"cmd"$'\x1f\x1f\x1f'"dots status refresh"
+  fi
+  OUT+=$'\n'
+  draw_section "This machine" "$(machine_rows)"
+  if [[ -s $CHECK_DIR/packages ]]; then
+    OUT+=$'\n'
+    rule "Package updates · $(wc -l <"$CHECK_DIR/packages")"
+    OUT+="$(check_columns "$BW" <"$CHECK_DIR/packages")"$'\n'
+  fi
+  printf '%s' "$OUT"
+}
+
+# Package lines in the report are "  name<TAB>old<TAB>new" (yay reports -git packages as
+# "latest-commit [age]"). Lay them out in as many columns as fit $1 characters, like ls: top
+# to bottom, then across, each column only as wide as its longest entry. Versions are cut to
+# 16 characters (glibc's run to 24 and would leave room for one column) and names to 26 (a few
+# lib32-vulkan-* would widen every column). Other lines pass through.
+check_columns() {
+  awk -F'\t' -v width="$1" -v dim="$T_DIM" -v hi="$T_NEW" -v warn="$T_WARN" -v off="$T_OFF" '
+    function cut(v) { return length(v) > 16 ? substr(v, 1, 15) "…" : v }
+    function fits(c,   j, i, rows, tot, rest) {
+      rows = int((n + c - 1) / c)
+      tot = 2 + 6 * (c - 1)
+      for (j = 1; j <= c; j++) {
+        nw[j] = ow[j] = vw[j] = 0
+        git[j] = 0
+        for (i = (j - 1) * rows + 1; i <= j * rows && i <= n; i++) {
+          if (length(name[i]) > nw[j]) nw[j] = length(name[i])
+          if (git_[i]) { git[j] = 1; continue }
+          if (length(old[i]) > ow[j]) ow[j] = length(old[i])
+          if (length(new[i]) > vw[j]) vw[j] = length(new[i])
+        }
+        rest = ow[j] + vw[j] ? ow[j] + 3 + vw[j] : 0
+        if (git[j] && rest < 11) rest = 11
+        cw[j] = nw[j] + 2 + rest
+        tot += cw[j]
+      }
+      return tot <= width
+    }
+    function flush(   c, rows, r, j, i, line, cell, vis) {
+      if (!n) return
+      for (c = int(width / 12); c > 1; c--) if (c <= n && fits(c)) break
+      dropold = 0
+      if (!fits(c)) {
+        nw[1] = width - 2 - 2 - (ow[1] ? ow[1] + 3 : 0) - vw[1]
+        if (nw[1] < 10) { dropold = 1; nw[1] = width - 2 - 2 - vw[1] }
+        if (nw[1] < 4) nw[1] = 4
+        for (i = 1; i <= n; i++) if (length(name[i]) > nw[1]) name[i] = substr(name[i], 1, nw[1] - 1) "…"
+      }
+      rows = int((n + c - 1) / c)
+      for (r = 1; r <= rows; r++) {
+        line = " "
+        for (j = 1; j <= c; j++) {
+          i = (j - 1) * rows + r
+          if (i > n) break
+          if (git_[i]) {
+            cell = sprintf("%-*s  %s", nw[j], name[i], warn "new commits" off)
+            vis = nw[j] + 13
+          } else {
+            if (dropold) {
+              cell = sprintf("%-*s  %s", nw[j], name[i], hi new[i] off)
+              vis = nw[j] + 2 + length(new[i])
+            } else {
+              cell = sprintf("%-*s  %*s %s→%s %s", nw[j], name[i], ow[j], old[i], dim, off, hi new[i] off)
+              vis = nw[j] + 2 + ow[j] + 3 + length(new[i])
+            }
+          }
+          line = line " " cell
+          if (j < c && i + rows <= n) line = line sprintf("%*s", cw[j] - vis + 5, "")
+        }
+        print line
+      }
+      n = 0
+    }
+    NF == 3 { sub(/^ +/, "", $1); name[++n] = length($1) > 26 ? substr($1, 1, 25) "…" : $1; git_[n] = $3 ~ /^latest-commit/; old[n] = cut($2); new[n] = cut($3); next }
+    { flush(); print }
+    END { flush() }'
 }
 
 # The "dots" card in the notification panel: one notification that every check replaces
@@ -973,38 +1269,24 @@ check_notify() {
   fi
   title="$updates update(s), $attention to look at"
   if ((errors)); then title+=", couldn't check everything"; fi
-  # One line per section of the page: "Packages: 3 repo · 1 AUR"
-  body=$(sed 's/\x1b\[[0-9;]*m//g' "$CHECK_DIR/report" | awk 'NF && !/^ /' |
-    sed -E 's/ +\(.*\)$//; s/  +/: /; s/: *$//')
+  # One line per upstream row with news ("Packages: 3 repo · 1 AUR, listed below"), then the rest
+  body=$(awk -F'\x1f' '$1 == "row" && $2 != "ok" { print $3 ": " $4 }' "$CHECK_DIR/upstream" 2>/dev/null)
+  if ((attention)); then body+="${body:+$'\n'}This machine: $(plural "$attention" "thing needs" "things need") you (dots status)"; fi
   id=$(notify-send -a dots -u low -i system-software-update -p ${id:+-r "$id"} "$title" "$body" 2>/dev/null) || return 0
   if [[ -n $id ]]; then printf '%s\n' "$id" >"$CHECK_DIR/notify-id"; fi
   return 0
 }
 
-# The page draws right away from the cached result and keeps every key
-# available; a fresh check runs in the background and the page redraws when
-# it finishes.
+# The page is less over status_render: the header stays pinned (--header), the report scrolls
+# and searches, and each action key quits less with that key as its exit status (lesskey's
+# "quit <char>"), so the loop runs the action and opens the page again. less can't redraw
+# itself, so every check (on opening, r, after an action) runs before less, with the pixel-art
+# cat (~/.local/bin/sprite play) playing meanwhile. c lists the numbered commands to copy one.
 check_page() { # the floating window behind the panel's dots card and the Updates tile
-  local key keys bg=0 updates attention errors checked prunable pacnew unlinked
+  local rc key keys prompt page=$RUN_DIR/page rows cols CMDS=() updates attention errors checked prunable pacnew unlinked
 
-  start_check() {
-    ((bg)) && return 0
-    check_collect >/dev/null 2>&1 &
-    bg=$!
-  }
-
-  draw() {
-    clear
-    check_show
-    check_summary # only offer the actions that have something to do
-    keys=""
-    ((updates)) && keys+="$T_NEW[u]$T_OFF update  "
-    ((prunable)) && keys+="$T_NEW[p]$T_OFF prune  "
-    ((pacnew)) && keys+="$T_NEW[m]$T_OFF merge .pacnew  "
-    ((unlinked)) && keys+="$T_NEW[l]$T_OFF link  "
-    keys+="$T_NEW[s]$T_OFF status  $T_NEW[a]$T_OFF show all  $T_NEW[r]$T_OFF check again  $T_NEW[q]$T_OFF close "
-    if ((bg)); then printf '\n  %schecking…%s' "$T_DIM" "$T_OFF"; fi
-    printf '\n%s' "$keys"
+  recheck() {
+    "$DOTFILES/Configs/.local/bin/sprite" play -m "checking for updates" "$SELF" check quiet || true
   }
 
   run_action() { # run it, wait for a key, then check again
@@ -1012,43 +1294,55 @@ check_page() { # the floating window behind the panel's dots card and the Update
     "$@" || true
     printf '\nPress a key to go back '
     read -rsn1 _ || true
-    start_check
+    recheck
   }
 
-  start_check
-  draw
-  while true; do
-    if read -rsn1 -t 0.3 key; then
-      case $key in
-        u) run_action "$SELF" update ;;
-        p) run_action "$SELF" prune ;;
-        m) run_action sudo DIFFPROG='nvim -d' pacdiff ;;
-        l) run_action "$SELF" link ;;
-        s) "$SELF" status 2>&1 | less -R ;;
-        a) check_show all | less -R ;;
-        r) start_check ;;
-        q | $'\e') exit 0 ;;
-        *) continue ;;
-      esac
-      draw
-    elif ((bg)) && ! kill -0 "$bg" 2>/dev/null; then
-      wait "$bg" 2>/dev/null || true
-      bg=0
-      draw
+  copy_command() {
+    local n
+    clear
+    for n in "${!CMDS[@]}"; do printf '  %s[%d]%s %s\n' "$T_DIM" $((n + 1)) "$T_OFF" "${CMDS[n]}"; done
+    printf '\nCopy which command? [1-%d, Enter to go back] ' "${#CMDS[@]}"
+    read -r n || return 0
+    if [[ $n =~ ^[0-9]+$ ]] && ((n >= 1 && n <= ${#CMDS[@]})); then
+      printf '%s' "${CMDS[n - 1]}" | wl-copy
+      printf '%sCopied.%s' "$T_NEW" "$T_OFF"
+      read -rsn1 -t 1 _ || true
     fi
+  }
+
+  recheck
+  while true; do
+    read -r rows cols < <(term_size)
+    status_render "$cols" >"$page"
+    check_summary # only offer the actions that have something to do
+    keys='#command\n' prompt=''
+    if ((updates)); then keys+='u quit u\n' prompt+='u update · '; fi
+    if ((prunable)); then keys+='p quit p\n' prompt+='p prune · '; fi
+    if ((pacnew)); then keys+='m quit m\n' prompt+='m merge \.pacnew · '; fi
+    if ((unlinked)); then keys+='l quit l\n' prompt+='l link · '; fi
+    if ((${#CMDS[@]})); then keys+='c quit c\n' prompt+='c copy a command · '; fi
+    keys+='r quit r\n' prompt+='r check again · q close'
+    rc=0
+    less -R --use-color --color=P60 --header=2 --mouse --tilde --lesskey-content="$(printf '%b' "$keys")" --prompt="$prompt" "$page" || rc=$?
+    ((rc)) || exit 0
+    printf -v key "\\$(printf '%03o' "$rc")"
+    case $key in
+      u) run_action "$SELF" update ;;
+      p) run_action "$SELF" prune ;;
+      m) run_action sudo DIFFPROG='nvim -d' pacdiff ;;
+      l) run_action "$SELF" link ;;
+      c) copy_command ;;
+      r) recheck ;;
+      *) exit 0 ;;
+    esac
   done
 }
 
-cmd_check() {
+cmd_check() { # plumbing: the hourly timer runs `quiet`, the waybar bell runs `card`
   case ${1:-} in
-    page) check_page ;;
     quiet) check_collect ;;
-    card) check_notify ;; # re-post the panel card from the last check (the bell runs this)
-    "")
-      check_collect
-      if [[ -t 1 ]]; then check_show; else check_show | sed 's/\x1b\[[0-9;]*m//g'; fi
-      ;;
-    *) die "usage: dots check [page|quiet|card]" ;;
+    card) check_notify ;; # re-post the panel card from the last check
+    *) die "usage: dots check quiet|card (see dots status)" ;;
   esac
 }
 
@@ -1148,36 +1442,37 @@ show_list() { # title, then items
   fi
 }
 
-cmd_status() {
-  local items
-  header "Packages"
-  mapfile -t items < <(missing)
-  show_list "Listed but not installed" "${items[@]}"
-  mapfile -t items < <(unlisted)
-  show_list "Installed but in no list (dots add -g GROUP, or dots prune)" "${items[@]}"
-  mapfile -t items < <(orphans)
-  show_list "Orphans (dots prune)" "${items[@]}"
-  mapfile -t items < <(default_providers | awk '{ printf "%s -> %s (option 1 of %s)\n", $1, $2, $3 }')
-  show_list "Providers pacman picked because no list names one (pin one with dots add)" "${items[@]}"
-
-  header "Dotfiles"
-  mapfile -t items < <(bad_links)
-  show_list "Not linked (dots link)" "${items[@]}"
-  mapfile -t items < <(stale_links)
-  show_list "Stale links (dots link removes them)" "${items[@]/#$HOME/\~}"
-
-  header "System files"
-  mapfile -t items < <(etc_drift)
-  show_list "Different from Extras/system" "${items[@]}"
-  mapfile -t items < <(pacnew_files)
-  show_list ".pacnew files (sudo DIFFPROG='nvim -d' pacdiff)" "${items[@]}"
-
-  header "Migrations"
-  if [[ ! -d $STATE/migrations ]]; then
-    info "dots hasn't run on this machine yet"
+cmd_status() { # $1 = "" | refresh | copy N | page
+  local rows cols n CMDS=()
+  case ${1:-} in
+    page)
+      check_page
+      return 0
+      ;;
+    refresh)
+      if [[ -t 1 ]]; then
+        "$DOTFILES/Configs/.local/bin/sprite" play -m "checking for updates" "$SELF" check quiet || true
+      else
+        check_collect >/dev/null
+      fi
+      ;;
+    copy)
+      n=${2:-}
+      status_render 100 >/dev/null
+      if ! [[ $n =~ ^[0-9]+$ ]] || ((n < 1 || n > ${#CMDS[@]})); then die "usage: dots status copy N (1-${#CMDS[@]})"; fi
+      printf '%s' "${CMDS[n - 1]}" | wl-copy
+      printf 'Copied: %s\n' "${CMDS[n - 1]}"
+      return 0
+      ;;
+    "") ;;
+    *) die "usage: dots status [refresh|copy N|page]" ;;
+  esac
+  read -r rows cols < <(term_size)
+  if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
+    status_render "$cols"
+    while IFS= read -r n; do printf '%s %s%s\n' "$T_DIM" "$n" "$T_OFF"; done < <(wrap $((cols - 1)) "copy a command: dots status copy N · check again: dots status refresh")
   else
-    mapfile -t items < <(pending_migrations)
-    show_list "Pending (dots update)" "${items[@]}"
+    status_render "$cols" | sed 's/\x1b\[[0-9;]*m//g'
   fi
 }
 
@@ -1447,7 +1742,7 @@ case $CMD in
 esac
 case $CMD in
   install | update) cmd_install ;;
-  status) cmd_status ;;
+  status) cmd_status "${ARGS[@]}" ;;
   check) cmd_check "${ARGS[@]}" ;;
   link) header "Dotfiles" && step_link ;;
   adopt) cmd_adopt "${ARGS[@]}" ;;

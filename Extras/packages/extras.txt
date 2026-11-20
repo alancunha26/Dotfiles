@@ -9,3 +9,5 @@ godot                        # Game engine
 chromium                     # Chromium-based browser, for web dev
 t3code-bin                   # Desktop control surface for local coding agents
 discord-chat-exporter-gui    # Exports Discord chat logs to a file - GUI
+betterbird-bin               # Mail client (Thunderbird fork)
+protonmail-bridge-core       # Local IMAP/SMTP for Proton Mail (protonmail-bridge.service; no Qt GUI)

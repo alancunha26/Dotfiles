@@ -7,15 +7,25 @@
   //     "2": "#82AAFF"
   //   }
   // },
+  // "logo": {
+  //   "source": "$HOME/.config/fastfetch/bulbasaur.txt",
+  //   "color": {
+  //     "1": "#4fd6be",
+  //     "2": "#c7fb6d"
+  //   },
+  //   "padding": {
+  //     "top": 3,
+  //     "left": 2
+  //   }
+  // },
   "logo": {
-    "source": "$HOME/.config/fastfetch/bulbasaur.txt",
-    "color": {
-      "1": "#4fd6be",
-      "2": "#c7fb6d"
-    },
+    "type": "kitty-icat",
+    "source": "$HOME/.cache/sprites/night-window@9.gif",
+    "width": 56,
+    "height": 18,
     "padding": {
-      "top": 3,
-      "left": 2
+      "top": 2,
+      "left": 1
     }
   },
   // "logo": {
