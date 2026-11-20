@@ -23,6 +23,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("uwsm app -t service -s s -- wl-clip-persist --clipboard regular")
     hl.exec_cmd("uwsm app -t service -s a -- udiskie --no-automount --smart-tray")
 
+    -- Mail, started in the tray (user.js); the desktop entry keeps its XWayland override
+    hl.exec_cmd("uwsm app -- eu.betterbird.Betterbird.desktop")
+
     -- Music player, hidden on the "music" workspace until Super+M
     hl.exec_cmd("uwsm app -- kitty --class=cliamp -e cliamp")
 end)

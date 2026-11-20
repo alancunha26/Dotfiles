@@ -10,3 +10,6 @@ user_pref("mail.showCondensedAddresses", true);
 user_pref("mail.addressDisplayFormat", 2);
 user_pref("mail.displayname.version", 1);
 user_pref("mail.tabs.autoHide", false);
+user_pref("mail.closeToTray", true);
+user_pref("mail.minimizeToTray", true);
+user_pref("mail.startupMinimized", true);
