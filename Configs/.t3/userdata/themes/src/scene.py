@@ -76,11 +76,11 @@ def S(dur, action, at, to=None, face=1):
     return (dur, action, at, to or at, face)
 
 SCRIPTS = {
-    'siamese': ('siamese', 'left', True, [
-        S(6, 'sit', (37, 27)), S(1.8, 'look', (37, 27)), S(.64, 'swat', (37, 27)), S(2.6, 'look', (37, 27)),
-        S(.64, 'swat', (37, 27)), S(2.3, 'look', (37, 27)), S(6, 'sit', (37, 27)), S(1.6, 'meow', (37, 27)),
-        S(8.4, 'sit', (37, 27)), S(4, 'groom', (37, 27)), S(2.2, 'itch', (37, 27)), S(3.5, 'sit', (37, 27)),
-        S(2.5, 'look', (37, 27)), S(.64, 'swat', (37, 27)), S(5.18, 'look', (37, 27))]),
+    'siamese': ('siamese', 'right', True, [
+        S(6, 'sit', (150, 36), face=-1), S(1.8, 'look', (150, 36), face=-1), S(.64, 'swat', (150, 36), face=-1), S(2.6, 'look', (150, 36), face=-1),
+        S(.64, 'swat', (150, 36), face=-1), S(2.3, 'look', (150, 36), face=-1), S(6, 'sit', (150, 36), face=-1), S(1.6, 'meow', (150, 36), face=-1),
+        S(8.4, 'sit', (150, 36), face=-1), S(4, 'groom', (150, 36), face=-1), S(2.2, 'itch', (150, 36), face=-1), S(3.5, 'sit', (150, 36), face=-1),
+        S(2.5, 'look', (150, 36), face=-1), S(.64, 'swat', (150, 36), face=-1), S(5.18, 'look', (150, 36), face=-1)]),
     'tabby': ('tabby', 'left', False, [
         S(3, 'sit', (100, 50), face=-1), S(1.4, 'stretch', (100, 50), face=1),
         S(1.4, 'walk', (100, 50), (108, 50), face=1), S(.4, 'crouch', (108, 50), face=1),
@@ -93,13 +93,13 @@ SCRIPTS = {
         S(2.4, 'walk', (86, 50), (100, 50), face=1), S(3.2, 'sit', (100, 50), face=1),
         S(4, 'look', (100, 50), face=-1), S(4, 'sit', (100, 50), face=-1)]),
     'black': ('black', 'left', False, [
-        S(6, 'sit', (61, 42), face=1), S(3, 'look', (61, 42), face=-1), S(4, 'groom', (61, 42), face=1),
+        S(6, 'sit', (61, 42), face=1), S(3, 'look', (61, 42), face=1), S(4, 'groom', (61, 42), face=1),
         S(4, 'loaf', (61, 42), face=1), S(8, 'sleep', (61, 42), face=1), S(1.4, 'loaf', (61, 42), face=1),
         S(1.4, 'stretch', (61, 42), face=1), S(.4, 'crouch', (61, 42), face=1),
         S(.7, 'jump', (61, 42), (70, 50), face=1), S(.3, 'crouch', (70, 50), face=1),
         S(5.4, 'sit', (70, 50), face=1), S(.4, 'crouch', (70, 50), face=-1),
         S(.7, 'jump', (70, 50), (61, 42), face=-1), S(.3, 'crouch', (61, 42), face=-1),
-        S(3.6, 'sit', (61, 42), face=1), S(4.6, 'look', (61, 42), face=-1), S(3.8, 'sit', (61, 42), face=1)]),
+        S(3.6, 'sit', (61, 42), face=1), S(4.6, 'look', (61, 42), face=1), S(3.8, 'sit', (61, 42), face=1)]),
     'calico': ('calico', 'right', False, [
         S(5, 'walk', (118, 48), (84, 48), face=-1), S(.4, 'crouch', (84, 48), face=-1),
         S(.7, 'jump', (84, 48), (50, 38), face=-1), S(.3, 'crouch', (50, 38), face=-1),
@@ -110,10 +110,10 @@ SCRIPTS = {
         S(.7, 'jump', (52, 38), (86, 48), face=1), S(.3, 'crouch', (86, 48), face=1),
         S(4.6, 'walk', (86, 48), (118, 48), face=1), S(5, 'groom', (118, 48), face=1), S(2.2, 'itch', (118, 48), face=1),
         S(2.2, 'sit', (118, 48), face=1), S(1.8, 'look', (118, 48), face=-1)]),
-    'siamese2': ('siamese', 'right', False, [
-        S(8, 'groom', (150, 36), face=-1), S(4, 'sit', (150, 36), face=-1), S(2.6, 'itch', (150, 36), face=-1),
-        S(5, 'look', (150, 36), face=-1), S(8.4, 'sit', (150, 36), face=-1), S(8, 'groom', (150, 36), face=-1),
-        S(4, 'look', (150, 36), face=-1), S(8, 'sit', (150, 36), face=-1)]),
+    'siamese2': ('siamese', 'left', False, [
+        S(8, 'groom', (37, 27)), S(4, 'sit', (37, 27)), S(2.6, 'itch', (37, 27)),
+        S(5, 'look', (37, 27)), S(8.4, 'sit', (37, 27)), S(8, 'groom', (37, 27)),
+        S(4, 'look', (37, 27)), S(8, 'sit', (37, 27))]),
     'lynx': ('lynx', 'right', False, [
         S(10, 'lie', (183, 66), face=1), S(1.4, 'yawn', (183, 66)), S(13, 'lsleep', (183, 66)),
         S(1.0, 'lie', (183, 66)), S(1.4, 'yawn', (183, 66)), S(21.2, 'lie', (183, 66))]),
@@ -229,10 +229,10 @@ def draw_moth(buf, g):
         if start <= g < end:
             k = (g - start)
             leave = max(0, g - (end - 1.2))
-            u = 40 + 9 * math.cos(TAU * k / 2.6) + 14 * leave * leave
-            v = 3 + 5 * math.sin(TAU * k / 1.3) - 16 * leave
+            u = 147 + 9 * math.cos(TAU * k / 2.6) + 14 * leave * leave
+            v = 12 + 5 * math.sin(TAU * k / 1.3) - 16 * leave
             a = 255 if leave == 0 else max(0, int(255 * (1 - leave / 1.2)))
-            x, y = round(u * UNIT), HEAD * UNIT + round(v * UNIT)
+            x, y = RW + round(u * UNIT), HEAD * UNIT + round(v * UNIT)
             up = int(g * 12) % 2
             for dx in range(-7, 8):
                 for dy in range(-5, 6):
