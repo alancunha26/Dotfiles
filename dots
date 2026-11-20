@@ -72,8 +72,11 @@ THEMES_URL=${DOTS_THEMES_REPO:-https://github.com/alancunha26/Themes.git}
 # their own files in them: their contents are linked one by one. Everything
 # else in Configs/ is linked as a whole, so new files there land in the repo.
 # .config/thunderbird is Betterbird's profile root; its default/ profile gets user.js and chrome/.
+# .t3/userdata is T3 Code's state; only its themes/ is ours, linked whole because T3 Code skips a
+# theme file that is a symlink but follows a symlinked directory.
 REAL_DIRS=(.config .config/cliamp .config/gtk-4.0 .config/systemd .config/systemd/user .local .local/bin
-  .local/share .local/share/applications .claude .claude/skills .config/thunderbird .config/thunderbird/default)
+  .local/share .local/share/applications .claude .claude/skills .config/thunderbird .config/thunderbird/default
+  .t3 .t3/userdata)
 
 SYSTEM_SERVICES=(NetworkManager.service lactd.service fstrim.timer reflector.timer)
 DISPLAY_MANAGER=ly@tty2.service # replaces the getty on the same tty
@@ -740,6 +743,14 @@ step_apps() {
   # fastfetch's logo is the cat sprite as a GIF that kitty plays (night-window@9.gif: one
   # pixel per column of a 9px-wide cell); sprite rebuilds it here when the sprite changed.
   if have magick; then quiet run "$HOME/.local/bin/sprite" gif; fi
+
+  # The T3 Code theme's rooftop cats: src/build.py draws them into tokyo-night.png (git-ignored,
+  # ~4MB, T3 Code plays it as --theme-background-image) and the sky into tokyo-night.json. It
+  # takes ~30s of CPU, so it runs at low priority and only when a source is newer than the PNG.
+  local themes=$DOTFILES/Configs/.t3/userdata/themes
+  if [[ ! -s $themes/tokyo-night.png || -n $(find "$themes/src" -newer "$themes/tokyo-night.png" -print -quit) ]]; then
+    quiet run nice -n 19 python3 -B "$themes/src/build.py"
+  fi
 
   local name what cmd
   while IFS=$'\x1f' read -r name what cmd; do note "$name: $what${cmd:+. Run: $cmd}"; done < <(mail_todo)

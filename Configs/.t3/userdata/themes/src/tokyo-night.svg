@@ -1,0 +1,103 @@
+<svg xmlns='http://www.w3.org/2000/svg'>
+<style>
+image { image-rendering: pixelated; }
+.a { fill: #828bb8; }
+.b { fill: #c8d3f5; }
+.t1 { animation: tw 8.4s steps(2) infinite; }
+.t2 { animation: tw 10.6s steps(2) infinite 1.1s; }
+.t3 { animation: tw 12.8s steps(2) infinite 2.3s; }
+.t4 { animation: tw 14.2s steps(2) infinite 3.7s; }
+@keyframes tw { 50% { opacity: .2; } }
+.shoot { fill: #c8d3f5; opacity: 0; animation: shoot 23s steps(24) infinite 6s; }
+@keyframes shoot {
+  0% { opacity: 0; transform: translate(0, 0); }
+  1% { opacity: .9; }
+  4% { opacity: 0; transform: translate(-240px, 120px); }
+  100% { opacity: 0; transform: translate(-240px, 120px); }
+}
+.scene { transform: translateY(100vh) scale(3); }
+.stars { animation: drift 400s steps(80) infinite alternate; }
+@keyframes drift { to { transform: translate(-70px, -18px); } }
+.mw { fill: #c99a4e; }
+.mw1, .mw2, .mw3, .mw4 { opacity: 0; animation: mw 23s steps(1, end) infinite -4s; }
+.mw2 { animation-duration: 31s; animation-delay: -19s; }
+.mw3 { animation-duration: 41s; animation-delay: -8s; }
+.mw4 { animation-duration: 53s; animation-delay: -33s; }
+@keyframes mw { 0% { opacity: 0; } 30% { opacity: 1; } 72%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { * { animation-play-state: paused !important; } }
+</style>
+<g class='stars'>
+<rect class='a' x='24.3%' y='34.7%' width='3' height='3'/>
+<rect class='a' x='57.9%' y='38.3%' width='3' height='3'/>
+<rect class='b' x='39.9%' y='53.7%' width='3' height='3'/>
+<rect class='b' x='39.2%' y='2.9%' width='3' height='3'/>
+<rect class='b' x='5.2%' y='48.8%' width='3' height='3'/>
+<rect class='a' x='77.3%' y='53.3%' width='3' height='3'/>
+<rect class='a' x='35.4%' y='37.1%' width='3' height='3'/>
+<rect class='a' x='90.7%' y='3.7%' width='3' height='3'/>
+<rect class='a' x='17.0%' y='53.6%' width='3' height='3'/>
+<rect class='b' x='50.5%' y='61.9%' width='3' height='3'/>
+<rect class='a' x='88.9%' y='24.7%' width='3' height='3'/>
+<rect class='b' x='85.9%' y='42.9%' width='6' height='6'/>
+<rect class='a' x='60.7%' y='18.7%' width='3' height='3'/>
+<rect class='b' x='3.1%' y='24.1%' width='3' height='3'/>
+<rect class='a' x='32.4%' y='23.8%' width='3' height='3'/>
+<rect class='b' x='26.9%' y='49.2%' width='6' height='6'/>
+<rect class='b' x='23.1%' y='9.3%' width='3' height='3'/>
+<rect class='a' x='19.0%' y='18.7%' width='3' height='3'/>
+<rect class='b' x='91.2%' y='11.4%' width='6' height='6'/>
+<rect class='b' x='12.8%' y='16.7%' width='6' height='6'/>
+<g class='t1'>
+<rect class='a' x='28.9%' y='5.8%' width='3' height='3'/>
+<rect class='b' x='76.3%' y='54.4%' width='6' height='6'/>
+<rect class='a' x='24.4%' y='13.2%' width='3' height='3'/>
+<rect class='a' x='46.5%' y='40.1%' width='3' height='3'/>
+<rect class='a' x='91.5%' y='55.8%' width='3' height='3'/>
+<rect class='b' x='48.1%' y='9.2%' width='3' height='3'/>
+</g>
+<g class='t2'>
+<rect class='b' x='16.3%' y='4.5%' width='3' height='3'/>
+<rect class='a' x='97.8%' y='20.9%' width='3' height='3'/>
+<rect class='b' x='59.9%' y='58.9%' width='3' height='3'/>
+<rect class='a' x='97.7%' y='28.1%' width='3' height='3'/>
+</g>
+<g class='t3'>
+<rect class='b' x='72.4%' y='36.6%' width='3' height='3'/>
+<rect class='a' x='11.2%' y='41.3%' width='3' height='3'/>
+<rect class='a' x='38.0%' y='37.2%' width='3' height='3'/>
+<rect class='b' x='53.5%' y='58.9%' width='3' height='3'/>
+<rect class='a' x='6.9%' y='39.6%' width='3' height='3'/>
+<rect class='a' x='68.0%' y='9.9%' width='3' height='3'/>
+<rect class='a' x='8.8%' y='46.5%' width='3' height='3'/>
+<rect class='a' x='34.8%' y='9.8%' width='3' height='3'/>
+<rect class='a' x='4.2%' y='29.4%' width='3' height='3'/>
+<rect class='a' x='54.3%' y='55.4%' width='3' height='3'/>
+</g>
+<g class='t4'>
+<rect class='a' x='24.0%' y='61.7%' width='3' height='3'/>
+<rect class='a' x='71.4%' y='54.7%' width='3' height='3'/>
+<rect class='a' x='10.6%' y='10.2%' width='3' height='3'/>
+<rect class='b' x='34.7%' y='6.0%' width='3' height='3'/>
+<rect class='a' x='27.6%' y='40.1%' width='3' height='3'/>
+<rect class='b' x='96.8%' y='33.3%' width='3' height='3'/>
+</g>
+</g>
+<svg x='62%' y='8%' overflow='visible'>
+  <rect class='shoot' width='12' height='3'/>
+</svg>
+<g class='scene'>
+  <g transform='translate(0 -90)'>
+    <image id='far' href='sprite:city-far' width='400' height='90'/>
+    <use href='#far' x='400'/>
+    <use href='#far' x='800'/>
+    <use href='#far' x='1200'/>
+  </g>
+  <g transform='translate(0 -64)'>
+    <g id='mid'><image href='sprite:city-mid' width='320' height='64'/>MIDWINDOWS</g>
+    <use href='#mid' x='320'/>
+    <use href='#mid' x='640'/>
+    <use href='#mid' x='960'/>
+    <use href='#mid' x='1280'/>
+  </g>
+</g>
+</svg>
