@@ -46,6 +46,7 @@ xorg-xrdb                    # Loads ~/.Xresources for XWayland apps
 waybar-git                   # System bar (git: clicking workspaces needs Lua-config support, unreleased after 0.15.0; switch back to waybar once a release has it)
 rofi                         # Application launcher (2.x has native wayland)
 rofi-emoji                   # Rofi emoji
+wtype                        # Types the picked emoji (rofi-emoji needs it on Wayland)
 libnotify                    # For notifications
 swaync-git                   # Notification daemon + panel (git: the calendar widget is unreleased after 0.12.6; switch back to swaync once a release has it)
 grim                         # Screenshot tool
