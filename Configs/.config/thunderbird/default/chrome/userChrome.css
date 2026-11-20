@@ -444,6 +444,38 @@
     background-color: var(--cl-hover) !important;
   }
 
+  /* Compose window: on the base like the main window, with the header fields (From, To,
+     Subject) as one card above the editor card. The menu bar stays collapsed until Alt highlights
+     one of its menus. */
+  #compose-toolbar-menubar2:not(:has([_moz-menuactive], [open])) {
+    min-block-size: 0 !important;
+    max-block-size: 0 !important;
+    padding-block: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #compose-toolbox,
+  #compose-toolbox > toolbar,
+  #composeContentBox,
+  #composeContentBox > #FormatToolbox,
+  #messageArea {
+    background-color: var(--tn-base) !important;
+  }
+
+  #composeContentBox > #MsgHeadersToolbar {
+    background-color: var(--tn-panel) !important;
+    border: 1px solid var(--tn-line) !important;
+    border-radius: var(--tn-radius) !important;
+    margin: 6px 16px 0 !important;
+  }
+
+  #button-send[disabled] {
+    opacity: 1 !important;
+    background-color: color-mix(in srgb, var(--tn-accent) 30%, var(--tn-base)) !important;
+    color: var(--tn-muted) !important;
+    font-weight: 600 !important;
+  }
+
   notification-message {
     --message-bar-background-color: var(--tn-raise) !important;
     --message-bar-text-color: var(--tn-text) !important;
